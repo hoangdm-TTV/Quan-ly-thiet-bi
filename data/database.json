@@ -1,0 +1,569 @@
+{
+  "devices": [
+    {
+      "code": "TS-014",
+      "name": "Laptop Dell Inspiron 5593 - I7-1065G7/8GB/512GB PCIE/VGA 2GB/15.6 FHD/WIN10/BẠC",
+      "category": "laptop",
+      "brand": "Dell ",
+      "model": "Inspiron 5593",
+      "serial": "",
+      "specs": "Intel Core i7 -1065G7, RAM 8GB DDR4, SSD 512GB, 15,6 inch FHD IPS",
+      "status": "available",
+      "userId": null,
+      "departmentId": null,
+      "purchaseDate": "2026-10-10",
+      "purchaseCost": 24000000,
+      "warrantyUntil": "",
+      "location": "Kho IT Tầng 4",
+      "notes": "",
+      "id": "dev-1791615545426"
+    },
+    {
+      "id": "dev-1",
+      "code": "TS-001",
+      "name": "MacBook Pro 16\" M3 Max 36GB/1TB",
+      "category": "laptop",
+      "brand": "Apple",
+      "model": "MacBook Pro 16 2023",
+      "serial": "C02G3498MD6T",
+      "specs": "Apple M3 Max (14 CPU/30 GPU), RAM 36GB Unified, SSD 1TB, Liquid Retina XDR 16.2 inch",
+      "status": "available",
+      "userId": null,
+      "departmentId": "dept-1",
+      "purchaseDate": "2024-01-15",
+      "purchaseCost": 79900000,
+      "warrantyUntil": "2026-01-15",
+      "location": "Kho IT",
+      "notes": "Máy kèm sạc 140W zin và túi chống sốc Tomtoc."
+    },
+    {
+      "id": "dev-2",
+      "code": "TS-002",
+      "name": "ThinkPad X1 Carbon Gen 11 i7-1365U 32GB",
+      "category": "laptop",
+      "brand": "Lenovo",
+      "model": "X1 Carbon Gen 11",
+      "serial": "PF47X89Q",
+      "specs": "Intel Core i7-1365U vPro, RAM 32GB LPDDR5, SSD 1TB NVMe, 14 inch 2.8K OLED",
+      "status": "in_use",
+      "userId": "user-2",
+      "departmentId": "dept-2",
+      "purchaseDate": "2023-11-20",
+      "purchaseCost": 45500000,
+      "warrantyUntil": "2026-11-20",
+      "location": "P.402 - Phòng IT",
+      "notes": "Kèm dock sạc Lenovo USB-C Pro."
+    },
+    {
+      "id": "dev-3",
+      "code": "TS-003",
+      "name": "Dell Precision 3660 Tower i7-13700 RTX A4000",
+      "category": "pc",
+      "brand": "Dell",
+      "model": "Precision 3660 Workstation",
+      "serial": "8KH2QW3",
+      "specs": "Intel Core i7-13700 16-Core, RAM 64GB DDR5, SSD 1TB Gen4 + 2TB HDD, NVIDIA RTX A4000 16GB",
+      "status": "in_use",
+      "userId": "user-3",
+      "departmentId": "dept-3",
+      "purchaseDate": "2023-08-10",
+      "purchaseCost": 56000000,
+      "warrantyUntil": "2026-08-10",
+      "location": "P.405 - Bàn Lead Dev",
+      "notes": "Máy trạm dựng đồ họa & build phần mềm."
+    },
+    {
+      "id": "dev-4",
+      "code": "TS-004",
+      "name": "Màn hình Dell UltraSharp 27\" 4K U2723QE",
+      "category": "monitor",
+      "brand": "Dell",
+      "model": "U2723QE IPS Black",
+      "serial": "CN-0N86K1-WS200-34K-092M",
+      "specs": "27 inch 4K IPS Black 2000:1, USB-C Hub 90W PD, RJ45 Ethernet, 100% sRGB & DCI-P3 98%",
+      "status": "in_use",
+      "userId": "user-4",
+      "departmentId": "dept-3",
+      "purchaseDate": "2023-09-05",
+      "purchaseCost": 13500000,
+      "warrantyUntil": "2026-09-05",
+      "location": "P.405 - Bàn Designer",
+      "notes": "Màu chuẩn cho thiết kế đồ họa."
+    },
+    {
+      "id": "dev-5",
+      "code": "TS-005",
+      "name": "Dell Latitude 5440 i5-1335U 16GB 512GB",
+      "category": "laptop",
+      "brand": "Dell",
+      "model": "Latitude 5440",
+      "serial": "4V8B2P3",
+      "specs": "Intel Core i5-1335U, RAM 16GB DDR5, SSD 512GB NVMe, 14.0 inch FHD Anti-Glare",
+      "status": "in_use",
+      "userId": "user-5",
+      "departmentId": "dept-4",
+      "purchaseDate": "2024-02-18",
+      "purchaseCost": 21900000,
+      "warrantyUntil": "2027-02-18",
+      "location": "P.301 - Phòng Sales",
+      "notes": "Cấp cho Trưởng phòng Kinh Doanh."
+    },
+    {
+      "id": "dev-6",
+      "code": "TS-006",
+      "name": "Dell Latitude 5440 i5-1335U 16GB 512GB",
+      "category": "laptop",
+      "brand": "Dell",
+      "model": "Latitude 5440",
+      "serial": "9Q1K7L2",
+      "specs": "Intel Core i5-1335U, RAM 16GB DDR5, SSD 512GB NVMe, 14.0 inch FHD Anti-Glare",
+      "status": "available",
+      "userId": null,
+      "departmentId": "dept-2",
+      "purchaseDate": "2024-02-18",
+      "purchaseCost": 21900000,
+      "warrantyUntil": "2027-02-18",
+      "location": "Kho IT Tầng 4 - Kệ A2",
+      "notes": "Máy lưu kho IT sẵn sàng cấp cho nhân sự mới."
+    },
+    {
+      "id": "dev-7",
+      "code": "TS-007",
+      "name": "Máy chủ Dell PowerEdge R650 1U 2x Xeon Silver 4314",
+      "category": "server",
+      "brand": "Dell",
+      "model": "PowerEdge R650",
+      "serial": "7M4P9X1",
+      "specs": "Dual Intel Xeon Silver 4314 (32 Cores/64 Threads), RAM 128GB RDIMM, 4x 1.92TB NVMe SAS SSD RAID 10, iDRAC9 Ent",
+      "status": "in_use",
+      "userId": "user-2",
+      "departmentId": "dept-2",
+      "purchaseDate": "2023-05-12",
+      "purchaseCost": 165000000,
+      "warrantyUntil": "2028-05-12",
+      "location": "Data Center Tầng 4 - Rack 02 U10-U11",
+      "notes": "Chạy cụm máy chủ ảo hóa nội bộ Proxmox VE."
+    },
+    {
+      "id": "dev-8",
+      "code": "TS-008",
+      "name": "Switch Cisco Catalyst 1000 48 Ports PoE+ Gigabit",
+      "category": "network",
+      "brand": "Cisco",
+      "model": "C1000-48FP-4G-L",
+      "serial": "FOC2534X01V",
+      "specs": "48 Port Gigabit Ethernet PoE+ (Tổng công suất 740W), 4x 1G SFP Uplink Ports",
+      "status": "in_use",
+      "userId": "user-9",
+      "departmentId": "dept-2",
+      "purchaseDate": "2023-04-01",
+      "purchaseCost": 38000000,
+      "warrantyUntil": "2026-04-01",
+      "location": "Tủ mạng Tầng 3 - Rack Switch 01",
+      "notes": "Cung cấp mạng và nguồn cho camera + AP tầng 3."
+    },
+    {
+      "id": "dev-9",
+      "code": "TS-009",
+      "name": "Máy in đa năng HP LaserJet Enterprise MFP M528dn",
+      "category": "printer",
+      "brand": "HP",
+      "model": "LaserJet MFP M528dn",
+      "serial": "VNC3K08912",
+      "specs": "In Laser 2 mặt tự động 45 trang/phút, Scan ADF 2 mặt, Copy, kết nối mạng LAN Gigabit",
+      "status": "in_use",
+      "userId": "user-8",
+      "departmentId": "dept-7",
+      "purchaseDate": "2023-06-25",
+      "purchaseCost": 28500000,
+      "warrantyUntil": "2025-06-25",
+      "location": "Khu vực in ấn Hành Chính - Tầng 5",
+      "notes": "Dùng chung cho Kế Toán và Hành Chính Nhân Sự."
+    },
+    {
+      "id": "dev-10",
+      "code": "TS-010",
+      "name": "MacBook Air 15\" M2 16GB 512GB Midnight",
+      "category": "laptop",
+      "brand": "Apple",
+      "model": "MacBook Air 15 2023",
+      "serial": "C02JK3491LP2",
+      "specs": "Apple M2 (8 CPU/10 GPU), RAM 16GB, SSD 512GB, 15.3 inch Liquid Retina Display",
+      "status": "borrowed",
+      "userId": "user-10",
+      "departmentId": "dept-4",
+      "purchaseDate": "2023-12-01",
+      "purchaseCost": 36900000,
+      "warrantyUntil": "2025-12-01",
+      "location": "Mang đi công tác (Khách hàng TP.HCM)",
+      "notes": "Mượn đi công tác demo sản phẩm với đối tác."
+    },
+    {
+      "id": "dev-11",
+      "code": "TS-011",
+      "name": "Màn hình LG 27UP850N-W 27\" 4K IPS Type-C",
+      "category": "monitor",
+      "brand": "LG",
+      "model": "27UP850N-W",
+      "serial": "302NTYQ4P890",
+      "specs": "27 inch 4K IPS HDR400, DCI-P3 95%, USB Type-C 90W PD, Loa tích hợp Waves MaxxAudio",
+      "status": "maintenance",
+      "userId": null,
+      "departmentId": "dept-2",
+      "purchaseDate": "2023-03-10",
+      "purchaseCost": 10200000,
+      "warrantyUntil": "2025-03-10",
+      "location": "Trung tâm bảo hành LG - 23 Láng Hạ",
+      "notes": "Bị sọc ngang mờ góc dưới, gửi bảo hành thay panel."
+    },
+    {
+      "id": "dev-12",
+      "code": "TS-012",
+      "name": "Laptop HP EliteBook 840 G8 i5-1135G7 16GB",
+      "category": "laptop",
+      "brand": "HP",
+      "model": "EliteBook 840 G8",
+      "serial": "5CG12489MN",
+      "specs": "Intel Core i5-1135G7, RAM 16GB DDR4, SSD 256GB, 14 inch FHD IPS",
+      "status": "broken",
+      "userId": null,
+      "departmentId": "dept-2",
+      "purchaseDate": "2021-08-15",
+      "purchaseCost": 22000000,
+      "warrantyUntil": "2023-08-15",
+      "location": "Kho thiết bị hỏng - Tầng hầm B1",
+      "notes": "Chết mainboard và phồng pin, đã đề xuất thanh lý linh kiện."
+    },
+    {
+      "id": "dev-13",
+      "code": "TS-013",
+      "name": "Máy in màu Canon imageCLASS LBP623Cdw",
+      "category": "printer",
+      "brand": "Canon",
+      "model": "LBP623Cdw",
+      "serial": "NM478902B",
+      "specs": "In laser màu 21 trang/phút, Duplex tự động, Wifi, Gigabit LAN",
+      "status": "liquidated",
+      "userId": null,
+      "departmentId": "dept-5",
+      "purchaseDate": "2020-04-10",
+      "purchaseCost": 8900000,
+      "warrantyUntil": "2021-04-10",
+      "location": "Đã xuất kho thanh lý",
+      "notes": "Hỏng cụm sấy và hộp quang, chi phí sửa cao nên đã thanh lý phế liệu T1/2024."
+    }
+  ],
+  "users": [
+    {
+      "code": "GD002",
+      "name": "Nguyễn Quang Nghiêm",
+      "email": "nghiemnq@trithucvietbn.com",
+      "phone": "",
+      "departmentId": "dept-1",
+      "position": "Giám đốc điều hành",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "id": "user-1791616375982"
+    },
+    {
+      "code": "GD001",
+      "name": "Nguyễn Quang Ninh",
+      "email": "ninhnq@trithucvietbn.com",
+      "phone": "",
+      "departmentId": "dept-1",
+      "position": "Giám đốc ",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "id": "user-1791616141870"
+    }
+  ],
+  "departments": [
+    {
+      "id": "dept-1",
+      "name": "Ban Giám Đốc",
+      "code": "BGD",
+      "manager": "Trần Đình Quang",
+      "room": "P.701 - Tầng 7"
+    },
+    {
+      "id": "dept-2",
+      "name": "Phòng Công Nghệ Thông Tin (IT)",
+      "code": "IT",
+      "manager": "Nguyễn Văn Hùng",
+      "room": "P.402 - Tầng 4"
+    },
+    {
+      "id": "dept-3",
+      "name": "Phòng Phát Triển Sản Phẩm (R&D)",
+      "code": "RND",
+      "manager": "Lê Hoàng Nam",
+      "room": "P.405 - Tầng 4"
+    },
+    {
+      "id": "dept-4",
+      "name": "Phòng Kinh Doanh & Bán Hàng",
+      "code": "SALES",
+      "manager": "Phạm Thị Mai",
+      "room": "P.301 - Tầng 3"
+    },
+    {
+      "id": "dept-5",
+      "name": "Phòng Marketing & Truyền Thông",
+      "code": "MKT",
+      "manager": "Vũ Đức Thịnh",
+      "room": "P.302 - Tầng 3"
+    },
+    {
+      "id": "dept-6",
+      "name": "Phòng Kế Toán - Tài Chính",
+      "code": "ACC",
+      "manager": "Hoàng Bích Ngân",
+      "room": "P.501 - Tầng 5"
+    },
+    {
+      "id": "dept-7",
+      "name": "Phòng Nhân Sự & Hành Chính",
+      "code": "HR",
+      "manager": "Đỗ Thúy Hằng",
+      "room": "P.502 - Tầng 5"
+    }
+  ],
+  "handovers": [
+    {
+      "id": "ho-1",
+      "code": "BG-2024-001",
+      "type": "handover",
+      "deviceId": "dev-1",
+      "userId": "user-1",
+      "departmentId": "dept-1",
+      "handoverDate": "2024-01-16",
+      "expectedReturnDate": null,
+      "actualReturnDate": "2026-10-10",
+      "status": "returned",
+      "giverId": "user-2",
+      "giverName": "Nguyễn Văn Hùng (IT Lead)",
+      "condition": "Máy mới nguyên seal 100%, kèm phụ kiện sạc zin 140W",
+      "notes": "Cấp phát máy làm việc cho Tổng Giám Đốc Trần Đình Quang."
+    },
+    {
+      "id": "ho-2",
+      "code": "BG-2024-002",
+      "type": "handover",
+      "deviceId": "dev-2",
+      "userId": "user-2",
+      "departmentId": "dept-2",
+      "handoverDate": "2023-11-21",
+      "expectedReturnDate": null,
+      "actualReturnDate": null,
+      "status": "active",
+      "giverId": "user-9",
+      "giverName": "Bùi Tuấn Anh (IT Support)",
+      "condition": "Máy mới 100%, cài sẵn Windows 11 Pro bản quyền và các tools quản trị",
+      "notes": "Bàn giao thiết bị làm việc cho Trưởng Phòng IT."
+    },
+    {
+      "id": "ho-3",
+      "code": "BG-2024-003",
+      "type": "handover",
+      "deviceId": "dev-3",
+      "userId": "user-3",
+      "departmentId": "dept-3",
+      "handoverDate": "2023-08-11",
+      "expectedReturnDate": null,
+      "actualReturnDate": null,
+      "status": "active",
+      "giverId": "user-2",
+      "giverName": "Nguyễn Văn Hùng (IT Lead)",
+      "condition": "Máy trạm hoàn chỉnh, cấu hình RTX A4000 16GB, đã stress test 24h",
+      "notes": "Cấp máy trạm cho Lead Developer phòng R&D."
+    },
+    {
+      "id": "ho-4",
+      "code": "PM-2024-001",
+      "type": "borrow",
+      "deviceId": "dev-10",
+      "userId": "user-10",
+      "departmentId": "dept-4",
+      "handoverDate": "2024-10-01",
+      "expectedReturnDate": "2024-10-15",
+      "actualReturnDate": null,
+      "status": "active",
+      "giverId": "user-9",
+      "giverName": "Bùi Tuấn Anh (IT Support)",
+      "condition": "Tốt 98%, pin 99%, kèm sạc 35W Dual Port và túi xách",
+      "notes": "Mượn đi công tác hội nghị khách hàng miền Nam tại TP.HCM."
+    },
+    {
+      "id": "ho-5",
+      "code": "PM-2024-002",
+      "type": "borrow",
+      "deviceId": "dev-6",
+      "userId": "user-6",
+      "departmentId": "dept-5",
+      "handoverDate": "2024-09-10",
+      "expectedReturnDate": "2024-09-20",
+      "actualReturnDate": "2024-09-19",
+      "status": "returned",
+      "giverId": "user-9",
+      "giverName": "Bùi Tuấn Anh (IT Support)",
+      "condition": "Khi bàn giao: mới 100%. Khi trả: máy nguyên vẹn không trầy xước.",
+      "notes": "Mượn tổ chức workshop sự kiện Marketing Q3."
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "maint-1",
+      "code": "BT-2024-001",
+      "deviceId": "dev-11",
+      "issue": "Màn hình LG 27UP850N-W xuất hiện dải sọc mờ ngang góc dưới màn hình sau khi dùng 8 tháng",
+      "solution": "Liên hệ TTBH LG chính hãng bảo hành thay panel tấm nền IPS mới",
+      "cost": 0,
+      "vendor": "Trung tâm Bảo hành LG Electronics Việt Nam",
+      "status": "in_progress",
+      "startDate": "2024-10-02",
+      "completedDate": null,
+      "technician": "Kỹ thuật viên LG Hoàng Việt",
+      "notes": "Dự kiến trả máy vào ngày 12/10/2024."
+    },
+    {
+      "id": "maint-2",
+      "code": "BT-2024-002",
+      "deviceId": "dev-7",
+      "issue": "Bảo trì định kỳ cụm quạt tản nhiệt, vệ sinh khe hút gió và cập nhật firmware iDRAC/BIOS",
+      "solution": "Vệ sinh công nghiệp khí nén, tra keo tản nhiệt MX-4, update BIOS lên phiên bản 1.9.2",
+      "cost": 1500000,
+      "vendor": "Nội bộ IT & Đối tác CMC Telecom",
+      "status": "completed",
+      "startDate": "2024-08-20",
+      "completedDate": "2024-08-21",
+      "technician": "Bùi Tuấn Anh",
+      "notes": "Nhiệt độ CPU giảm 8 độ C sau vệ sinh, quạt chạy êm."
+    },
+    {
+      "id": "maint-3",
+      "code": "BT-2024-003",
+      "deviceId": "dev-9",
+      "issue": "Máy in HP M528dn kẹt giấy ở khay nạp tự động ADF và có tiếng kêu cọt kẹt",
+      "solution": "Thay cụm cao su cuốn giấy (roller kit) và bôi mỡ nhiệt bánh răng",
+      "cost": 850000,
+      "vendor": "Công ty CP Thiết bị Văn phòng Á Châu",
+      "status": "completed",
+      "startDate": "2024-07-15",
+      "completedDate": "2024-07-16",
+      "technician": "KTV Nam Hải (Á Châu)",
+      "notes": "Đã test in và scan 2 mặt 50 trang thử nghiệm chạy mượt mà."
+    },
+    {
+      "id": "maint-4",
+      "code": "BT-2024-004",
+      "deviceId": "dev-3",
+      "issue": "Lên lịch bảo trì định kỳ 6 tháng: Thổi bụi tản nhiệt nước AIO và kiểm tra sức khỏe SSD NVMe",
+      "solution": "Kiểm tra SMART health SSD, vệ sinh lọc bụi case và cánh quạt tản nhiệt",
+      "cost": 300000,
+      "vendor": "Phòng IT nội bộ",
+      "status": "scheduled",
+      "startDate": "2024-11-15",
+      "completedDate": null,
+      "technician": "Bùi Tuấn Anh",
+      "notes": "Lịch bảo trì theo kế hoạch quý 4."
+    }
+  ],
+  "audits": [
+    {
+      "id": "audit-1",
+      "code": "KK-2024-Q3",
+      "title": "Kiểm kê tài sản thiết bị IT Quý 3/2024",
+      "auditDate": "2024-09-28",
+      "auditor": "Nguyễn Văn Hùng & Hoàng Bích Ngân (Kế toán)",
+      "status": "completed",
+      "notes": "Kiểm kê định kỳ toàn bộ thiết bị văn phòng tầng 3, 4, 5 và phòng Server.",
+      "totalChecked": 13,
+      "matchedCount": 12,
+      "discrepancyCount": 2,
+      "records": [
+        {
+          "deviceId": "dev-1",
+          "status": "matched",
+          "note": "Đang ở P.701 bàn CEO, hoạt động hoàn hảo"
+        },
+        {
+          "deviceId": "dev-2",
+          "status": "matched",
+          "note": "Đang ở P.402 IT"
+        },
+        {
+          "deviceId": "dev-3",
+          "status": "matched",
+          "note": "P.405 R&D, đúng tem tài sản"
+        },
+        {
+          "deviceId": "dev-4",
+          "status": "matched",
+          "note": "P.405 Designer, màn hình tốt"
+        },
+        {
+          "deviceId": "dev-5",
+          "status": "matched",
+          "note": "P.301 Sales"
+        },
+        {
+          "deviceId": "dev-6",
+          "status": "matched",
+          "note": "Trong tủ kho IT tầng 4"
+        },
+        {
+          "deviceId": "dev-7",
+          "status": "matched",
+          "note": "Tại Rack 02 Server room"
+        },
+        {
+          "deviceId": "dev-8",
+          "status": "matched",
+          "note": "Tủ rack mạng tầng 3"
+        },
+        {
+          "deviceId": "dev-9",
+          "status": "matched",
+          "note": "Khu vực in ấn tầng 5"
+        },
+        {
+          "deviceId": "dev-10",
+          "status": "matched",
+          "note": "Nhân viên mượn có phiếu hợp lệ"
+        },
+        {
+          "deviceId": "dev-11",
+          "status": "discrepancy",
+          "note": "Bị lỗi sọc màn hình, đã gửi bảo hành LG"
+        },
+        {
+          "deviceId": "dev-12",
+          "status": "discrepancy",
+          "note": "Hỏng mainboard tại kho B1, đề xuất thanh lý"
+        },
+        {
+          "deviceId": "dev-13",
+          "status": "matched",
+          "note": "Đã hoàn tất thanh lý có biên bản kế toán"
+        },
+        {
+          "deviceId": "dev-1791615545426",
+          "status": "matched",
+          "note": "Phát hiện lỗi / Lệch vị trí"
+        }
+      ]
+    },
+    {
+      "id": "audit-2",
+      "code": "KK-2024-Q4",
+      "title": "Đợt kiểm kê tài sản IT cuối năm 2024",
+      "auditDate": "2024-12-25",
+      "auditor": "Tổ Kiểm kê Tài sản Công ty",
+      "status": "in_progress",
+      "notes": "Đợt kiểm kê phục vụ quyết toán tài sản và lập ngân sách trang thiết bị năm mới.",
+      "totalChecked": 13,
+      "matchedCount": 9,
+      "discrepancyCount": 0,
+      "records": []
+    }
+  ],
+  "updatedAt": "2026-10-10T07:14:29.247Z"
+}
