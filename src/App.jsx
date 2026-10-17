@@ -19,21 +19,27 @@ import { AuditModal } from './components/modals/AuditModal';
 import { UserModal } from './components/modals/UserModal';
 import { PrintVoucherModal } from './components/modals/PrintVoucherModal';
 
-import { getLocalStoredData, fetchInitialData, saveStoredData, resetToSampleData } from './services/storage';
+import { fetchInitialData, saveStoredData, resetToSampleData } from './services/storage';
 
 export default function App() {
   // Main data state
-  const [data, setData] = useState(() => getLocalStoredData());
+  const [data, setData] = useState({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [databaseError, setDatabaseError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Load from backend on startup
   useEffect(() => {
-    fetchInitialData().then(({ data: remoteData, isBackend }) => {
-      setData(remoteData);
-      setIsBackendConnected(isBackend);
-    });
+    fetchInitialData()
+      .then(({ data: remoteData }) => {
+        setData(remoteData);
+        setIsBackendConnected(true);
+        setDatabaseError('');
+      })
+      .catch((error) => setDatabaseError(error.message))
+      .finally(() => setIsLoading(false));
   }, []);
 
   // Modals state
@@ -47,13 +53,29 @@ export default function App() {
   const [printModal, setPrintModal] = useState({ open: false, handover: null });
 
   // Save changes to storage whenever data changes
-  const updateData = (newData) => {
-    setData(newData);
-    saveStoredData(newData);
+  const updateData = async (newData) => {
+    try {
+      await saveStoredData(newData);
+      setData(newData);
+      setIsBackendConnected(true);
+      setDatabaseError('');
+    } catch (error) {
+      setIsBackendConnected(false);
+      setDatabaseError(error.message);
+      window.alert(`Không thể lưu vào database: ${error.message}`);
+    }
   };
 
-  const handleRefresh = () => {
-    setData(getStoredData());
+  const handleRefresh = async () => {
+    try {
+      const { data: latestData } = await fetchInitialData();
+      setData(latestData);
+      setIsBackendConnected(true);
+      setDatabaseError('');
+    } catch (error) {
+      setDatabaseError(error.message);
+      window.alert(`Không thể tải dữ liệu từ database: ${error.message}`);
+    }
   };
 
   // --- Handlers for Devices ---
@@ -279,13 +301,32 @@ export default function App() {
     }
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     if (window.confirm('Khôi phục toàn bộ CSDL về dữ liệu mẫu mặc định?')) {
-      const fresh = resetToSampleData();
-      setData(fresh);
-      alert('Đã thiết lập lại dữ liệu thành công!');
+      try {
+        const fresh = await resetToSampleData();
+        setData(fresh);
+        setDatabaseError('');
+        alert('Đã thiết lập lại dữ liệu thành công!');
+      } catch (error) {
+        setDatabaseError(error.message);
+        alert(`Không thể khôi phục dữ liệu: ${error.message}`);
+      }
     }
   };
+
+  if (isLoading || databaseError && !isBackendConnected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-lg rounded-2xl bg-white p-8 shadow-sm text-center">
+          <h1 className="text-xl font-bold text-slate-900">{isLoading ? 'Đang kết nối database…' : 'Không thể kết nối database'}</h1>
+          <p className="mt-3 text-sm text-slate-600">{isLoading ? 'Đang tải dữ liệu từ backend.' : databaseError}</p>
+          {!isLoading && <p className="mt-2 text-sm text-slate-500">Hãy chạy backend bằng <code>npm run server</code>, sau đó tải lại trang. Ứng dụng không dùng dữ liệu mẫu khi database không khả dụng.</p>}
+          {!isLoading && <button className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white" onClick={() => window.location.reload()}>Thử lại</button>}
+        </div>
+      </div>
+    );
+  }
 
   // Compute counts for sidebar
   const activeHandoversCount = data.handovers.filter((h) => h.status === 'active').length;

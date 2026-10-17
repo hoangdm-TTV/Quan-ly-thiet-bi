@@ -1,35 +1,30 @@
 import * as XLSX from 'xlsx';
-import {
-  INITIAL_DEPARTMENTS,
-  INITIAL_USERS,
-  INITIAL_DEVICES,
-  INITIAL_HANDOVERS,
-  INITIAL_MAINTENANCE,
-  INITIAL_AUDITS,
-} from '../data/mockData';
-
 const STORAGE_KEY = 'IT_ASSET_MASTER_V1';
 const API_URL = '/api';
 
-// Fetch from backend server with fallback to LocalStorage
-export const fetchInitialData = async () => {
-  try {
-    const res = await fetch(`${API_URL}/data`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.devices && data.users) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        return { data, isBackend: true };
-      }
-    }
-  } catch (err) {
-    console.warn('[Storage] Backend chua bat, chuyen sang LocalStorage:', err);
+const request = async (path, options = {}) => {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `Backend trả về lỗi HTTP ${response.status}`);
   }
-
-  // Fallback to LocalStorage
-  return { data: getLocalStoredData(), isBackend: false };
+  return response.json();
 };
 
+// Backend API là nguồn dữ liệu chính; không fallback ngầm sang dữ liệu mẫu.
+export const fetchInitialData = async () => {
+  const data = await request('/data');
+  if (!data || !Array.isArray(data.devices) || !Array.isArray(data.users)) {
+    throw new Error('Database trả về dữ liệu không đúng định dạng.');
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  return { data, isBackend: true };
+};
+
+// Cache chỉ phục vụ sao lưu/xuất khi cần, không dùng thay thế database.
 export const getLocalStoredData = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -43,68 +38,24 @@ export const getLocalStoredData = () => {
     console.error('Failed to load storage, fallback to initial data:', e);
   }
 
-  const defaultData = {
-    devices: INITIAL_DEVICES,
-    users: INITIAL_USERS,
-    departments: INITIAL_DEPARTMENTS,
-    handovers: INITIAL_HANDOVERS,
-    maintenance: INITIAL_MAINTENANCE,
-    audits: INITIAL_AUDITS,
-    updatedAt: new Date().toISOString(),
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-  return defaultData;
+  throw new Error('Không có dữ liệu đã lưu trong trình duyệt để sao lưu.');
 };
 
-// Save data to both Backend and LocalStorage
+// Lưu backend trước; chỉ cập nhật cache sau khi database xác nhận thành công.
 export const saveStoredData = async (data) => {
   const toSave = {
     ...data,
     updatedAt: new Date().toISOString(),
   };
 
-  // 1. Save to LocalStorage immediately
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-  } catch (e) {
-    console.error('Loi luu LocalStorage:', e);
-  }
-
-  // 2. Sync to Backend Physical File
-  try {
-    const res = await fetch(`${API_URL}/data`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toSave),
-    });
-    if (res.ok) {
-      return { success: true, isBackend: true };
-    }
-  } catch (e) {
-    // Backend offline, LocalStorage already cached
-  }
-
-  return { success: true, isBackend: false };
+  await request('/data', { method: 'POST', body: JSON.stringify(toSave) });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  return { success: true, isBackend: true };
 };
 
 export const resetToSampleData = async () => {
-  const defaultData = {
-    devices: INITIAL_DEVICES,
-    users: INITIAL_USERS,
-    departments: INITIAL_DEPARTMENTS,
-    handovers: INITIAL_HANDOVERS,
-    maintenance: INITIAL_MAINTENANCE,
-    audits: INITIAL_AUDITS,
-    updatedAt: new Date().toISOString(),
-  };
-
-  try {
-    await fetch(`${API_URL}/reset`, { method: 'POST' });
-  } catch (e) {
-    // fallback
-  }
-
+  const result = await request('/reset', { method: 'POST' });
+  const defaultData = result.db;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
   return defaultData;
 };

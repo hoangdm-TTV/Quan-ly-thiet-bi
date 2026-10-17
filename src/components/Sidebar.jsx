@@ -110,13 +110,13 @@ export const Sidebar = ({
         <div className="flex items-center gap-2 mb-1.5">
           <div className={`w-2 h-2 rounded-full ${isBackendConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></div>
           <span className="text-xs font-semibold text-slate-200">
-            {isBackendConnected ? 'Backend Server (File CSDL)' : 'Bộ nhớ Trình duyệt (Offline)'}
+            {isBackendConnected ? 'Database Backend' : 'Database Offline'}
           </span>
         </div>
         <p className="text-[11px] text-slate-300">
           {isBackendConnected
             ? 'Đang lưu trực tiếp vào file: data/database.json'
-            : 'Đang lưu tại LocalStorage trình duyệt'}
+            : 'Không thể lưu dữ liệu. Hãy khởi động backend.'}
         </p>
       </div>
     </aside>
