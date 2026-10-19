@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "server": "node server/server.js",
-    "db:import-json": "node scripts/import-legacy-json.js",
+    "db:check": "node scripts/check-database.js",
+    "db:seed": "node scripts/seed-database.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

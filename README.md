@@ -54,8 +54,11 @@ Click đúp chuột vào file `start.bat` trong thư mục này.
 # Cài đặt thư viện (nếu chưa cài)
 npm install
 
-# Khởi chạy server phát triển
-npm run dev
+# Khởi chạy backend (Terminal 1)
+npm run server
+
+# Khởi chạy giao diện (Terminal 2)
+npm run dev -- --host
 ```
 
 Mở trình duyệt và truy cập: **`http://localhost:5173`**
@@ -63,7 +66,7 @@ Mở trình duyệt và truy cập: **`http://localhost:5173`**
 
 ## PostgreSQL: thiết kế bảng và kết nối backend
 
-Backend hiện kết nối PostgreSQL qua thư viện `pg`; API `/api/data` vẫn giữ cấu trúc tương thích với frontend. Schema được tạo từ `server/schema.sql`, dữ liệu demo/JSON cũ không tự ghi đè lên database đã có dữ liệu.
+Backend hiện kết nối PostgreSQL qua thư viện `pg`; API `/api/data` vẫn giữ cấu trúc tương thích với frontend. Schema được tạo từ `server/schema.sql`. Dữ liệu ứng dụng được lưu trong PostgreSQL; file SQL nạp dữ liệu ban đầu là `server/seed-existing-data.sql`.
 
 ### Mô hình quan hệ
 
@@ -77,43 +80,87 @@ Backend hiện kết nối PostgreSQL qua thư viện `pg`; API `/api/data` vẫ
 
 Các bảng chính dùng ID dạng text để giữ tương thích ID hiện có (`dev-1`, `user-1`, ...). Khóa ngoại giúp PostgreSQL ngăn bản ghi tham chiếu đến phòng ban, nhân sự hoặc thiết bị không tồn tại. Các chỉ mục hỗ trợ lọc thiết bị theo trạng thái/phòng ban, phiếu theo hạn trả và bảo trì theo thiết bị.
 
-### Thiết lập local
+### Thiết lập PostgreSQL trên Windows
 
-1. Cài PostgreSQL và bảo đảm dịch vụ đang chạy.
-2. Tạo database rỗng, ví dụ bằng `psql`:
+Nếu PostgreSQL chưa được cài, tải bộ cài Windows từ [trang tải chính thức của PostgreSQL](https://www.postgresql.org/download/windows/). Bộ cài Windows do EDB cung cấp gồm PostgreSQL Server và pgAdmin. Trong quá trình cài, hãy nhớ mật khẩu của tài khoản quản trị `postgres` và giữ cổng mặc định `5432`, trừ khi máy bạn đã dùng cổng khác.
+
+Sau khi cài, kiểm tra dịch vụ PostgreSQL đang chạy trong Windows Services. Kiểm tra cổng từ PowerShell:
+
+```powershell
+Test-NetConnection 127.0.0.1 -Port 5432
+```
+
+Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe ở cổng đó. Nếu `False`, khởi động dịch vụ PostgreSQL hoặc kiểm tra cổng đã chọn khi cài.
+
+### Cấu hình kết nối ứng dụng
+
+1. Từ thư mục dự án, tạo `.env` từ mẫu:
+
+   ```powershell
+   Copy-Item .env.example .env
+   notepad .env
+   ```
+
+2. Sửa `DATABASE_URL` trong `.env` theo thông tin PostgreSQL vừa cài. Ví dụ nếu database tên `it_assetmaster`, tài khoản là `postgres` và mật khẩu là `MyPassword123`:
+
+   ```env
+   DATABASE_URL=postgresql://postgres:MyPassword123@127.0.0.1:5432/it_assetmaster
+   PGSSL=false
+   PGPOOL_MAX=10
+   PORT=5000
+   ```
+
+   Thay mật khẩu ví dụ bằng mật khẩu thật. Nếu mật khẩu có ký tự đặc biệt như `@`, `:`, `/`, `#` hoặc `%`, hãy URL-encode các ký tự đó. Không gửi hoặc commit file `.env`.
+
+3. Tạo database rỗng tên `it_assetmaster` trong pgAdmin, hoặc mở SQL Shell (`psql`) bằng tài khoản quản trị và chạy:
 
    ```sql
    CREATE DATABASE it_assetmaster;
    ```
 
-3. Tạo file `.env` từ `.env.example`, rồi điền đúng tên người dùng/mật khẩu PostgreSQL. Ví dụ:
+   Nếu ứng dụng được dùng lâu dài trong công ty, nên tạo một tài khoản riêng cho ứng dụng và cấp quyền trên database này thay vì dùng tài khoản quản trị `postgres`.
 
-   ```env
-   DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/it_assetmaster
-   PGSSL=false
-   PORT=5000
+4. Kiểm tra cấu hình kết nối:
+
+   ```powershell
+   npm.cmd run db:check
    ```
 
-   Không commit file `.env` lên Git; file này đã được thêm vào `.gitignore`.
+   Lệnh này không in mật khẩu. Nếu kết nối thành công, nó cho biết tên database, tài khoản và trạng thái schema. Nếu báo lỗi, xem mục xử lý sự cố bên dưới.
 
-4. **Để giữ dữ liệu đang có**, chạy một lần:
+5. Để nạp dữ liệu khởi tạo từ file SQL vào database trống, chạy một lần:
 
-   ```bash
-   npm.cmd run db:import-json
+   ```powershell
+   npm.cmd run db:seed
    ```
 
-   Lệnh này đọc `data/database.json`, tạo bảng nếu cần và nhập các bản ghi trong một transaction. Lệnh từ chối chạy nếu PostgreSQL đã có dữ liệu; nó sẽ không ghi đè database không trống. Giữ nguyên file JSON làm bản sao lưu cho đến khi kiểm tra dữ liệu PostgreSQL.
+   Backend tự tạo bảng khi khởi động. Lệnh `db:seed` chỉ nạp `server/seed-existing-data.sql` và từ chối chạy nếu database đã có dữ liệu. Bản seed hiện có 7 phòng ban, 3 nhân sự, 14 thiết bị, 5 phiếu bàn giao, 4 phiếu bảo trì, 3 đợt kiểm kê và 25 dòng kiểm kê.
 
-5. Chạy backend và frontend ở hai terminal (hoặc dùng `start.bat` sau khi `.env` đã cấu hình):
+6. Chạy backend và frontend trong hai cửa sổ terminal:
 
    ```bash
    npm.cmd run server
+   ```
+
+   Khi thấy thông báo `IT ASSETMASTER API RUNNING`, mở terminal thứ hai:
+
+   ```bash
    npm.cmd run dev -- --host
    ```
 
-6. Mở `http://localhost:5173`. Có thể kiểm tra API tại `http://localhost:5000/api/health`.
+7. Mở `http://localhost:5173`. Kiểm tra backend tại `http://localhost:5000/api/health`; kết quả thành công có `"status":"ok"`.
+
+### Xử lý sự cố kết nối
+
+- **Thiếu `DATABASE_URL`:** tạo `.env` theo bước 1–2. File `.env.example` chỉ là mẫu và không chứa mật khẩu thật.
+- **`ECONNREFUSED`:** dịch vụ PostgreSQL chưa chạy, hoặc host/cổng trong URL sai. Kiểm tra bằng `Test-NetConnection 127.0.0.1 -Port 5432`.
+- **`28P01` / password authentication failed:** sai username hoặc mật khẩu; cập nhật `DATABASE_URL`.
+- **`3D000` / database does not exist:** tạo database `it_assetmaster` như bước 3.
+- **`42501` / permission denied:** cấp quyền cho tài khoản ứng dụng trên database hoặc schema `public`.
+- **Trình duyệt hiện HTTP 500:** xem lỗi cụ thể trong terminal đang chạy `npm.cmd run server`; đồng thời mở `http://localhost:5000/api/health` để kiểm tra trạng thái backend và database.
+- Nếu sửa `.env` trong khi server đang chạy, dừng backend bằng `Ctrl+C` rồi chạy lại `npm.cmd run server`.
 
 Khi backend nhận thao tác lưu, toàn bộ snapshot hiện tại được ghi trong một transaction PostgreSQL; nếu một bản ghi vi phạm ràng buộc, transaction rollback để tránh lưu dữ liệu dở dang. Với nhiều người dùng đồng thời, bước tiếp theo nên thay endpoint snapshot bằng API CRUD theo từng bản ghi để tránh hai thao tác ghi toàn bộ dữ liệu đè lên nhau.
 
 
-**Lưu ý dữ liệu hiện tại:** kiểm tra `data/database.json` cho thấy thiết bị và phiếu đang tham chiếu một số ID nhân sự không còn trong danh sách `users` (ví dụ các ID cũ dạng `user-1`, trong khi danh sách hiện có ID khác). Trước khi import, script sẽ cảnh báo ID và số liên kết bị ảnh hưởng; để thỏa mãn khóa ngoại, các tham chiếu nhân sự/phòng ban không tồn tại sẽ được đặt thành `NULL`. Các thiết bị, phiếu và nội dung khác vẫn được nhập; file JSON gốc không bị sửa. Sau import, cần đối chiếu các tài sản/phiếu đó và gán lại nhân sự đúng trong giao diện.
+**Lưu ý dữ liệu khởi tạo:** 18 tham chiếu trong dữ liệu cũ trỏ tới ID nhân sự không còn trong danh sách `users`; các liên kết đó được đặt thành `NULL` trong `server/seed-existing-data.sql` để bảo đảm khóa ngoại. Các liên kết còn lại và toàn bộ bản ghi được giữ lại. Sau khi nạp seed, đối chiếu các thiết bị/phiếu đó và gán lại nhân sự đúng trong giao diện nếu biết người tương ứng.

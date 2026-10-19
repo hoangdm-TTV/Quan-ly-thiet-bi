@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 const { Pool } = pg;
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const legacyJsonPath = path.join(currentDir, '..', 'data', 'database.json');
 
 if (!process.env.DATABASE_URL) {
   throw new Error('Thiếu DATABASE_URL. Hãy tạo file .env từ .env.example và cấu hình PostgreSQL.');
@@ -118,49 +117,6 @@ export const getSnapshot = async () => {
     maintenance: maintenance.rows,
     audits: audits.rows.map((audit) => ({ ...audit, records: recordsByAudit.get(audit.id) || [] })),
     updatedAt: metadata.rows[0]?.value || null,
-  };
-};
-
-export const importLegacyJsonIfEmpty = async () => {
-  const { rows } = await pool.query(`
-    SELECT
-      (SELECT COUNT(*) FROM departments) + (SELECT COUNT(*) FROM users) +
-      (SELECT COUNT(*) FROM devices) + (SELECT COUNT(*) FROM handovers) +
-      (SELECT COUNT(*) FROM maintenance) + (SELECT COUNT(*) FROM audits) AS total
-  `);
-  if (Number(rows[0].total) !== 0) {
-    throw new Error('Từ chối import: PostgreSQL không trống. Không có dữ liệu nào bị thay đổi.');
-  }
-  const raw = await fs.readFile(legacyJsonPath, 'utf8');
-  const legacyData = JSON.parse(raw);
-  const userIds = new Set((legacyData.users || []).map((row) => row.id));
-  const departmentIds = new Set((legacyData.departments || []).map((row) => row.id));
-  const orphanUserIds = new Set();
-  let clearedUserReferences = 0;
-  let clearedDepartmentReferences = 0;
-  const clearMissing = (row, field, validIds, onMissing) => {
-    if (row[field] && !validIds.has(row[field])) {
-      onMissing(row[field]);
-      row[field] = null;
-    }
-  };
-  for (const user of legacyData.users || []) {
-    clearMissing(user, 'departmentId', departmentIds, () => { clearedDepartmentReferences += 1; });
-  }
-  for (const device of legacyData.devices || []) {
-    clearMissing(device, 'userId', userIds, (id) => { orphanUserIds.add(id); clearedUserReferences += 1; });
-    clearMissing(device, 'departmentId', departmentIds, () => { clearedDepartmentReferences += 1; });
-  }
-  for (const handover of legacyData.handovers || []) {
-    clearMissing(handover, 'userId', userIds, (id) => { orphanUserIds.add(id); clearedUserReferences += 1; });
-    clearMissing(handover, 'giverId', userIds, (id) => { orphanUserIds.add(id); clearedUserReferences += 1; });
-    clearMissing(handover, 'departmentId', departmentIds, () => { clearedDepartmentReferences += 1; });
-  }
-  const saved = await replaceSnapshot(legacyData);
-  return {
-    imported: true,
-    counts: Object.fromEntries(Object.entries(saved).filter(([, value]) => Array.isArray(value)).map(([key, value]) => [key, value.length])),
-    warnings: { orphanUserIds: [...orphanUserIds], clearedUserReferences, clearedDepartmentReferences },
   };
 };
 

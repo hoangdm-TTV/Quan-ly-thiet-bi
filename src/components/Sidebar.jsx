@@ -115,7 +115,7 @@ export const Sidebar = ({
         </div>
         <p className="text-[11px] text-slate-300">
           {isBackendConnected
-            ? 'Đang lưu trực tiếp vào file: data/database.json'
+            ? 'Đang lưu trực tiếp vào PostgreSQL'
             : 'Không thể lưu dữ liệu. Hãy khởi động backend.'}
         </p>
       </div>

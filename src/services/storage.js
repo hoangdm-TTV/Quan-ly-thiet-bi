@@ -8,8 +8,12 @@ const request = async (path, options = {}) => {
     headers: { 'Content-Type': 'application/json', ...options.headers },
   });
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body.error || `Backend trả về lỗi HTTP ${response.status}`);
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || body.message || `Backend trả về lỗi HTTP ${response.status}`);
+    }
+    throw new Error(`Backend trả về HTTP ${response.status} nhưng không có phản hồi JSON. Kiểm tra cửa sổ terminal của backend.`);
   }
   return response.json();
 };
