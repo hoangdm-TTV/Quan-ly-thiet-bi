@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus,
   Search,
   Filter,
+  ChevronLeft,
+  ChevronRight,
   LayoutGrid,
   List,
   Laptop,
@@ -45,6 +47,60 @@ export const DeviceManagement = ({
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDept, setSelectedDept] = useState('all');
+  const deviceTableScrollRef = useRef(null);
+  const dragStartRef = useRef(null);
+  const didDragRef = useRef(false);
+  const [isDraggingTable, setIsDraggingTable] = useState(false);
+
+  useEffect(() => {
+    const handlePointerMove = (event) => {
+      if (!dragStartRef.current || event.pointerType !== 'mouse') return;
+      const deltaX = event.clientX - dragStartRef.current.x;
+      if (Math.abs(deltaX) > 4) {
+        didDragRef.current = true;
+        setIsDraggingTable(true);
+        if (deviceTableScrollRef.current) {
+          deviceTableScrollRef.current.scrollLeft = dragStartRef.current.scrollLeft - deltaX;
+        }
+        event.preventDefault();
+      }
+    };
+
+    const handlePointerUp = () => {
+      dragStartRef.current = null;
+      setIsDraggingTable(false);
+      if (didDragRef.current) {
+        window.setTimeout(() => {
+          didDragRef.current = false;
+        }, 0);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, []);
+
+  const handleTablePointerDown = (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (event.target.closest('button, a, input, select, textarea')) return;
+    dragStartRef.current = {
+      x: event.clientX,
+      scrollLeft: deviceTableScrollRef.current?.scrollLeft || 0,
+    };
+  };
+
+  const handleTableClickCapture = (event) => {
+    if (!didDragRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    didDragRef.current = false;
+  };
 
   // Filter logic
   const filteredDevices = useMemo(() => {
@@ -115,9 +171,9 @@ export const DeviceManagement = ({
   return (
     <div className="space-y-5">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="flex flex-wrap items-center gap-2 text-base sm:text-xl font-bold text-slate-900 tracking-tight">
             <span>Danh Sách Thiết Bị & Tài Sản IT</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">
               {filteredDevices.length} / {devices.length}
@@ -128,9 +184,9 @@ export const DeviceManagement = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Toggle Grid/Table view */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-md transition ${
@@ -172,7 +228,7 @@ export const DeviceManagement = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
+      <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Search box */}
           <div className="relative">
@@ -297,21 +353,50 @@ export const DeviceManagement = ({
             Thêm thiết bị mới
           </button>
         </div>
-      ) : viewMode === 'table' ? (
-        /* TABLE VIEW */
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+      ) : (
+        <>
+          {viewMode === 'table' && (
+            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2">
+            <p className="text-[11px] text-slate-500">
+              Giữ chuột trái và kéo bảng, hoặc giữ <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 font-sans">Shift</kbd> khi lăn chuột.
+            </p>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                aria-label="Cuộn bảng sang trái"
+                onClick={() => deviceTableScrollRef.current?.scrollBy({ left: -480, behavior: 'smooth' })}
+                className="rounded-md border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Cuộn bảng sang phải"
+                onClick={() => deviceTableScrollRef.current?.scrollBy({ left: 480, behavior: 'smooth' })}
+                className="rounded-md border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div
+            ref={deviceTableScrollRef}
+            onPointerDown={handleTablePointerDown}
+            onClickCapture={handleTableClickCapture}
+            className={`overflow-x-auto overscroll-x-contain ${isDraggingTable ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+          >
+            <table className="w-[1460px] min-w-full table-fixed text-left text-xs">
               <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase font-semibold text-[11px] tracking-wider">
                 <tr>
-                  <th className="py-3 px-4">Mã tài sản</th>
-                  <th className="py-3 px-4">Thiết bị & Model</th>
-                  <th className="py-3 px-4">Số Serial</th>
-                  <th className="py-3 px-4">Trạng thái</th>
-                  <th className="py-3 px-4">Người sử dụng</th>
-                  <th className="py-3 px-4">Phòng ban</th>
-                  <th className="py-3 px-4">Nguyên giá</th>
-                  <th className="py-3 px-4 text-right">Thao tác</th>
+                  <th className="sticky left-0 z-20 w-[100px] bg-slate-50 py-3 px-4 whitespace-nowrap">Mã tài sản</th>
+                  <th className="w-[300px] py-3 px-4">Thiết bị & Model</th>
+                  <th className="w-[180px] py-3 px-4">Số Serial</th>
+                  <th className="w-[210px] py-3 px-4">Trạng thái</th>
+                  <th className="w-[180px] py-3 px-4">Người sử dụng</th>
+                  <th className="w-[190px] py-3 px-4">Phòng ban</th>
+                  <th className="w-[140px] py-3 px-4">Nguyên giá</th>
+                  <th className="w-[160px] py-3 px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -327,7 +412,7 @@ export const DeviceManagement = ({
                       className="hover:bg-blue-50/40 transition-colors group"
                     >
                       {/* Asset Code */}
-                      <td className="py-3 px-4 font-mono font-bold text-blue-700 whitespace-nowrap">
+                      <td className="sticky left-0 z-10 bg-white py-3 px-4 font-mono font-bold text-blue-700 whitespace-nowrap group-hover:bg-blue-50/40">
                         <span
                           onClick={() => onOpenDeviceDetail(dev)}
                           className="cursor-pointer hover:underline flex items-center gap-1.5"
@@ -461,10 +546,10 @@ export const DeviceManagement = ({
               </tbody>
             </table>
           </div>
-        </div>
-      ) : (
-        /* GRID CARD VIEW */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            </div>
+          )}
+          {/* Cards are the mobile layout; desktop can switch between cards and table. */}
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${viewMode === 'table' ? 'md:hidden' : ''}`}>
           {filteredDevices.map((dev) => {
             const Icon = getCategoryIconComponent(dev.category);
             const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
@@ -474,7 +559,7 @@ export const DeviceManagement = ({
             return (
               <div
                 key={dev.id}
-                className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
               >
                 <div>
                   {/* Card Header: Tag & Status */}
@@ -583,6 +668,7 @@ export const DeviceManagement = ({
             );
           })}
         </div>
+        </>
       )}
     </div>
   );

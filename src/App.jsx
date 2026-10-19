@@ -483,7 +483,7 @@ export default function App() {
       />
 
       {/* Main Layout Body */}
-      <div className="flex-1 max-w-7xl w-full mx-auto flex flex-col lg:flex-row">
+      <div className="flex-1 max-w-[1800px] w-full mx-auto flex flex-col lg:flex-row">
         {/* Left Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -498,7 +498,7 @@ export default function App() {
         />
 
         {/* Center Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+        <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8">
           {activeTab === 'dashboard' && (
             <Dashboard
               devices={data.devices}

@@ -28,6 +28,16 @@ export const initializeSchema = async () => {
 };
 
 const dateValue = (value) => value || null;
+const dateOnly = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const year = String(value.getFullYear()).padStart(4, '0');
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  if (typeof value === 'string') return value.match(/^(\d{4}-\d{2}-\d{2})(?:$|T)/)?.[1] || null;
+  return null;
+};
 const cleanText = (value) => value === undefined ? null : value;
 const sameId = (left, right) => (left ?? null) === (right ?? null);
 
@@ -104,7 +114,9 @@ const validateHandoverTransitions = async (client, snapshot, { allowReset = fals
     }
 
     if (previous?.status === 'active' && handover.status === 'returned') {
-      if (!handover.actualReturnDate || previous.handover_date && handover.actualReturnDate < String(previous.handover_date).slice(0, 10)) {
+      const actualReturnDate = dateOnly(handover.actualReturnDate);
+      const handoverDate = dateOnly(previous.handover_date);
+      if (!actualReturnDate || handoverDate && actualReturnDate < handoverDate) {
         throw handoverError('Ngày trả phải được ghi nhận và không được trước ngày bàn giao.');
       }
       const device = incomingDevices.get(handover.deviceId);

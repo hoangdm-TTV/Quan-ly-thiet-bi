@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, CheckCircle, AlertTriangle } from 'lucide-react';
-import { formatDate } from '../../utils/formatters';
+import { formatDate, getLocalDateInputValue } from '../../utils/formatters';
 
 export const ReturnModal = ({
   isOpen,
@@ -10,7 +10,7 @@ export const ReturnModal = ({
   user,
   onConfirmReturn,
 }) => {
-  const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);
+  const [returnDate, setReturnDate] = useState(getLocalDateInputValue());
   const [condition, setCondition] = useState('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
   const [nextDeviceStatus, setNextDeviceStatus] = useState('available'); // 'available' | 'maintenance' | 'broken'
   const [returnNotes, setReturnNotes] = useState('');
@@ -18,7 +18,7 @@ export const ReturnModal = ({
 
   useEffect(() => {
     if (isOpen && handover) {
-      setReturnDate(new Date().toISOString().split('T')[0]);
+      setReturnDate(getLocalDateInputValue());
       setCondition('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
       setNextDeviceStatus('available');
       setReturnNotes('');

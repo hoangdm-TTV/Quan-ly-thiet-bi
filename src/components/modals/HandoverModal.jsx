@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Send, Calendar, User, Laptop } from 'lucide-react';
+import { getLocalDateInputValue } from '../../utils/formatters';
 
 export const HandoverModal = ({
   isOpen,
@@ -16,7 +17,7 @@ export const HandoverModal = ({
     deviceId: '',
     userId: '',
     departmentId: '',
-    handoverDate: new Date().toISOString().split('T')[0],
+    handoverDate: getLocalDateInputValue(),
     expectedReturnDate: '',
     giverName: 'Nguyễn Văn Hùng (Bộ phận IT)',
     condition: 'Thiết bị hoạt động tốt 100%, đầy đủ phụ kiện sạc zin đi kèm.',
@@ -38,7 +39,7 @@ export const HandoverModal = ({
           ? preselectedDevice.id
           : devices.find((device) => device.status === 'available')?.id || '',
         userId: prev.userId || (users[0]?.id || ''),
-        handoverDate: new Date().toISOString().split('T')[0],
+        handoverDate: getLocalDateInputValue(),
       }));
     }
   }, [isOpen, preselectedDevice]);
