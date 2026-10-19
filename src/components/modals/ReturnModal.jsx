@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
 
@@ -14,20 +14,40 @@ export const ReturnModal = ({
   const [condition, setCondition] = useState('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
   const [nextDeviceStatus, setNextDeviceStatus] = useState('available'); // 'available' | 'maintenance' | 'broken'
   const [returnNotes, setReturnNotes] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && handover) {
+      setReturnDate(new Date().toISOString().split('T')[0]);
+      setCondition('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
+      setNextDeviceStatus('available');
+      setReturnNotes('');
+    }
+  }, [isOpen, handover?.id]);
 
   if (!isOpen || !handover) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onConfirmReturn({
-      handoverId: handover.id,
-      deviceId: handover.deviceId,
-      returnDate,
-      condition,
-      nextDeviceStatus,
-      returnNotes,
-    });
-    onClose();
+    if (handover.status !== 'active' || !device) {
+      alert('Phiếu này không còn hiệu lực hoặc không tìm thấy thiết bị. Hãy tải lại dữ liệu.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const saved = await onConfirmReturn({
+        handoverId: handover.id,
+        deviceId: handover.deviceId,
+        returnDate,
+        condition,
+        nextDeviceStatus,
+        returnNotes,
+      });
+      if (saved) onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -124,16 +144,18 @@ export const ReturnModal = ({
             <button
               type="button"
               onClick={onClose}
+              disabled={isSaving}
               className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
             >
               Hủy
             </button>
             <button
               type="submit"
+              disabled={isSaving}
               className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <CheckCircle className="w-4 h-4" />
-              <span>Xác nhận hoàn trả</span>
+              <span>{isSaving ? 'Đang lưu…' : 'Xác nhận hoàn trả'}</span>
             </button>
           </div>
         </form>

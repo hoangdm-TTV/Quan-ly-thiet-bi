@@ -59,10 +59,12 @@ export default function App() {
       setData(newData);
       setIsBackendConnected(true);
       setDatabaseError('');
+      return true;
     } catch (error) {
       setIsBackendConnected(false);
       setDatabaseError(error.message);
       window.alert(`Không thể lưu vào database: ${error.message}`);
+      return false;
     }
   };
 
@@ -103,61 +105,105 @@ export default function App() {
   };
 
   // --- Handlers for Handover & Borrow ---
-  const handleSaveHandover = (handoverFormData) => {
+  const handleSaveHandover = async (handoverFormData) => {
+    let latestData;
+    try {
+      ({ data: latestData } = await fetchInitialData());
+      setData(latestData);
+    } catch (error) {
+      setDatabaseError(error.message);
+      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      return false;
+    }
+
+    const device = latestData.devices.find((d) => d.id === handoverFormData.deviceId);
+    const hasActiveHandover = latestData.handovers.some(
+      (h) => h.deviceId === handoverFormData.deviceId && h.status === 'active'
+    );
+    if (!device || device.status !== 'available' || hasActiveHandover) {
+      window.alert('Không thể bàn giao: thiết bị không còn sẵn sàng cấp phát hoặc đang có phiếu sử dụng chưa trả. Hãy tải lại dữ liệu và chọn thiết bị khác.');
+      return false;
+    }
+
     const newHandover = {
       ...handoverFormData,
       id: `ho-${Date.now()}`,
     };
 
     // Update target device status and assigned user
-    const updatedDevices = data.devices.map((d) => {
+    const updatedDevices = latestData.devices.map((d) => {
       if (d.id === handoverFormData.deviceId) {
         return {
           ...d,
           status: handoverFormData.type === 'borrow' ? 'borrowed' : 'in_use',
           userId: handoverFormData.userId,
-          departmentId: handoverFormData.departmentId || d.departmentId,
+          departmentId: handoverFormData.departmentId || null,
         };
       }
       return d;
     });
 
-    updateData({
-      ...data,
+    return updateData({
+      ...latestData,
       devices: updatedDevices,
-      handovers: [newHandover, ...data.handovers],
+      handovers: [newHandover, ...latestData.handovers],
     });
   };
 
-  const handleConfirmReturn = ({ handoverId, deviceId, returnDate, condition, nextDeviceStatus, returnNotes }) => {
+  const handleConfirmReturn = async ({ handoverId, deviceId, returnDate, condition, nextDeviceStatus, returnNotes }) => {
+    let latestData;
+    try {
+      ({ data: latestData } = await fetchInitialData());
+      setData(latestData);
+    } catch (error) {
+      setDatabaseError(error.message);
+      window.alert(`Không thể kiểm tra trạng thái mới nhất của phiếu trả: ${error.message}`);
+      return false;
+    }
+
+    const handover = latestData.handovers.find((h) => h.id === handoverId);
+    const device = latestData.devices.find((d) => d.id === deviceId);
+    const anotherActiveHandover = latestData.handovers.some(
+      (h) => h.id !== handoverId && h.deviceId === deviceId && h.status === 'active'
+    );
+    if (!handover || handover.status !== 'active' || handover.deviceId !== deviceId || !device || anotherActiveHandover) {
+      window.alert('Không thể xác nhận trả: phiếu hoặc thiết bị đã thay đổi, hoặc đang có phiếu sử dụng khác. Hãy tải lại dữ liệu rồi thử lại.');
+      return false;
+    }
+
     // 1. Update handover record
-    const updatedHandovers = data.handovers.map((h) => {
+    const updatedHandovers = latestData.handovers.map((h) => {
       if (h.id === handoverId) {
         return {
           ...h,
           status: 'returned',
           actualReturnDate: returnDate,
-          notes: returnNotes ? `${h.notes || ''} [Trả ngày ${returnDate}: ${returnNotes}]` : h.notes,
+          notes: `${h.notes || ''}${h.notes ? '\n' : ''}[Trả ngày ${returnDate}] Tình trạng khi nhận lại: ${condition || 'Chưa ghi nhận'}.${returnNotes ? ` Ghi chú: ${returnNotes}` : ''}`,
         };
       }
       return h;
     });
 
     // 2. Update device status and unassign user if now available
-    const updatedDevices = data.devices.map((d) => {
+    const updatedDevices = latestData.devices.map((d) => {
       if (d.id === deviceId) {
         return {
           ...d,
           status: nextDeviceStatus,
-          userId: nextDeviceStatus === 'available' ? null : d.userId,
-          location: nextDeviceStatus === 'available' ? 'Kho IT' : d.location,
+          userId: null,
+          departmentId: null,
+          location: nextDeviceStatus === 'available'
+            ? 'Kho IT'
+            : nextDeviceStatus === 'maintenance'
+              ? 'Khu vực bảo trì'
+              : 'Khu vực thiết bị hỏng',
         };
       }
       return d;
     });
 
-    updateData({
-      ...data,
+    return updateData({
+      ...latestData,
       devices: updatedDevices,
       handovers: updatedHandovers,
     });

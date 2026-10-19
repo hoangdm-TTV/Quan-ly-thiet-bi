@@ -59,3 +59,61 @@ npm run dev
 ```
 
 Mở trình duyệt và truy cập: **`http://localhost:5173`**
+
+
+## PostgreSQL: thiết kế bảng và kết nối backend
+
+Backend hiện kết nối PostgreSQL qua thư viện `pg`; API `/api/data` vẫn giữ cấu trúc tương thích với frontend. Schema được tạo từ `server/schema.sql`, dữ liệu demo/JSON cũ không tự ghi đè lên database đã có dữ liệu.
+
+### Mô hình quan hệ
+
+- `departments` — phòng ban; khóa chính `id`, mã `code` duy nhất.
+- `users` — nhân sự; `department_id` tham chiếu `departments.id`.
+- `devices` — thiết bị; `user_id` tham chiếu người đang giữ, `department_id` tham chiếu đơn vị quản lý. `code` duy nhất; trạng thái và giá trị mua có ràng buộc kiểm tra.
+- `handovers` — phiếu bàn giao/mượn trả; liên kết thiết bị, người nhận, phòng ban và người bàn giao.
+- `maintenance` — lịch sử bảo trì; liên kết thiết bị, lưu trạng thái, ngày và chi phí.
+- `audits` — đợt kiểm kê; `audit_records` là từng dòng thiết bị trong đợt, khóa chính ghép `(audit_id, device_id)`.
+- `app_metadata` — metadata hệ thống như lần cập nhật gần nhất.
+
+Các bảng chính dùng ID dạng text để giữ tương thích ID hiện có (`dev-1`, `user-1`, ...). Khóa ngoại giúp PostgreSQL ngăn bản ghi tham chiếu đến phòng ban, nhân sự hoặc thiết bị không tồn tại. Các chỉ mục hỗ trợ lọc thiết bị theo trạng thái/phòng ban, phiếu theo hạn trả và bảo trì theo thiết bị.
+
+### Thiết lập local
+
+1. Cài PostgreSQL và bảo đảm dịch vụ đang chạy.
+2. Tạo database rỗng, ví dụ bằng `psql`:
+
+   ```sql
+   CREATE DATABASE it_assetmaster;
+   ```
+
+3. Tạo file `.env` từ `.env.example`, rồi điền đúng tên người dùng/mật khẩu PostgreSQL. Ví dụ:
+
+   ```env
+   DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/it_assetmaster
+   PGSSL=false
+   PORT=5000
+   ```
+
+   Không commit file `.env` lên Git; file này đã được thêm vào `.gitignore`.
+
+4. **Để giữ dữ liệu đang có**, chạy một lần:
+
+   ```bash
+   npm.cmd run db:import-json
+   ```
+
+   Lệnh này đọc `data/database.json`, tạo bảng nếu cần và nhập các bản ghi trong một transaction. Lệnh từ chối chạy nếu PostgreSQL đã có dữ liệu; nó sẽ không ghi đè database không trống. Giữ nguyên file JSON làm bản sao lưu cho đến khi kiểm tra dữ liệu PostgreSQL.
+
+5. Chạy backend và frontend ở hai terminal (hoặc dùng `start.bat` sau khi `.env` đã cấu hình):
+
+   ```bash
+   npm.cmd run server
+   npm.cmd run dev -- --host
+   ```
+
+6. Mở `http://localhost:5173`. Có thể kiểm tra API tại `http://localhost:5000/api/health`.
+
+Khi backend nhận thao tác lưu, toàn bộ snapshot hiện tại được ghi trong một transaction PostgreSQL; nếu một bản ghi vi phạm ràng buộc, transaction rollback để tránh lưu dữ liệu dở dang. Với nhiều người dùng đồng thời, bước tiếp theo nên thay endpoint snapshot bằng API CRUD theo từng bản ghi để tránh hai thao tác ghi toàn bộ dữ liệu đè lên nhau.
+
+
+**Lưu ý dữ liệu hiện tại:** kiểm tra `data/database.json` cho thấy thiết bị và phiếu đang tham chiếu một số ID nhân sự không còn trong danh sách `users` (ví dụ các ID cũ dạng `user-1`, trong khi danh sách hiện có ID khác). Trước khi import, script sẽ cảnh báo ID và số liên kết bị ảnh hưởng; để thỏa mãn khóa ngoại, các tham chiếu nhân sự/phòng ban không tồn tại sẽ được đặt thành `NULL`. Các thiết bị, phiếu và nội dung khác vẫn được nhập; file JSON gốc không bị sửa. Sau import, cần đối chiếu các tài sản/phiếu đó và gán lại nhân sự đúng trong giao diện.

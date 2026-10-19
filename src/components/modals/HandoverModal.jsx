@@ -22,6 +22,7 @@ export const HandoverModal = ({
     condition: 'Thiết bị hoạt động tốt 100%, đầy đủ phụ kiện sạc zin đi kèm.',
     notes: '',
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -33,7 +34,9 @@ export const HandoverModal = ({
       setFormData((prev) => ({
         ...prev,
         code: `${prefix}-${year}-${randomNum}`,
-        deviceId: preselectedDevice ? preselectedDevice.id : prev.deviceId || (devices[0]?.id || ''),
+        deviceId: preselectedDevice?.status === 'available'
+          ? preselectedDevice.id
+          : devices.find((device) => device.status === 'available')?.id || '',
         userId: prev.userId || (users[0]?.id || ''),
         handoverDate: new Date().toISOString().split('T')[0],
       }));
@@ -46,7 +49,7 @@ export const HandoverModal = ({
     setFormData((prev) => ({
       ...prev,
       userId: selectedUserId,
-      departmentId: selectedUser?.departmentId || prev.departmentId,
+      departmentId: selectedUser?.departmentId || '',
     }));
   };
 
@@ -65,25 +68,35 @@ export const HandoverModal = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.userId) {
       alert('Vui lòng chọn thiết bị và nhân viên tiếp nhận!');
       return;
     }
 
-    onSave({
-      ...formData,
-      status: 'active',
-      actualReturnDate: null,
-    });
-    onClose();
+    const selectedDevice = devices.find((device) => device.id === formData.deviceId);
+    if (!selectedDevice || selectedDevice.status !== 'available') {
+      alert('Thiết bị này không còn sẵn sàng cấp phát. Hãy chọn thiết bị khác.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const saved = await onSave({
+        ...formData,
+        departmentId: formData.departmentId || users.find((user) => user.id === formData.userId)?.departmentId || null,
+        status: 'active',
+        actualReturnDate: null,
+      });
+      if (saved) onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Filter available devices or current selected
-  const availableDevices = devices.filter(
-    (d) => d.status === 'available' || d.id === formData.deviceId
-  );
+  // Handover creation is limited to devices ready for assignment.
+  const availableDevices = devices.filter((d) => d.status === 'available');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -277,16 +290,18 @@ export const HandoverModal = ({
             <button
               type="button"
               onClick={onClose}
+              disabled={isSaving}
               className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
+              disabled={isSaving || availableDevices.length === 0}
               className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
-              <span>Xác nhận & Lưu phiếu</span>
+              <span>{isSaving ? 'Đang lưu…' : availableDevices.length === 0 ? 'Không có thiết bị sẵn sàng' : 'Xác nhận & Lưu phiếu'}</span>
             </button>
           </div>
         </form>

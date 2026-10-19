@@ -478,6 +478,74 @@
   ],
   "audits": [
     {
+      "code": "KK-2026-Q4",
+      "title": "Kiểm kê tài sản thiết bị IT Quý 4/2026",
+      "auditDate": "2026-10-17",
+      "auditor": "Tổ Kiểm kê Tài sản Công nghệ Thông tin",
+      "notes": "Kiểm kê định kỳ hiện trạng tài sản, rà soát thất thoát và lập kế hoạch bảo trì.",
+      "status": "in_progress",
+      "records": [
+        {
+          "deviceId": "dev-1",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-2",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-3",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-4",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-13",
+          "status": "matched",
+          "note": "Đã hoàn tất thanh lý có biên bản kế toán"
+        },
+        {
+          "deviceId": "dev-1791615545426",
+          "status": "matched",
+          "note": "Phát hiện lỗi / Lệch vị trí"
+        },
+        {
+          "deviceId": "dev-5",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-6",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-7",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-8",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        },
+        {
+          "deviceId": "dev-9",
+          "status": "matched",
+          "note": "Đã quét kiểm tra thực tế khớp"
+        }
+      ],
+      "id": "audit-1792228796845",
+      "matchedCount": 11,
+      "discrepancyCount": 0
+    },
+    {
       "id": "audit-1",
       "code": "KK-2024-Q3",
       "title": "Kiểm kê tài sản thiết bị IT Quý 3/2024",
@@ -492,7 +560,7 @@
         {
           "deviceId": "dev-1",
           "status": "matched",
-          "note": "Đang ở P.701 bàn CEO, hoạt động hoàn hảo"
+          "note": "Đã quét kiểm tra thực tế khớp"
         },
         {
           "deviceId": "dev-2",
@@ -575,5 +643,5 @@
       "records": []
     }
   ],
-  "updatedAt": "2026-10-17T08:18:58.226Z"
+  "updatedAt": "2026-10-17T09:22:59.295Z"
 }
