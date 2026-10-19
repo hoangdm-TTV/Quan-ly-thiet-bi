@@ -1,22 +1,57 @@
 import * as XLSX from 'xlsx';
 const STORAGE_KEY = 'IT_ASSET_MASTER_V1';
 const API_URL = '/api';
+let currentRevision = null;
 
 const request = async (path, options = {}) => {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', ...options.headers },
   });
   if (!response.ok) {
+    if (response.status === 401 && !['/auth/login', '/auth/status'].includes(path) && typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event('it-asset-auth-expired'));
+    }
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const body = await response.json().catch(() => ({}));
-      throw new Error(body.error || body.message || `Backend trả về lỗi HTTP ${response.status}`);
+      const error = new Error(body.error || body.message || `Backend trả về lỗi HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
     }
-    throw new Error(`Backend trả về HTTP ${response.status} nhưng không có phản hồi JSON. Kiểm tra cửa sổ terminal của backend.`);
+    const message = response.status === 404 && path.startsWith('/auth/')
+      ? 'Backend đang chạy chưa có API đăng nhập mới. Hãy dừng backend bằng Ctrl+C, chạy lại `npm run server`, rồi tải lại trang.'
+      : `Backend trả về HTTP ${response.status} nhưng không có phản hồi JSON.`;
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
   return response.json();
 };
+
+export const getCurrentUser = () => request('/auth/me');
+export const getAuthStatus = () => request('/auth/status');
+
+export const login = (credentials) => request('/auth/login', {
+  method: 'POST',
+  body: JSON.stringify(credentials),
+});
+
+export const logout = async () => {
+  try {
+    await request('/auth/logout', { method: 'POST' });
+  } finally {
+    currentRevision = null;
+    localStorage.removeItem(STORAGE_KEY);
+  }
+};
+
+export const changePassword = (passwords) => request('/auth/password', {
+  method: 'POST',
+  body: JSON.stringify(passwords),
+});
 
 // Backend API là nguồn dữ liệu chính; không fallback ngầm sang dữ liệu mẫu.
 export const fetchInitialData = async () => {
@@ -24,6 +59,7 @@ export const fetchInitialData = async () => {
   if (!data || !Array.isArray(data.devices) || !Array.isArray(data.users)) {
     throw new Error('Database trả về dữ liệu không đúng định dạng.');
   }
+  currentRevision = data.revision;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   return { data, isBackend: true };
 };
@@ -47,19 +83,30 @@ export const getLocalStoredData = () => {
 
 // Lưu backend trước; chỉ cập nhật cache sau khi database xác nhận thành công.
 export const saveStoredData = async (data) => {
-  const toSave = {
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-
-  await request('/data', { method: 'POST', body: JSON.stringify(toSave) });
+  if (currentRevision === null || currentRevision === undefined) {
+    throw new Error('Chưa có phiên bản dữ liệu từ database. Hãy tải lại trang trước khi lưu.');
+  }
+  const result = await request('/data', {
+    method: 'POST',
+    headers: { 'If-Match': String(currentRevision) },
+    body: JSON.stringify(data),
+  });
+  currentRevision = result.db.revision;
+  const toSave = { ...data, updatedAt: result.db.updatedAt, revision: currentRevision };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   return { success: true, isBackend: true };
 };
 
 export const resetToSampleData = async () => {
-  const result = await request('/reset', { method: 'POST' });
+  if (currentRevision === null || currentRevision === undefined) {
+    throw new Error('Chưa có phiên bản dữ liệu từ database. Hãy tải lại trang trước khi khôi phục.');
+  }
+  const result = await request('/reset', {
+    method: 'POST',
+    headers: { 'If-Match': String(currentRevision) },
+  });
   const defaultData = result.db;
+  currentRevision = defaultData.revision;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
   return defaultData;
 };

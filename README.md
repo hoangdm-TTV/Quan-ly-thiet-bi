@@ -46,18 +46,16 @@ Hệ thống quản lý thiết bị và tài sản công nghệ thông tin toà
 
 ## 🚀 Hướng dẫn khởi chạy ứng dụng
 
-### Cách 1: Chạy bằng file `start.bat`
-Click đúp chuột vào file `start.bat` trong thư mục này.
+### Cách 1: Chạy bằng file `start.bat` (Windows, khuyến nghị)
+Click đúp `start.bat`. File sẽ mở backend và giao diện trong hai cửa sổ terminal riêng. Giữ cả hai cửa sổ mở; nhấn `Ctrl+C` trong từng cửa sổ để dừng dịch vụ.
 
 ### Cách 2: Chạy bằng Terminal
 ```bash
 # Cài đặt thư viện (nếu chưa cài)
 npm install
 
-# Khởi chạy backend (Terminal 1)
+# Khởi chạy backend và giao diện trong hai terminal (Terminal 1 và 2)
 npm run server
-
-# Khởi chạy giao diện (Terminal 2)
 npm run dev -- --host
 ```
 
@@ -108,9 +106,13 @@ Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe �
    PGSSL=false
    PGPOOL_MAX=10
    PORT=5000
+   AUTH_ADMIN_EMAIL=admin@congty.vn
+   AUTH_ADMIN_PASSWORD=mat-khau-rieng-it-nhat-12-ky-tu
+   API_HOST=127.0.0.1
+   CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
    ```
 
-   Thay mật khẩu ví dụ bằng mật khẩu thật. Nếu mật khẩu có ký tự đặc biệt như `@`, `:`, `/`, `#` hoặc `%`, hãy URL-encode các ký tự đó. Không gửi hoặc commit file `.env`.
+   Thay các giá trị ví dụ bằng thông tin riêng. Mật khẩu database trong `DATABASE_URL` cần URL-encode ký tự đặc biệt như `@`, `:`, `/`, `#` hoặc `%`; mật khẩu admin không cần URL-encode. Không gửi hoặc commit file `.env`.
 
 3. Tạo database rỗng tên `it_assetmaster` trong pgAdmin, hoặc mở SQL Shell (`psql`) bằng tài khoản quản trị và chạy:
 
@@ -136,7 +138,7 @@ Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe �
 
    Backend tự tạo bảng khi khởi động. Lệnh `db:seed` chỉ nạp `server/seed-existing-data.sql` và từ chối chạy nếu database đã có dữ liệu. Bản seed hiện có 7 phòng ban, 3 nhân sự, 14 thiết bị, 5 phiếu bàn giao, 4 phiếu bảo trì, 3 đợt kiểm kê và 25 dòng kiểm kê.
 
-6. Chạy backend và frontend trong hai cửa sổ terminal:
+6. Trên Windows, có thể chạy `start.bat` để mở backend và frontend cùng lúc. Hoặc khởi chạy thủ công trong hai cửa sổ terminal:
 
    ```bash
    npm.cmd run server
@@ -150,6 +152,10 @@ Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe �
 
 7. Mở `http://localhost:5173`. Kiểm tra backend tại `http://localhost:5000/api/health`; kết quả thành công có `"status":"ok"`.
 
+   Lần đầu backend khởi động, nó tạo tài khoản admin từ `AUTH_ADMIN_EMAIL` và `AUTH_ADMIN_PASSWORD`, lưu mật khẩu dạng hash trong PostgreSQL, rồi các API dữ liệu yêu cầu đăng nhập. Sau khi log báo đã tạo admin, xóa `AUTH_ADMIN_PASSWORD` khỏi `.env` và khởi động lại backend. Đăng nhập bằng email/mật khẩu đó; có thể đổi mật khẩu ở thanh bên. Mỗi phiên đăng nhập hết hạn sau 12 giờ. Hệ thống hiện dùng một tài khoản admin duy nhất; mọi người dùng tài khoản này đều có quyền sửa dữ liệu.
+
+   Khi triển khai trên domain công ty, đặt `CORS_ORIGINS` thành origin chính xác của website và chỉ mở `API_HOST` ra mạng khi backend được đặt sau HTTPS. Không dùng tài khoản admin chung nếu công ty cần biết chính xác cá nhân nào đã thực hiện từng thay đổi.
+
 ### Xử lý sự cố kết nối
 
 - **Thiếu `DATABASE_URL`:** tạo `.env` theo bước 1–2. File `.env.example` chỉ là mẫu và không chứa mật khẩu thật.
@@ -158,9 +164,10 @@ Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe �
 - **`3D000` / database does not exist:** tạo database `it_assetmaster` như bước 3.
 - **`42501` / permission denied:** cấp quyền cho tài khoản ứng dụng trên database hoặc schema `public`.
 - **Trình duyệt hiện HTTP 500:** xem lỗi cụ thể trong terminal đang chạy `npm.cmd run server`; đồng thời mở `http://localhost:5000/api/health` để kiểm tra trạng thái backend và database.
+- **Đăng nhập báo HTTP 404 / `Cannot GET /api/auth/status`:** backend đang chạy là tiến trình cũ chưa nạp API xác thực. Dừng đúng terminal backend bằng `Ctrl+C`, chạy lại `npm.cmd run server`, chờ log `IT ASSETMASTER API RUNNING`, rồi tải lại trang. Nếu backend không khởi động, xử lý lỗi PostgreSQL được ghi trong terminal trước.
 - Nếu sửa `.env` trong khi server đang chạy, dừng backend bằng `Ctrl+C` rồi chạy lại `npm.cmd run server`.
 
-Khi backend nhận thao tác lưu, toàn bộ snapshot hiện tại được ghi trong một transaction PostgreSQL; nếu một bản ghi vi phạm ràng buộc, transaction rollback để tránh lưu dữ liệu dở dang. Với nhiều người dùng đồng thời, bước tiếp theo nên thay endpoint snapshot bằng API CRUD theo từng bản ghi để tránh hai thao tác ghi toàn bộ dữ liệu đè lên nhau.
+Khi backend nhận thao tác lưu, toàn bộ snapshot hiện tại được ghi trong một transaction PostgreSQL; nếu một bản ghi vi phạm ràng buộc, transaction rollback để tránh lưu dữ liệu dở dang. Mỗi snapshot mang một phiên bản dữ liệu; nếu người dùng lưu từ phiên bản cũ, backend trả HTTP 409 và yêu cầu tải lại thay vì ghi đè thay đổi mới hơn. Backend cũng kiểm tra thiết bị sẵn sàng trước khi có phiếu đang sử dụng, chặn nhiều phiếu hoạt động cho cùng thiết bị, và yêu cầu khi trả phải đóng đúng phiếu, xóa người giữ/phòng ban, cập nhật trạng thái và vị trí kho tương ứng. Cơ chế này giảm nguy cơ sai nghiệp vụ nhưng chưa thay thế API CRUD theo từng nghiệp vụ.
 
 
 **Lưu ý dữ liệu khởi tạo:** 18 tham chiếu trong dữ liệu cũ trỏ tới ID nhân sự không còn trong danh sách `users`; các liên kết đó được đặt thành `NULL` trong `server/seed-existing-data.sql` để bảo đảm khóa ngoại. Các liên kết còn lại và toàn bộ bản ghi được giữ lại. Sau khi nạp seed, đối chiếu các thiết bị/phiếu đó và gán lại nhân sự đúng trong giao diện nếu biết người tương ứng.

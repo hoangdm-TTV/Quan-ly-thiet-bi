@@ -1,0 +1,77 @@
+import React, { useState } from 'react';
+import { KeyRound, LogIn } from 'lucide-react';
+
+export const LoginPage = ({ onLogin, setupRequired = false, connectionError = '' }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await onLogin({ email, password });
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-5">
+      <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200">
+        <div className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-700">
+          <KeyRound className="h-6 w-6" />
+        </div>
+        <h1 className="text-center text-xl font-bold text-slate-900">Đăng nhập quản trị thiết bị</h1>
+        <p className="mt-2 text-center text-sm text-slate-500">Dành cho quản trị viên hệ thống nội bộ</p>
+
+        {connectionError && !error && (
+          <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{connectionError}</p>
+        )}
+
+        {setupRequired ? (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Chưa tạo tài khoản admin. Thêm <code>AUTH_ADMIN_EMAIL</code> và <code>AUTH_ADMIN_PASSWORD</code> (tối thiểu 12 ký tự) vào file <code>.env</code>, rồi khởi động lại backend.
+          </div>
+        ) : (
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            <label className="block text-sm font-medium text-slate-700">
+              Email admin
+              <input
+                required
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Mật khẩu
+              <input
+                required
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </label>
+            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+            <button
+              disabled={isSubmitting}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              <LogIn className="h-4 w-4" />
+              {isSubmitting ? 'Đang đăng nhập…' : 'Đăng nhập'}
+            </button>
+          </form>
+        )}
+      </section>
+    </main>
+  );
+};

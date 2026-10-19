@@ -18,8 +18,19 @@ import { MaintenanceModal } from './components/modals/MaintenanceModal';
 import { AuditModal } from './components/modals/AuditModal';
 import { UserModal } from './components/modals/UserModal';
 import { PrintVoucherModal } from './components/modals/PrintVoucherModal';
+import { LoginPage } from './components/LoginPage';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 
-import { fetchInitialData, saveStoredData, resetToSampleData } from './services/storage';
+import {
+  changePassword,
+  fetchInitialData,
+  getAuthStatus,
+  getCurrentUser,
+  login,
+  logout,
+  resetToSampleData,
+  saveStoredData,
+} from './services/storage';
 
 export default function App() {
   // Main data state
@@ -27,20 +38,87 @@ export default function App() {
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [databaseError, setDatabaseError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
+  const [authSetupRequired, setAuthSetupRequired] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load from backend on startup
+  // Restore the authenticated session before loading company data.
   useEffect(() => {
-    fetchInitialData()
-      .then(({ data: remoteData }) => {
+    const initialize = async () => {
+      try {
+        const { user } = await getCurrentUser();
+        setAuthUser(user);
+        const { data: remoteData } = await fetchInitialData();
         setData(remoteData);
         setIsBackendConnected(true);
         setDatabaseError('');
-      })
-      .catch((error) => setDatabaseError(error.message))
-      .finally(() => setIsLoading(false));
+      } catch (error) {
+        if (error.status === 401) {
+          try {
+            const { setupRequired } = await getAuthStatus();
+            setAuthSetupRequired(setupRequired);
+          } catch (statusError) {
+            setDatabaseError(statusError.message);
+          }
+        } else {
+          setDatabaseError(error.message);
+        }
+      } finally {
+        setIsLoading(false);
+        setIsAuthLoading(false);
+      }
+    };
+    initialize();
   }, []);
+
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      setAuthUser(null);
+      setData({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
+      setIsBackendConnected(false);
+    };
+    window.addEventListener('it-asset-auth-expired', handleExpiredSession);
+    return () => window.removeEventListener('it-asset-auth-expired', handleExpiredSession);
+  }, []);
+
+  const handleLogin = async (credentials) => {
+    const { user } = await login(credentials);
+    setAuthUser(user);
+    setAuthSetupRequired(false);
+    setIsLoading(true);
+    try {
+      const { data: remoteData } = await fetchInitialData();
+      setData(remoteData);
+      setIsBackendConnected(true);
+      setDatabaseError('');
+    } catch (error) {
+      setIsBackendConnected(false);
+      setDatabaseError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Clear the local view even if the session has already expired.
+    }
+    setAuthUser(null);
+    setData({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
+    setIsBackendConnected(false);
+    setDatabaseError('');
+  };
+
+  const handleChangePassword = async (passwords) => {
+    await changePassword(passwords);
+    setIsPasswordModalOpen(false);
+    await handleLogout();
+  };
 
   // Modals state
   const [deviceModal, setDeviceModal] = useState({ open: false, editItem: null });
@@ -361,6 +439,14 @@ export default function App() {
     }
   };
 
+  if (isAuthLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">Đang kiểm tra phiên đăng nhập…</div>;
+  }
+
+  if (!authUser) {
+    return <LoginPage onLogin={handleLogin} setupRequired={authSetupRequired} connectionError={databaseError} />;
+  }
+
   if (isLoading || databaseError && !isBackendConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
@@ -406,6 +492,9 @@ export default function App() {
           activeHandoversCount={activeHandoversCount}
           inMaintenanceCount={inMaintenanceCount}
           isBackendConnected={isBackendConnected}
+          currentUser={authUser}
+          onLogout={handleLogout}
+          onChangePassword={() => setIsPasswordModalOpen(true)}
         />
 
         {/* Center Content Area */}
@@ -566,6 +655,11 @@ export default function App() {
         device={data.devices.find((d) => d.id === printModal.handover?.deviceId)}
         user={data.users.find((u) => u.id === printModal.handover?.userId)}
         department={data.departments.find((dep) => dep.id === printModal.handover?.departmentId)}
+      />
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSave={handleChangePassword}
       />
     </div>
   );

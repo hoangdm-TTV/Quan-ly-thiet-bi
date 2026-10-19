@@ -21,10 +21,102 @@ export const pool = new Pool({
 export const initializeSchema = async () => {
   const sql = await fs.readFile(path.join(currentDir, 'schema.sql'), 'utf8');
   await pool.query(sql);
+  await pool.query(
+    `INSERT INTO app_metadata (key, value) VALUES ('dataVersion', '0')
+     ON CONFLICT (key) DO NOTHING`,
+  );
 };
 
 const dateValue = (value) => value || null;
 const cleanText = (value) => value === undefined ? null : value;
+const sameId = (left, right) => (left ?? null) === (right ?? null);
+
+const handoverError = (message) => Object.assign(new Error(message), { status: 422 });
+
+const validateHandoverTransitions = async (client, snapshot, { allowReset = false } = {}) => {
+  const [handoverResult, deviceResult] = await Promise.all([
+    client.query('SELECT id, code, type, device_id, user_id, department_id, handover_date, status FROM handovers'),
+    client.query('SELECT id, status, user_id, department_id FROM devices'),
+  ]);
+  const previousHandovers = new Map(handoverResult.rows.map((row) => [row.id, row]));
+  const previousDevices = new Map(deviceResult.rows.map((row) => [row.id, row]));
+  const incomingHandovers = new Map(snapshot.handovers.map((row) => [row.id, row]));
+  const incomingDevices = new Map(snapshot.devices.map((row) => [row.id, row]));
+  const incomingUsers = new Map(snapshot.users.map((row) => [row.id, row]));
+  const activeByDevice = new Map();
+
+  if (!allowReset) {
+    for (const oldHandover of previousHandovers.values()) {
+      if (!incomingHandovers.has(oldHandover.id)) {
+        throw handoverError(`Không thể xóa phiếu bàn giao ${oldHandover.code}; hãy giữ lại lịch sử phiếu.`);
+      }
+    }
+  }
+
+  for (const handover of snapshot.handovers) {
+    const previous = previousHandovers.get(handover.id);
+    if (previous && (
+      previous.code !== handover.code
+      || previous.type !== handover.type
+      || !sameId(previous.device_id, handover.deviceId)
+      || !sameId(previous.user_id, handover.userId)
+    )) {
+      throw handoverError(`Không thể đổi mã phiếu, loại phiếu, thiết bị hoặc người nhận của phiếu ${previous.code}.`);
+    }
+
+    if (previous?.status === 'returned' && handover.status !== 'returned') {
+      throw handoverError(`Phiếu ${previous.code} đã hoàn trả và không thể mở lại.`);
+    }
+    if (handover.status === 'returned' && (!previous || previous.status !== 'returned' && previous.status !== 'active')) {
+      throw handoverError('Chỉ có thể đánh dấu đã trả cho phiếu bàn giao đang hoạt động.');
+    }
+
+    if (handover.status === 'active') {
+      if (!handover.deviceId || !incomingDevices.has(handover.deviceId)) {
+        throw handoverError(`Phiếu ${handover.code} phải tham chiếu đến một thiết bị đang tồn tại.`);
+      }
+      if (activeByDevice.has(handover.deviceId)) {
+        throw handoverError('Thiết bị đang có nhiều hơn một phiếu sử dụng chưa trả.');
+      }
+      activeByDevice.set(handover.deviceId, handover.id);
+
+      const device = incomingDevices.get(handover.deviceId);
+      const expectedStatus = handover.type === 'borrow' ? 'borrowed' : 'in_use';
+      if (device.status !== expectedStatus
+        || !sameId(device.userId, handover.userId)
+        || !sameId(device.departmentId, handover.departmentId)) {
+        throw handoverError(`Thiết bị trong phiếu ${handover.code} phải có đúng trạng thái, người giữ và phòng ban theo phiếu.`);
+      }
+
+      if (!previous || previous.status !== 'active') {
+        const oldDevice = previousDevices.get(handover.deviceId);
+        const oldActiveHandover = [...previousHandovers.values()].some(
+          (row) => row.device_id === handover.deviceId && row.status === 'active',
+        );
+        if (!oldDevice || oldDevice.status !== 'available' || oldActiveHandover) {
+          throw handoverError('Chỉ được bàn giao thiết bị đang sẵn sàng và chưa có phiếu sử dụng chưa trả.');
+        }
+        const user = incomingUsers.get(handover.userId);
+        if (!user || !sameId(user.departmentId, handover.departmentId)) {
+          throw handoverError('Phòng ban trên phiếu phải khớp với phòng ban hiện tại của nhân viên nhận.');
+        }
+      }
+    }
+
+    if (previous?.status === 'active' && handover.status === 'returned') {
+      if (!handover.actualReturnDate || previous.handover_date && handover.actualReturnDate < String(previous.handover_date).slice(0, 10)) {
+        throw handoverError('Ngày trả phải được ghi nhận và không được trước ngày bàn giao.');
+      }
+      const device = incomingDevices.get(handover.deviceId);
+      const validLocations = { available: 'Kho IT', maintenance: 'Khu vực bảo trì', broken: 'Khu vực thiết bị hỏng' };
+      if (!device || !Object.hasOwn(validLocations, device.status)
+        || device.userId != null || device.departmentId != null
+        || device.location !== validLocations[device.status]) {
+        throw handoverError('Khi trả phải cập nhật thiết bị, xóa người giữ/phòng ban và chuyển về đúng vị trí theo trạng thái.');
+      }
+    }
+  }
+};
 
 const insertRows = async (client, table, columns, rows, valuesOf) => {
   for (const row of rows) {
@@ -37,7 +129,13 @@ const insertRows = async (client, table, columns, rows, valuesOf) => {
   }
 };
 
-export const replaceSnapshot = async (input) => {
+export const replaceSnapshot = async (input, expectedVersion, options = {}) => {
+  if (expectedVersion === undefined || expectedVersion === null || expectedVersion === '') {
+    const error = new Error('Thiếu phiên bản dữ liệu. Hãy tải lại dữ liệu trước khi lưu.');
+    error.status = 428;
+    throw error;
+  }
+
   const snapshot = {
     departments: input.departments || [],
     users: input.users || [],
@@ -53,6 +151,18 @@ export const replaceSnapshot = async (input) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const versionResult = await client.query(
+      "SELECT value FROM app_metadata WHERE key = 'dataVersion' FOR UPDATE",
+    );
+    const currentVersion = Number(versionResult.rows[0]?.value ?? 0);
+    if (!Number.isSafeInteger(currentVersion) || String(currentVersion) !== String(expectedVersion)) {
+      const error = new Error('Dữ liệu đã được người khác cập nhật. Hãy tải lại dữ liệu rồi thực hiện lại thay đổi.');
+      error.status = 409;
+      throw error;
+    }
+
+    await validateHandoverTransitions(client, snapshot, options);
+
     await client.query('TRUNCATE audit_records, audits, maintenance, handovers, devices, users, departments CASCADE');
 
     await insertRows(client, 'departments', ['id', 'name', 'code', 'manager', 'room'], snapshot.departments, (r) => [r.id, r.name, r.code, cleanText(r.manager), cleanText(r.room)]);
@@ -76,13 +186,19 @@ export const replaceSnapshot = async (input) => {
     }
 
     const updatedAt = new Date().toISOString();
+    const nextVersion = currentVersion + 1;
     await client.query(
       `INSERT INTO app_metadata (key, value) VALUES ('updatedAt', $1)
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
       [updatedAt],
     );
+    await client.query(
+      `INSERT INTO app_metadata (key, value) VALUES ('dataVersion', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [String(nextVersion)],
+    );
     await client.query('COMMIT');
-    return { ...snapshot, updatedAt };
+    return { ...snapshot, updatedAt, revision: nextVersion };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -100,7 +216,7 @@ export const getSnapshot = async () => {
     pool.query('SELECT id, code, device_id AS "deviceId", issue, solution, cost::float8 AS cost, vendor, status, start_date AS "startDate", completed_date AS "completedDate", technician, notes FROM maintenance ORDER BY start_date DESC NULLS LAST, id'),
     pool.query('SELECT id, code, title, audit_date AS "auditDate", auditor, status, notes, total_checked AS "totalChecked", matched_count AS "matchedCount", discrepancy_count AS "discrepancyCount" FROM audits ORDER BY audit_date DESC NULLS LAST, id'),
     pool.query('SELECT audit_id AS "auditId", device_id AS "deviceId", status, note FROM audit_records ORDER BY audit_id, device_id'),
-    pool.query("SELECT value FROM app_metadata WHERE key = 'updatedAt'"),
+    pool.query("SELECT key, value FROM app_metadata WHERE key IN ('updatedAt', 'dataVersion')"),
   ]);
 
   const recordsByAudit = new Map();
@@ -109,6 +225,7 @@ export const getSnapshot = async () => {
     group.push({ deviceId: record.deviceId, status: record.status, note: record.note });
     recordsByAudit.set(record.auditId, group);
   }
+  const metadataByKey = Object.fromEntries(metadata.rows.map(({ key, value }) => [key, value]));
   return {
     departments: departments.rows,
     users: users.rows,
@@ -116,7 +233,8 @@ export const getSnapshot = async () => {
     handovers: handovers.rows,
     maintenance: maintenance.rows,
     audits: audits.rows.map((audit) => ({ ...audit, records: recordsByAudit.get(audit.id) || [] })),
-    updatedAt: metadata.rows[0]?.value || null,
+    updatedAt: metadataByKey.updatedAt || null,
+    revision: Number(metadataByKey.dataVersion ?? 0),
   };
 };
 
