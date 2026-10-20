@@ -1,11 +1,12 @@
 {
     "schema_version": 2,
-    "commit": "67d73cf32da13a7c75f9bdc58619b828715f8d8d",
-    "indexed_at": "2026-10-19T23:59:18Z",
+    "commit": "868a37425e5e75bffc661427e5350d8766281d9f",
+    "indexed_at": "2026-10-20T00:05:24Z",
     "project": "D-Quan-ly-thiet-bi",
     "nodes": 280,
-    "edges": 585,
+    "edges": 598,
     "original_size": 3670016,
-    "compressed_size": 455703,
-    "compression_level": 3
+    "compressed_size": 455546,
+    "compression_level": 3,
+    "reconcile_basis": "git-clean-head"
 }
