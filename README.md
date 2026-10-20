@@ -49,6 +49,23 @@ Hệ thống quản lý thiết bị và tài sản công nghệ thông tin toà
 ### Cách 1: Chạy bằng file `start.bat` (Windows, khuyến nghị)
 Click đúp `start.bat`. File sẽ mở backend và giao diện trong hai cửa sổ terminal riêng. Giữ cả hai cửa sổ mở; nhấn `Ctrl+C` trong từng cửa sổ để dừng dịch vụ.
 
+### Dùng trên điện thoại hoặc máy khác trong mạng nội bộ
+
+Ứng dụng có thể chạy trong mạng LAN mà không cần hosting. Máy tính chạy `start.bat` là máy chủ: frontend được mở trên mạng nội bộ, còn backend và PostgreSQL vẫn chạy trên máy tính này. Điện thoại chỉ gửi yêu cầu qua frontend; không cần và không được kết nối trực tiếp tới PostgreSQL.
+
+1. Trong `.env`, đặt `ALLOW_LAN_ORIGINS=true` và `VITE_PORT=5173`. Giữ `API_HOST=127.0.0.1` để chỉ frontend trên máy chủ gọi được backend.
+2. Chạy `start.bat`. Trong cửa sổ hiện ra, lấy địa chỉ IPv4 thuộc adapter Wi-Fi/Ethernet đang dùng, ví dụ `192.168.1.20`.
+3. Trên điện thoại đang dùng cùng Wi-Fi, mở `http://192.168.1.20:5173` (thay bằng IP thật của máy chủ) rồi đăng nhập bằng tài khoản admin.
+4. Nếu điện thoại không mở được trang, trên máy chủ mở PowerShell bằng quyền Administrator và chỉ cho phép cổng giao diện trong mạng Private:
+
+   ```powershell
+   New-NetFirewallRule -DisplayName "IT AssetMaster LAN" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5173 -Profile Private
+   ```
+
+   Có thể xóa quy tắc sau bằng `Remove-NetFirewallRule -DisplayName "IT AssetMaster LAN"`. Không mở cổng `5000` hoặc `5432` ra mạng; API chỉ bind vào loopback và Vite chuyển tiếp yêu cầu nội bộ.
+
+Máy chủ phải bật, ứng dụng phải đang chạy và các thiết bị phải ở cùng mạng nội bộ. Nếu IP máy chủ thay đổi, dùng IP mới. Cách này phù hợp mạng công ty tin cậy; đừng dùng mạng Wi-Fi khách hoặc chuyển tiếp cổng router ra Internet.
+
 ### Cách 2: Chạy bằng Terminal
 ```bash
 # Cài đặt thư viện (nếu chưa cài)
@@ -109,6 +126,8 @@ Kết quả `TcpTestSucceeded : True` nghĩa là PostgreSQL đang lắng nghe �
    AUTH_ADMIN_EMAIL=admin@congty.vn
    AUTH_ADMIN_PASSWORD=mat-khau-rieng-it-nhat-12-ky-tu
    API_HOST=127.0.0.1
+ALLOW_LAN_ORIGINS=true
+VITE_PORT=5173
    CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
    ```
 

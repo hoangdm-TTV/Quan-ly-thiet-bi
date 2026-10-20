@@ -20,6 +20,7 @@ export const MaintenanceManagement = ({
   devices,
   onOpenNewMaintenance,
   onCompleteMaintenance,
+  onStartMaintenance,
 }) => {
   const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'scheduled' | 'in_progress' | 'completed'
   const [searchQuery, setSearchQuery] = useState('');
@@ -192,8 +193,17 @@ export const MaintenanceManagement = ({
                       {formatCurrency(item.cost)}
                     </span>
 
-                    {/* Complete button */}
-                    {item.status !== 'completed' && (
+                    {item.status === 'scheduled' && (
+                      <button
+                        onClick={() => onStartMaintenance(item)}
+                        className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition"
+                      >
+                        Bắt đầu xử lý
+                      </button>
+                    )}
+
+                    {/* Complete button is available only after work has started. */}
+                    {item.status === 'in_progress' && (
                       <button
                         onClick={() => onCompleteMaintenance(item)}
                         className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"

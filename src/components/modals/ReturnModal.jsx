@@ -12,7 +12,7 @@ export const ReturnModal = ({
 }) => {
   const [returnDate, setReturnDate] = useState(getLocalDateInputValue());
   const [condition, setCondition] = useState('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
-  const [nextDeviceStatus, setNextDeviceStatus] = useState('available'); // 'available' | 'maintenance' | 'broken'
+  const [nextDeviceStatus, setNextDeviceStatus] = useState('available'); // 'available' | 'maintenance' | 'broken' (legacy API value)
   const [returnNotes, setReturnNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -122,8 +122,7 @@ export const ReturnModal = ({
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none font-semibold text-slate-800"
             >
               <option value="available">🟢 Sẵn sàng cấp phát (Nhập kho IT dùng tiếp)</option>
-              <option value="maintenance">🟠 Cần bảo dưỡng / Vệ sinh / Sửa chữa</option>
-              <option value="broken">🔴 Hỏng hóc / Chờ thanh lý</option>
+              <option value="broken">🔴 Hỏng / Cần sửa chữa</option>
             </select>
           </div>
 

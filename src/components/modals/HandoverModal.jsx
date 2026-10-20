@@ -10,6 +10,7 @@ export const HandoverModal = ({
   devices,
   users,
   departments,
+  maintenance = [],
 }) => {
   const [formData, setFormData] = useState({
     code: '',
@@ -35,14 +36,14 @@ export const HandoverModal = ({
       setFormData((prev) => ({
         ...prev,
         code: `${prefix}-${year}-${randomNum}`,
-        deviceId: preselectedDevice?.status === 'available'
+        deviceId: preselectedDevice?.status === 'available' && !maintenance.some((item) => item.deviceId === preselectedDevice.id && item.status === 'in_progress')
           ? preselectedDevice.id
-          : devices.find((device) => device.status === 'available')?.id || '',
+          : devices.find((device) => device.status === 'available' && !maintenance.some((item) => item.deviceId === device.id && item.status === 'in_progress'))?.id || '',
         userId: prev.userId || (users[0]?.id || ''),
         handoverDate: getLocalDateInputValue(),
       }));
     }
-  }, [isOpen, preselectedDevice]);
+  }, [isOpen, preselectedDevice, maintenance, devices]);
 
   // When user changes, auto select department
   const handleUserChange = (selectedUserId) => {
@@ -77,8 +78,10 @@ export const HandoverModal = ({
     }
 
     const selectedDevice = devices.find((device) => device.id === formData.deviceId);
-    if (!selectedDevice || selectedDevice.status !== 'available') {
-      alert('Thiết bị này không còn sẵn sàng cấp phát. Hãy chọn thiết bị khác.');
+    const hasInProgressMaintenance = maintenance.some((item) =>
+      item.deviceId === formData.deviceId && item.status === 'in_progress');
+    if (!selectedDevice || selectedDevice.status !== 'available' || hasInProgressMaintenance) {
+      alert('Thiết bị này không còn sẵn sàng cấp phát hoặc đang được sửa chữa. Hãy chọn thiết bị khác.');
       return;
     }
 
@@ -97,7 +100,8 @@ export const HandoverModal = ({
   };
 
   // Handover creation is limited to devices ready for assignment.
-  const availableDevices = devices.filter((d) => d.status === 'available');
+  const availableDevices = devices.filter((device) => device.status === 'available'
+    && !maintenance.some((item) => item.deviceId === device.id && item.status === 'in_progress'));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">

@@ -32,6 +32,7 @@ import { exportDevicesToExcel } from '../services/storage';
 
 export const DeviceManagement = ({
   devices,
+  maintenance = [],
   users,
   departments,
   searchQuery,
@@ -51,6 +52,12 @@ export const DeviceManagement = ({
   const dragStartRef = useRef(null);
   const didDragRef = useRef(false);
   const [isDraggingTable, setIsDraggingTable] = useState(false);
+  const hasOpenMaintenance = (deviceId) => maintenance.some(
+    (item) => item.deviceId === deviceId && ['scheduled', 'in_progress'].includes(item.status)
+  );
+  const hasInProgressMaintenance = (deviceId) => maintenance.some(
+    (item) => item.deviceId === deviceId && item.status === 'in_progress'
+  );
 
   useEffect(() => {
     const handlePointerMove = (event) => {
@@ -491,7 +498,7 @@ export const DeviceManagement = ({
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1">
                           {/* Quick Handover button */}
-                          {dev.status === 'available' && (
+                          {dev.status === 'available' && !hasInProgressMaintenance(dev.id) && (
                             <button
                               onClick={() => onHandoverDevice(dev)}
                               title="Bàn giao / Cấp phát"
@@ -502,10 +509,10 @@ export const DeviceManagement = ({
                           )}
 
                           {/* Quick Maintenance button */}
-                          {dev.status !== 'maintenance' && dev.status !== 'liquidated' && (
+                          {['available', 'in_use', 'borrowed', 'broken'].includes(dev.status) && !hasOpenMaintenance(dev.id) && (
                             <button
                               onClick={() => onMaintainDevice(dev)}
-                              title="Bảo dưỡng / Sửa chữa"
+                              title={dev.status === 'broken' ? 'Lập phiếu sửa chữa' : 'Lên lịch bảo trì định kỳ'}
                               className="p-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition"
                             >
                               <Wrench className="w-3.5 h-3.5" />
@@ -646,13 +653,22 @@ export const DeviceManagement = ({
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    {dev.status === 'available' && (
+                    {dev.status === 'available' && !hasInProgressMaintenance(dev.id) && (
                       <button
                         onClick={() => onHandoverDevice(dev)}
                         className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition"
                         title="Bàn giao"
                       >
                         <Send className="w-4 h-4" />
+                      </button>
+                    )}
+                    {['available', 'in_use', 'borrowed', 'broken'].includes(dev.status) && !hasOpenMaintenance(dev.id) && (
+                      <button
+                        onClick={() => onMaintainDevice(dev)}
+                        className="p-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition"
+                        title={dev.status === 'broken' ? 'Lập phiếu sửa chữa' : 'Lên lịch bảo trì định kỳ'}
+                      >
+                        <Wrench className="w-4 h-4" />
                       </button>
                     )}
                     <button

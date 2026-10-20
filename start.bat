@@ -24,10 +24,15 @@ if not exist "node_modules\vite\bin\vite.js" (
 echo Dang mo backend va giao dien trong hai cua so terminal...
 echo.
 start "Backend Server (Port 5000)" cmd /k "npm.cmd run server"
-start "Frontend UI (Port 5173)" cmd /k "npm.cmd run dev -- --host"
+start "Frontend UI (Port 5173)" cmd /k "npm.cmd run dev -- --host 0.0.0.0 --strictPort"
 echo.
 echo Backend:  http://localhost:5000/api/health
 echo Giao dien: http://localhost:5173
+echo.
+echo Dia chi IPv4 tren may nay (dung dia chi cua Wi-Fi/LAN):
+ipconfig | findstr /i "IPv4"
+echo Mo tren dien thoai: http://DIA-CHI-IPV4:5173
+echo Chi mo PostgreSQL/backend tren may chu; dien thoai truy cap giao dien qua mang LAN.
 echo.
 echo De dung ung dung, nhan Ctrl+C trong ca hai cua so terminal.
 echo Cua so nay co the dong sau khi ca hai cua so da mo.

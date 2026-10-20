@@ -44,14 +44,17 @@ const sameId = (left, right) => (left ?? null) === (right ?? null);
 const handoverError = (message) => Object.assign(new Error(message), { status: 422 });
 
 const validateHandoverTransitions = async (client, snapshot, { allowReset = false } = {}) => {
-  const [handoverResult, deviceResult] = await Promise.all([
+  const [handoverResult, deviceResult, maintenanceResult] = await Promise.all([
     client.query('SELECT id, code, type, device_id, user_id, department_id, handover_date, status FROM handovers'),
     client.query('SELECT id, status, user_id, department_id FROM devices'),
+    client.query('SELECT id, code, device_id, status FROM maintenance'),
   ]);
   const previousHandovers = new Map(handoverResult.rows.map((row) => [row.id, row]));
   const previousDevices = new Map(deviceResult.rows.map((row) => [row.id, row]));
+  const previousMaintenance = new Map(maintenanceResult.rows.map((row) => [row.id, row]));
   const incomingHandovers = new Map(snapshot.handovers.map((row) => [row.id, row]));
   const incomingDevices = new Map(snapshot.devices.map((row) => [row.id, row]));
+  const incomingMaintenance = new Map(snapshot.maintenance.map((row) => [row.id, row]));
   const incomingUsers = new Map(snapshot.users.map((row) => [row.id, row]));
   const activeByDevice = new Map();
 
@@ -59,6 +62,28 @@ const validateHandoverTransitions = async (client, snapshot, { allowReset = fals
     for (const oldHandover of previousHandovers.values()) {
       if (!incomingHandovers.has(oldHandover.id)) {
         throw handoverError(`Không thể xóa phiếu bàn giao ${oldHandover.code}; hãy giữ lại lịch sử phiếu.`);
+      }
+    }
+    for (const oldMaintenance of previousMaintenance.values()) {
+      const maintenance = incomingMaintenance.get(oldMaintenance.id);
+      if (!maintenance) {
+        throw handoverError(`Không thể xóa phiếu bảo trì ${oldMaintenance.code}; hãy giữ lại lịch sử tài sản.`);
+      }
+      if (maintenance.code !== oldMaintenance.code || !sameId(oldMaintenance.device_id, maintenance.deviceId)) {
+        throw handoverError(`Không thể đổi mã phiếu hoặc thiết bị của phiếu bảo trì ${oldMaintenance.code}.`);
+      }
+      if (oldMaintenance.status === 'completed' && maintenance.status !== 'completed'
+        || oldMaintenance.status === 'in_progress' && maintenance.status === 'scheduled'
+        || oldMaintenance.status === 'scheduled' && maintenance.status === 'completed') {
+        throw handoverError(`Trạng thái phiếu bảo trì ${oldMaintenance.code} không theo đúng thứ tự lên lịch, xử lý, nghiệm thu.`);
+      }
+    }
+    for (const oldDeviceId of previousDevices.keys()) {
+      if (incomingDevices.has(oldDeviceId)) continue;
+      const hasHistory = [...previousHandovers.values()].some((row) => row.device_id === oldDeviceId)
+        || [...previousMaintenance.values()].some((row) => row.device_id === oldDeviceId);
+      if (hasHistory) {
+        throw handoverError('Không thể xóa thiết bị đã có lịch sử bàn giao hoặc bảo trì; hãy ghi nhận thanh lý để giữ hồ sơ.');
       }
     }
   }
@@ -91,6 +116,12 @@ const validateHandoverTransitions = async (client, snapshot, { allowReset = fals
       activeByDevice.set(handover.deviceId, handover.id);
 
       const device = incomingDevices.get(handover.deviceId);
+      const hasInProgressMaintenance = snapshot.maintenance.some(
+        (item) => item.deviceId === handover.deviceId && item.status === 'in_progress',
+      );
+      if (hasInProgressMaintenance) {
+        throw handoverError(`Thiết bị trong phiếu ${handover.code} đang được sửa chữa.`);
+      }
       const expectedStatus = handover.type === 'borrow' ? 'borrowed' : 'in_use';
       if (device.status !== expectedStatus
         || !sameId(device.userId, handover.userId)

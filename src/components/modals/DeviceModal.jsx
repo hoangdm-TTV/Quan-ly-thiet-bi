@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Laptop, Tag } from 'lucide-react';
-import { CATEGORIES, STATUS_MAP } from '../../data/mockData';
+import { CATEGORIES } from '../../data/mockData';
 
 export const DeviceModal = ({
   isOpen,
@@ -202,54 +202,8 @@ export const DeviceModal = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Status */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Trạng thái</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none font-medium"
-              >
-                {Object.entries(STATUS_MAP).map(([key, val]) => (
-                  <option key={key} value={key}>
-                    {val.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* User */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Gán người dùng</label>
-              <select
-                value={formData.userId}
-                onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
-              >
-                <option value="">-- Chưa cấp phát (Lưu kho) --</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Department */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Phòng ban</label>
-              <select
-                value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
-              >
-                <option value="">-- Chưa gán phòng ban --</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+            <div className="sm:col-span-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+              Trạng thái, người giữ và phòng ban được cập nhật theo phiếu bàn giao, trả thiết bị và bảo trì để giữ đúng lịch sử tài sản.
             </div>
           </div>
 

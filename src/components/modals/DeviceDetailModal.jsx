@@ -31,6 +31,7 @@ export const DeviceDetailModal = ({
   onEdit,
   onHandover,
   onMaintain,
+  onLiquidate,
 }) => {
   const [activeTab, setActiveTab] = useState('info'); // 'info' | 'handovers' | 'maintenance' | 'sticker'
 
@@ -40,6 +41,7 @@ export const DeviceDetailModal = ({
   const dept = departments.find((d) => d.id === device.departmentId);
   const statusMeta = STATUS_MAP[device.status] || STATUS_MAP.available;
   const categoryInfo = CATEGORIES.find((c) => c.id === device.category);
+  const hasOpenMaintenance = maintenance.some((item) => item.deviceId === device.id && ['scheduled', 'in_progress'].includes(item.status));
 
   // Device-specific histories
   const deviceHandovers = handovers.filter((h) => h.deviceId === device.id);
@@ -356,7 +358,8 @@ export const DeviceDetailModal = ({
           </button>
 
           <div className="flex items-center gap-2">
-            {device.status === 'available' && (
+            {device.status === 'available'
+              && !maintenance.some((item) => item.deviceId === device.id && item.status === 'in_progress') && (
               <button
                 onClick={() => {
                   onClose();
@@ -369,7 +372,7 @@ export const DeviceDetailModal = ({
               </button>
             )}
 
-            {device.status !== 'maintenance' && device.status !== 'liquidated' && (
+            {['available', 'in_use', 'borrowed', 'broken'].includes(device.status) && !hasOpenMaintenance && (
               <button
                 onClick={() => {
                   onClose();
@@ -378,7 +381,17 @@ export const DeviceDetailModal = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-orange-600 hover:bg-orange-700 text-white rounded-lg shadow-xs transition"
               >
                 <Wrench className="w-3.5 h-3.5" />
-                <span>Bảo dưỡng / Sửa chữa</span>
+                <span>{device.status === 'broken' ? 'Lập phiếu sửa chữa' : 'Lên lịch bảo trì'}</span>
+              </button>
+            )}
+
+            {['available', 'broken'].includes(device.status) && !hasOpenMaintenance
+              && !deviceHandovers.some((handover) => handover.status === 'active') && (
+              <button
+                onClick={() => onLiquidate(device)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+              >
+                Ghi nhận thanh lý
               </button>
             )}
           </div>

@@ -31,11 +31,26 @@ const allowedOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean),
 );
+const isPrivateLanOrigin = (origin) => {
+  if (process.env.ALLOW_LAN_ORIGINS !== 'true') return false;
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== 'http:' || Number(url.port || 80) !== Number(process.env.VITE_PORT || 5173)) return false;
+    const octets = url.hostname.split('.').map(Number);
+    if (octets.length !== 4 || octets.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false;
+    return octets[0] === 10
+      || (octets[0] === 192 && octets[1] === 168)
+      || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31);
+  } catch {
+    return false;
+  }
+};
+const isAllowedOrigin = (origin) => allowedOrigins.has(origin) || isPrivateLanOrigin(origin);
 
 app.use(cors({
   origin(origin, callback) {
     // Non-browser clients do not send Origin. CORS is not an authentication mechanism.
-    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    if (!origin || isAllowedOrigin(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS.'));
   },
 }));
@@ -51,7 +66,7 @@ const maxLoginAttempts = 5;
 
 const trustedOrigin = (req) => {
   const origin = req.get('Origin');
-  return Boolean(origin && allowedOrigins.has(origin));
+  return Boolean(origin && isAllowedOrigin(origin));
 };
 
 app.get('/api/auth/status', async (_req, res, next) => {

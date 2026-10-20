@@ -163,12 +163,17 @@ export default function App() {
     let updatedDevices;
     if (deviceModal.editItem) {
       updatedDevices = data.devices.map((d) =>
-        d.id === deviceModal.editItem.id ? { ...d, ...deviceData } : d
+        d.id === deviceModal.editItem.id
+          ? { ...d, ...deviceData, status: d.status, userId: d.userId, departmentId: d.departmentId }
+          : d
       );
     } else {
       const newDevice = {
         ...deviceData,
         id: `dev-${Date.now()}`,
+        status: 'available',
+        userId: null,
+        departmentId: null,
       };
       updatedDevices = [newDevice, ...data.devices];
     }
@@ -176,10 +181,60 @@ export default function App() {
   };
 
   const handleDeleteDevice = (device) => {
+    const hasHandoverHistory = data.handovers.some((handover) => handover.deviceId === device.id);
+    const hasMaintenanceHistory = data.maintenance.some((item) => item.deviceId === device.id);
+    if (hasHandoverHistory || hasMaintenanceHistory) {
+      window.alert('Thiết bị đã có lịch sử bàn giao hoặc bảo trì nên không thể xóa. Hãy giữ hồ sơ để bảo toàn vòng đời tài sản.');
+      return;
+    }
     if (window.confirm(`Bạn có chắc muốn xóa thiết bị "${device.name}" (${device.code})?`)) {
       const updatedDevices = data.devices.filter((d) => d.id !== device.id);
       updateData({ ...data, devices: updatedDevices });
     }
+  };
+
+  const handleLiquidateDevice = async (device) => {
+    const reason = window.prompt(`Nhập lý do thanh lý thiết bị ${device.code}:`);
+    if (reason === null) return;
+    if (!reason.trim()) {
+      window.alert('Cần ghi lý do thanh lý để lưu dấu vết tài sản.');
+      return;
+    }
+    if (!window.confirm(`Xác nhận chuyển ${device.code} sang trạng thái Đã thanh lý?`)) return;
+
+    let latestData;
+    try {
+      ({ data: latestData } = await fetchInitialData());
+      setData(latestData);
+    } catch (error) {
+      setDatabaseError(error.message);
+      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      return;
+    }
+
+    const currentDevice = latestData.devices.find((item) => item.id === device.id);
+    const hasActiveHandover = latestData.handovers.some((item) => item.deviceId === device.id && item.status === 'active');
+    const hasOpenMaintenance = latestData.maintenance.some(
+      (item) => item.deviceId === device.id && ['scheduled', 'in_progress'].includes(item.status)
+    );
+    if (!currentDevice || !['available', 'broken'].includes(currentDevice.status) || hasActiveHandover || hasOpenMaintenance) {
+      window.alert('Chỉ có thể thanh lý thiết bị đang ở kho hoặc đang hỏng và không còn phiếu bàn giao/bảo trì mở.');
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('sv-SE');
+    const updatedDevices = latestData.devices.map((item) => item.id === device.id
+      ? {
+          ...item,
+          status: 'liquidated',
+          userId: null,
+          departmentId: null,
+          location: 'Đã thanh lý',
+          notes: `${item.notes || ''}${item.notes ? '\n' : ''}[Thanh lý ${today}] ${reason.trim()}`,
+        }
+      : item);
+    const saved = await updateData({ ...latestData, devices: updatedDevices });
+    if (saved) setDetailModal({ open: false, device: null });
   };
 
   // --- Handlers for Handover & Borrow ---
@@ -198,8 +253,11 @@ export default function App() {
     const hasActiveHandover = latestData.handovers.some(
       (h) => h.deviceId === handoverFormData.deviceId && h.status === 'active'
     );
-    if (!device || device.status !== 'available' || hasActiveHandover) {
-      window.alert('Không thể bàn giao: thiết bị không còn sẵn sàng cấp phát hoặc đang có phiếu sử dụng chưa trả. Hãy tải lại dữ liệu và chọn thiết bị khác.');
+    const hasInProgressMaintenance = latestData.maintenance.some(
+      (item) => item.deviceId === handoverFormData.deviceId && item.status === 'in_progress'
+    );
+    if (!device || device.status !== 'available' || hasActiveHandover || hasInProgressMaintenance) {
+      window.alert('Không thể bàn giao: thiết bị chưa sẵn sàng, đang có phiếu chưa trả hoặc đang được sửa chữa. Hãy tải lại dữ liệu và chọn thiết bị khác.');
       return false;
     }
 
@@ -288,30 +346,83 @@ export default function App() {
   };
 
   // --- Handlers for Maintenance ---
-  const handleSaveMaintenance = (maintenanceData) => {
+  const handleSaveMaintenance = async (maintenanceData) => {
+    if (!['scheduled', 'in_progress'].includes(maintenanceData.status)) {
+      window.alert('Phiếu mới chỉ có thể ở trạng thái đã lên lịch hoặc đang xử lý. Hãy nghiệm thu sau khi bắt đầu xử lý.');
+      return false;
+    }
+    let latestData;
+    try {
+      ({ data: latestData } = await fetchInitialData());
+      setData(latestData);
+    } catch (error) {
+      setDatabaseError(error.message);
+      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      return false;
+    }
+
+    const device = latestData.devices.find((item) => item.id === maintenanceData.deviceId);
+    const hasActiveHandover = latestData.handovers.some(
+      (item) => item.deviceId === maintenanceData.deviceId && item.status === 'active'
+    );
+    const hasOpenMaintenance = latestData.maintenance.some(
+      (item) => item.deviceId === maintenanceData.deviceId && ['scheduled', 'in_progress'].includes(item.status)
+    );
+    const canSchedule = device && ['available', 'in_use', 'borrowed', 'broken'].includes(device.status);
+    const canStartNow = device?.status === 'broken' && !hasActiveHandover;
+    if (!canSchedule || hasOpenMaintenance || maintenanceData.status === 'in_progress' && !canStartNow) {
+      window.alert('Thiết bị đang sử dụng chỉ được lên lịch. Muốn bắt đầu sửa chữa, hãy thu hồi và ghi nhận thiết bị đang hỏng trước.');
+      return false;
+    }
+
     const newRecord = {
       ...maintenanceData,
       id: `maint-${Date.now()}`,
     };
 
-    // If status is in_progress, mark device as maintenance
-    const updatedDevices = data.devices.map((d) => {
-      if (d.id === maintenanceData.deviceId) {
-        if (maintenanceData.status === 'in_progress') {
-          return { ...d, status: 'maintenance' };
-        }
-      }
-      return d;
+    const updatedDevices = latestData.devices.map((item) =>
+      item.id === maintenanceData.deviceId && maintenanceData.status === 'in_progress'
+        ? { ...item, status: 'maintenance', userId: null, departmentId: null, location: 'Khu vực bảo trì' }
+        : item
+    );
+
+    return updateData({
+      ...latestData,
+      devices: updatedDevices,
+      maintenance: [newRecord, ...latestData.maintenance],
     });
+  };
+
+  const handleStartMaintenance = (maintenanceItem) => {
+    const currentItem = data.maintenance.find((item) => item.id === maintenanceItem.id);
+    const device = data.devices.find((item) => item.id === maintenanceItem.deviceId);
+    const hasActiveHandover = data.handovers.some(
+      (item) => item.deviceId === maintenanceItem.deviceId && item.status === 'active'
+    );
+    if (!currentItem || currentItem.status !== 'scheduled' || !device
+      || !['available', 'broken'].includes(device.status) || hasActiveHandover) {
+      window.alert('Chưa thể bắt đầu: hãy thu hồi thiết bị đang được giữ trước. Chỉ thiết bị đã ở kho hoặc ghi nhận hỏng mới vào bảo trì được.');
+      return;
+    }
 
     updateData({
       ...data,
-      devices: updatedDevices,
-      maintenance: [newRecord, ...data.maintenance],
+      maintenance: data.maintenance.map((item) =>
+        item.id === currentItem.id ? { ...item, status: 'in_progress' } : item
+      ),
+      devices: data.devices.map((item) => item.id === device.id
+        ? { ...item, status: 'maintenance', userId: null, departmentId: null, location: 'Khu vực bảo trì' }
+        : item),
     });
   };
 
   const handleCompleteMaintenance = (maintenanceItem) => {
+    const currentItem = data.maintenance.find((item) => item.id === maintenanceItem.id);
+    const targetDev = data.devices.find((item) => item.id === maintenanceItem.deviceId);
+    if (!currentItem || currentItem.status !== 'in_progress' || !targetDev || targetDev.status !== 'maintenance') {
+      window.alert('Chỉ có thể nghiệm thu phiếu đang xử lý và thiết bị đang ở khu vực bảo trì.');
+      return;
+    }
     const completeDate = new Date().toISOString().split('T')[0];
     const costInput = window.prompt(
       'Xác nhận nghiệm thu bảo trì xong. Nhập chi phí thực tế (VNĐ):',
@@ -322,7 +433,7 @@ export default function App() {
     const actualCost = Number(costInput) || 0;
 
     const updatedMaintenance = data.maintenance.map((m) => {
-      if (m.id === maintenanceItem.id) {
+      if (m.id === currentItem.id) {
         return {
           ...m,
           status: 'completed',
@@ -333,13 +444,15 @@ export default function App() {
       return m;
     });
 
-    // Device returns to 'available' or keep previous user
-    const targetDev = data.devices.find((d) => d.id === maintenanceItem.deviceId);
+    // A successfully repaired asset returns to the IT stock, ready for a new handover.
     const updatedDevices = data.devices.map((d) => {
       if (d.id === maintenanceItem.deviceId) {
         return {
           ...d,
-          status: d.userId ? 'in_use' : 'available',
+          status: 'available',
+          userId: null,
+          departmentId: null,
+          location: 'Kho IT',
         };
       }
       return d;
@@ -514,6 +627,7 @@ export default function App() {
           {activeTab === 'devices' && (
             <DeviceManagement
               devices={data.devices}
+              maintenance={data.maintenance}
               users={data.users}
               departments={data.departments}
               searchQuery={searchQuery}
@@ -558,6 +672,7 @@ export default function App() {
               devices={data.devices}
               onOpenNewMaintenance={() => setMaintenanceModal({ open: true, preselectedDevice: null })}
               onCompleteMaintenance={handleCompleteMaintenance}
+              onStartMaintenance={handleStartMaintenance}
             />
           )}
 
@@ -605,6 +720,7 @@ export default function App() {
         onEdit={(dev) => setDeviceModal({ open: true, editItem: dev })}
         onHandover={(dev) => setHandoverModal({ open: true, preselectedDevice: dev })}
         onMaintain={(dev) => setMaintenanceModal({ open: true, preselectedDevice: dev })}
+        onLiquidate={handleLiquidateDevice}
       />
 
       <HandoverModal
@@ -615,6 +731,7 @@ export default function App() {
         devices={data.devices}
         users={data.users}
         departments={data.departments}
+        maintenance={data.maintenance}
       />
 
       <ReturnModal
@@ -632,6 +749,8 @@ export default function App() {
         onSave={handleSaveMaintenance}
         preselectedDevice={maintenanceModal.preselectedDevice}
         devices={data.devices}
+        maintenance={data.maintenance}
+        handovers={data.handovers}
       />
 
       <AuditModal
