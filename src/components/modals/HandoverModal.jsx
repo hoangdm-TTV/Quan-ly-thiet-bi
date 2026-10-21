@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, Send, Calendar, User, Laptop } from "lucide-react";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
+import { STATUS_MAP } from "../../data/mockData";
 
 export const HandoverModal = ({
   isOpen,
@@ -245,8 +246,8 @@ export const HandoverModal = ({
               <option value="">-- Chọn thiết bị cần bàn giao --</option>
               {availableDevices.map((d) => (
                 <option key={d.id} value={d.id}>
-                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ""} -
-                  Trạng thái: {d.status}
+                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ""} -{" "}
+                  {STATUS_MAP[d.status]?.label || d.status}
                 </option>
               ))}
             </select>

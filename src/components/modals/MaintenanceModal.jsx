@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
+import { STATUS_MAP } from "../../data/mockData";
 
 export const MaintenanceModal = ({
   isOpen,
@@ -206,7 +207,7 @@ export const MaintenanceModal = ({
               {eligibleDevices.map((d) => (
                 <option key={d.id} value={d.id}>
                   [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ""} -
-                  Hiện tại: {d.status}
+                  Hiện tại: {STATUS_MAP[d.status]?.label || d.status}
                 </option>
               ))}
             </select>

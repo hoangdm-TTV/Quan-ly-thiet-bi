@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 import { getLocalDateInputValue } from "../utils/formatters";
+import { CATEGORIES, STATUS_MAP } from "../data/mockData";
+
 const STORAGE_KEY = "IT_ASSET_MASTER_V1";
 const API_URL = "/api";
 let currentRevision = null;
@@ -175,12 +177,12 @@ export const exportDevicesToExcel = (devices, users, departments) => {
     STT: idx + 1,
     "Mã tài sản": dev.code,
     "Tên thiết bị": dev.name,
-    Loại: dev.category,
+    Loại: CATEGORIES.find((c) => c.id === dev.category)?.name || dev.category,
     "Hãng sản xuất": dev.brand,
     Model: dev.model,
     "Số Serial": dev.serial,
     "Cấu hình chi tiết": dev.specs,
-    "Trạng thái": dev.status,
+    "Trạng thái": STATUS_MAP[dev.status]?.label || dev.status,
     "Người sử dụng": dev.userId
       ? userMap[dev.userId] || "Chưa rõ"
       : "Chưa cấp phát",
@@ -262,7 +264,7 @@ export const exportAuditsToExcel = (
         holder: userMap[dev.userId]?.name || "Không có người giữ",
         department: deptMap[dev.departmentId] || "Chưa gán phòng ban",
         location: dev.location || "Chưa ghi vị trí",
-        status: dev.status || "",
+        status: STATUS_MAP[dev.status]?.label || dev.status || "",
       },
       ...(rec.systemSnapshot || {}),
     };
