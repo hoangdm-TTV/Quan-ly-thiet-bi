@@ -977,6 +977,7 @@ export default function App() {
         deviceToEdit={deviceModal.editItem}
         departments={data.departments}
         users={data.users}
+        devices={data.devices}
       />
 
       <DeviceDetailModal
@@ -1008,6 +1009,7 @@ export default function App() {
         users={data.users}
         departments={data.departments}
         maintenance={data.maintenance}
+        handovers={data.handovers}
       />
 
       <ReturnModal
@@ -1037,6 +1039,7 @@ export default function App() {
         isOpen={auditModal.open}
         onClose={() => setAuditModal({ open: false })}
         onSave={handleSaveAudit}
+        audits={data.audits}
       />
 
       <UserModal

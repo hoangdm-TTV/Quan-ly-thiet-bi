@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Send, Calendar, User, Laptop } from 'lucide-react';
-import { getLocalDateInputValue } from '../../utils/formatters';
+import React, { useState, useEffect } from "react";
+import { X, Save, Send, Calendar, User, Laptop } from "lucide-react";
+import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
 
 export const HandoverModal = ({
   isOpen,
@@ -11,39 +11,53 @@ export const HandoverModal = ({
   users,
   departments,
   maintenance = [],
+  handovers = [],
 }) => {
   const [formData, setFormData] = useState({
-    code: '',
-    type: 'handover', // 'handover' | 'borrow'
-    deviceId: '',
-    userId: '',
-    departmentId: '',
+    code: "",
+    type: "handover", // 'handover' | 'borrow'
+    deviceId: "",
+    userId: "",
+    departmentId: "",
     handoverDate: getLocalDateInputValue(),
-    expectedReturnDate: '',
-    giverName: 'Nguyễn Văn Hùng (Bộ phận IT)',
-    condition: 'Thiết bị hoạt động tốt 100%, đầy đủ phụ kiện sạc zin đi kèm.',
-    notes: '',
+    expectedReturnDate: "",
+    giverName: "Nguyễn Văn Hùng (Bộ phận IT)",
+    condition: "Thiết bị hoạt động tốt 100%, đầy đủ phụ kiện sạc zin đi kèm.",
+    notes: "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      const isBorrow = formData.type === 'borrow';
-      const prefix = isBorrow ? 'PM' : 'BG';
+      const isBorrow = formData.type === "borrow";
+      const prefix = isBorrow ? "PM" : "BG";
       const year = new Date().getFullYear();
-      const randomNum = String(Math.floor(Math.random() * 900) + 100);
 
       setFormData((prev) => ({
         ...prev,
         code: `${prefix}-${year}-${randomNum}`,
-        deviceId: preselectedDevice?.status === 'available' && !maintenance.some((item) => item.deviceId === preselectedDevice.id && item.status === 'in_progress')
-          ? preselectedDevice.id
-          : devices.find((device) => device.status === 'available' && !maintenance.some((item) => item.deviceId === device.id && item.status === 'in_progress'))?.id || '',
-        userId: prev.userId || (users[0]?.id || ''),
+        deviceId:
+          preselectedDevice?.status === "available" &&
+          !maintenance.some(
+            (item) =>
+              item.deviceId === preselectedDevice.id &&
+              item.status === "in_progress",
+          )
+            ? preselectedDevice.id
+            : devices.find(
+                (device) =>
+                  device.status === "available" &&
+                  !maintenance.some(
+                    (item) =>
+                      item.deviceId === device.id &&
+                      item.status === "in_progress",
+                  ),
+              )?.id || "",
+        userId: prev.userId || users[0]?.id || "",
         handoverDate: getLocalDateInputValue(),
       }));
     }
-  }, [isOpen, preselectedDevice, maintenance, devices]);
+  }, [isOpen, preselectedDevice, maintenance, devices, handovers]);
 
   // When user changes, auto select department
   const handleUserChange = (selectedUserId) => {
@@ -51,20 +65,23 @@ export const HandoverModal = ({
     setFormData((prev) => ({
       ...prev,
       userId: selectedUserId,
-      departmentId: selectedUser?.departmentId || '',
+      departmentId: selectedUser?.departmentId || "",
     }));
   };
 
   // Switch type and code
   const handleTypeChange = (newType) => {
-    const prefix = newType === 'borrow' ? 'PM' : 'BG';
+    const prefix = newType === "borrow" ? "PM" : "BG";
     const year = new Date().getFullYear();
-    const randomNum = String(Math.floor(Math.random() * 900) + 100);
     setFormData((prev) => ({
       ...prev,
       type: newType,
-      code: `${prefix}-${year}-${randomNum}`,
-      expectedReturnDate: newType === 'borrow' ? prev.expectedReturnDate : '',
+      code: getNextCode(
+        handovers.map((h) => h.code),
+        prefix,
+        { year },
+      ),
+      expectedReturnDate: newType === "borrow" ? prev.expectedReturnDate : "",
     }));
   };
 
@@ -73,15 +90,25 @@ export const HandoverModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.userId) {
-      alert('Vui lòng chọn thiết bị và nhân viên tiếp nhận!');
+      alert("Vui lòng chọn thiết bị và nhân viên tiếp nhận!");
       return;
     }
 
-    const selectedDevice = devices.find((device) => device.id === formData.deviceId);
-    const hasInProgressMaintenance = maintenance.some((item) =>
-      item.deviceId === formData.deviceId && item.status === 'in_progress');
-    if (!selectedDevice || selectedDevice.status !== 'available' || hasInProgressMaintenance) {
-      alert('Thiết bị này không còn sẵn sàng cấp phát hoặc đang được sửa chữa. Hãy chọn thiết bị khác.');
+    const selectedDevice = devices.find(
+      (device) => device.id === formData.deviceId,
+    );
+    const hasInProgressMaintenance = maintenance.some(
+      (item) =>
+        item.deviceId === formData.deviceId && item.status === "in_progress",
+    );
+    if (
+      !selectedDevice ||
+      selectedDevice.status !== "available" ||
+      hasInProgressMaintenance
+    ) {
+      alert(
+        "Thiết bị này không còn sẵn sàng cấp phát hoặc đang được sửa chữa. Hãy chọn thiết bị khác.",
+      );
       return;
     }
 
@@ -89,8 +116,11 @@ export const HandoverModal = ({
     try {
       const saved = await onSave({
         ...formData,
-        departmentId: formData.departmentId || users.find((user) => user.id === formData.userId)?.departmentId || null,
-        status: 'active',
+        departmentId:
+          formData.departmentId ||
+          users.find((user) => user.id === formData.userId)?.departmentId ||
+          null,
+        status: "active",
         actualReturnDate: null,
       });
       if (saved) onClose();
@@ -100,8 +130,13 @@ export const HandoverModal = ({
   };
 
   // Handover creation is limited to devices ready for assignment.
-  const availableDevices = devices.filter((device) => device.status === 'available'
-    && !maintenance.some((item) => item.deviceId === device.id && item.status === 'in_progress'));
+  const availableDevices = devices.filter(
+    (device) =>
+      device.status === "available" &&
+      !maintenance.some(
+        (item) => item.deviceId === device.id && item.status === "in_progress",
+      ),
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -113,8 +148,12 @@ export const HandoverModal = ({
               <Send className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Tạo Phiếu Bàn Giao / Mượn Thiết Bị</h3>
-              <p className="text-xs text-slate-500">Cấp phát tài sản cho nhân viên và ghi nhận thời hạn</p>
+              <h3 className="font-bold text-slate-900 text-base">
+                Tạo Phiếu Bàn Giao / Mượn Thiết Bị
+              </h3>
+              <p className="text-xs text-slate-500">
+                Cấp phát tài sản cho nhân viên và ghi nhận thời hạn
+              </p>
             </div>
           </div>
           <button
@@ -126,27 +165,30 @@ export const HandoverModal = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm"
+        >
           {/* Handover Type selector */}
           <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-xl">
             <button
               type="button"
-              onClick={() => handleTypeChange('handover')}
+              onClick={() => handleTypeChange("handover")}
               className={`py-2 px-3 rounded-lg font-semibold text-xs transition ${
-                formData.type === 'handover'
-                  ? 'bg-white text-blue-600 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                formData.type === "handover"
+                  ? "bg-white text-blue-600 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Bàn giao chính thức (Làm việc lâu dài)
             </button>
             <button
               type="button"
-              onClick={() => handleTypeChange('borrow')}
+              onClick={() => handleTypeChange("borrow")}
               className={`py-2 px-3 rounded-lg font-semibold text-xs transition ${
-                formData.type === 'borrow'
-                  ? 'bg-white text-amber-600 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                formData.type === "borrow"
+                  ? "bg-white text-amber-600 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Cho mượn ngắn hạn (Sự kiện / Công tác)
@@ -156,24 +198,32 @@ export const HandoverModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Ticket Code */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Mã phiếu</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Mã phiếu
+              </label>
               <input
                 type="text"
                 required
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 font-mono focus:bg-white outline-none"
               />
             </div>
 
             {/* Handover Date */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Ngày giao máy</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Ngày giao máy
+              </label>
               <input
                 type="date"
                 required
                 value={formData.handoverDate}
-                onChange={(e) => setFormData({ ...formData, handoverDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, handoverDate: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />
             </div>
@@ -186,14 +236,17 @@ export const HandoverModal = ({
             </label>
             <select
               value={formData.deviceId}
-              onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, deviceId: e.target.value })
+              }
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               required
             >
               <option value="">-- Chọn thiết bị cần bàn giao --</option>
               {availableDevices.map((d) => (
                 <option key={d.id} value={d.id}>
-                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ''} - Trạng thái: {d.status}
+                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ""} -
+                  Trạng thái: {d.status}
                 </option>
               ))}
             </select>
@@ -222,10 +275,14 @@ export const HandoverModal = ({
 
             {/* Select Department */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Phòng ban sử dụng</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Phòng ban sử dụng
+              </label>
               <select
                 value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, departmentId: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               >
                 <option value="">-- Chưa gán --</option>
@@ -239,7 +296,7 @@ export const HandoverModal = ({
           </div>
 
           {/* Expected Return Date (If Borrow) */}
-          {formData.type === 'borrow' && (
+          {formData.type === "borrow" && (
             <div>
               <label className="block font-semibold text-amber-800 mb-1">
                 Hạn trả dự kiến <span className="text-rose-500">*</span>
@@ -248,7 +305,12 @@ export const HandoverModal = ({
                 type="date"
                 required
                 value={formData.expectedReturnDate}
-                onChange={(e) => setFormData({ ...formData, expectedReturnDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    expectedReturnDate: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-amber-50/50 border border-amber-200 focus:bg-white outline-none"
               />
             </div>
@@ -256,11 +318,15 @@ export const HandoverModal = ({
 
           {/* Condition */}
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Tình trạng thiết bị khi bàn giao</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Tình trạng thiết bị khi bàn giao
+            </label>
             <input
               type="text"
               value={formData.condition}
-              onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, condition: e.target.value })
+              }
               placeholder="Mới 100%, máy đẹp, nguyên vẹn tem bảo hành..."
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
             />
@@ -269,21 +335,29 @@ export const HandoverModal = ({
           {/* Giver Name & Notes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Người bàn giao (IT)</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Người bàn giao (IT)
+              </label>
               <input
                 type="text"
                 value={formData.giverName}
-                onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, giverName: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Mục đích / Ghi chú</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Mục đích / Ghi chú
+              </label>
               <input
                 type="text"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 placeholder="Cấp máy làm việc, mượn đi công tác..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />
@@ -306,7 +380,13 @@ export const HandoverModal = ({
               className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Đang lưu…' : availableDevices.length === 0 ? 'Không có thiết bị sẵn sàng' : 'Xác nhận & Lưu phiếu'}</span>
+              <span>
+                {isSaving
+                  ? "Đang lưu…"
+                  : availableDevices.length === 0
+                    ? "Không có thiết bị sẵn sàng"
+                    : "Xác nhận & Lưu phiếu"}
+              </span>
             </button>
           </div>
         </form>

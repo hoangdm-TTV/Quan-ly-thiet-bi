@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Save, Laptop, Tag } from "lucide-react";
 import { CATEGORIES } from "../../data/mockData";
 import { getLocalDateInputValue } from "../../utils/formatters";
+import { getNextCode } from "../../utils/formatters";
 
 export const DeviceModal = ({
   isOpen,
@@ -10,6 +11,7 @@ export const DeviceModal = ({
   deviceToEdit,
   departments,
   users,
+  devices = [],
 }) => {
   const [formData, setFormData] = useState({
     code: "",
@@ -38,10 +40,13 @@ export const DeviceModal = ({
         purchaseCost: deviceToEdit.purchaseCost || "",
       });
     } else {
-      // Auto generate code TS-xxx
-      const randomCode = `TS-${String(Math.floor(Math.random() * 900) + 100)}`;
+      // Mã tài sản tuần tự: TS-015, TS-016...
+      const nextCode = getNextCode(
+        devices.map((d) => d.code),
+        "TS",
+      );
       setFormData({
-        code: randomCode,
+        code: nextCode,
         name: "",
         category: "laptop",
         brand: "",
@@ -68,7 +73,17 @@ export const DeviceModal = ({
       alert("Vui lòng nhập Mã tài sản và Tên thiết bị!");
       return;
     }
-
+    const duplicated = devices.some(
+      (d) =>
+        d.id !== deviceToEdit?.id &&
+        d.code.trim().toLowerCase() === formData.code.trim().toLowerCase(),
+    );
+    if (duplicated) {
+      alert(
+        `Mã tài sản "${formData.code.trim()}" đã tồn tại. Hãy nhập mã khác.`,
+      );
+      return;
+    }
     onSave({
       ...formData,
       purchaseCost: Number(formData.purchaseCost) || 0,

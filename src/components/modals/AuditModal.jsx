@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Save, ClipboardCheck } from "lucide-react";
-import { getLocalDateInputValue } from "../../utils/formatters";
+import { getLocalDateInputValue, getUniqueCode } from "../../utils/formatters";
 
-export const AuditModal = ({ isOpen, onClose, onSave }) => {
+export const AuditModal = ({ isOpen, onClose, onSave, audits = [] }) => {
   const [formData, setFormData] = useState({
     code: `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`,
     title: `Kiểm kê tài sản thiết bị IT Quý ${Math.floor(new Date().getMonth() / 3) + 1}/${new Date().getFullYear()}`,
@@ -11,6 +11,19 @@ export const AuditModal = ({ isOpen, onClose, onSave }) => {
     notes:
       "Kiểm kê định kỳ hiện trạng tài sản, rà soát thất thoát và lập kế hoạch bảo trì.",
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const baseCode = `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`;
+    setFormData((prev) => ({
+      ...prev,
+      code: getUniqueCode(
+        baseCode,
+        audits.map((a) => a.code),
+      ),
+      auditDate: getLocalDateInputValue(),
+    }));
+  }, [isOpen, audits]);
 
   if (!isOpen) return null;
 

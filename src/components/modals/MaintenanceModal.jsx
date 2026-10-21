@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getLocalDateInputValue } from "../../utils/formatters";
+import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
 
 export const MaintenanceModal = ({
   isOpen,
@@ -26,7 +26,6 @@ export const MaintenanceModal = ({
   useEffect(() => {
     if (isOpen) {
       const year = new Date().getFullYear();
-      const randomNum = String(Math.floor(Math.random() * 900) + 100);
       const selectableDevices = devices.filter(
         (device) =>
           ["available", "in_use", "borrowed", "broken"].includes(
@@ -47,7 +46,11 @@ export const MaintenanceModal = ({
           item.deviceId === selectedDevice?.id && item.status === "active",
       );
       setFormData({
-        code: `BT-${year}-${randomNum}`,
+        code: getNextCode(
+          maintenance.map((m) => m.code),
+          "BT",
+          { year },
+        ),
         deviceId: selectedDevice?.id || "",
         issue: "",
         solution: "",
