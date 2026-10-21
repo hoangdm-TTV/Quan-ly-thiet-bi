@@ -257,19 +257,21 @@ export const Navbar = ({
                   />
                 </label>
 
-                <div className="my-1 border-t border-slate-100"></div>
-
-                <button
-                  onClick={() => {
-                    handleReset();
-                    setShowBackupMenu(false);
-                    onResetData();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg text-left transition-colors"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Đặt lại dữ liệu mẫu Demo</span>
-                </button>
+                {import.meta.env.DEV && (
+                  <>
+                    <div className="my-1 border-t border-slate-100"></div>
+                    <button
+                      onClick={() => {
+                        setShowBackupMenu(false);
+                        onResetData();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg text-left transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Đặt lại dữ liệu mẫu Demo</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

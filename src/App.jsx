@@ -741,7 +741,15 @@ export default function App() {
   };
 
   const handleResetData = async () => {
-    if (window.confirm("Khôi phục toàn bộ CSDL về dữ liệu mẫu mặc định?")) {
+    const typed = window.prompt(
+      "CẢNH BÁO: toàn bộ dữ liệu hiện có sẽ bị XÓA và thay bằng dữ liệu mẫu.\n\nNhập chính xác chữ RESET để tiếp tục:",
+    );
+    if (typed === null) return;
+    if (typed.trim() !== "RESET") {
+      window.alert('Chưa nhập đúng "RESET". Đã hủy thao tác.');
+      return;
+    }
+    {
       try {
         const fresh = await resetToSampleData();
         setData(fresh);
