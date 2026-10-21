@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Server,
   Plus,
@@ -10,13 +10,12 @@ import {
   CheckCircle,
   FileSpreadsheet,
   AlertTriangle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   backupToJsonFile,
   restoreFromJsonFile,
   exportDevicesToExcel,
-  resetToSampleData,
-} from '../services/storage';
+} from "../services/storage";
 
 export const Navbar = ({
   activeTab,
@@ -26,6 +25,7 @@ export const Navbar = ({
   onOpenNewDevice,
   onOpenNewHandover,
   onDataRefresh,
+  onResetData,
   devices,
   users,
   departments,
@@ -37,11 +37,17 @@ export const Navbar = ({
   const [importStatus, setImportStatus] = useState(null);
 
   // Compute alerts
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const overdueHandovers = handovers.filter(
-    (h) => h.status === 'active' && h.type === 'borrow' && h.expectedReturnDate && h.expectedReturnDate < today
+    (h) =>
+      h.status === "active" &&
+      h.type === "borrow" &&
+      h.expectedReturnDate &&
+      h.expectedReturnDate < today,
   );
-  const urgentMaintenance = maintenance.filter((m) => m.status === 'in_progress');
+  const urgentMaintenance = maintenance.filter(
+    (m) => m.status === "in_progress",
+  );
 
   const totalAlerts = overdueHandovers.length + urgentMaintenance.length;
 
@@ -50,20 +56,15 @@ export const Navbar = ({
     if (!file) return;
     try {
       await restoreFromJsonFile(file);
-      setImportStatus({ success: true, message: 'Khôi phục dữ liệu thành công!' });
+      setImportStatus({
+        success: true,
+        message: "Khôi phục dữ liệu thành công!",
+      });
       onDataRefresh();
       setTimeout(() => setImportStatus(null), 3000);
     } catch (err) {
-      setImportStatus({ success: false, message: 'Lỗi: ' + err.message });
+      setImportStatus({ success: false, message: "Lỗi: " + err.message });
       setTimeout(() => setImportStatus(null), 4000);
-    }
-  };
-
-  const handleReset = () => {
-    if (window.confirm('Bạn có chắc muốn đặt lại dữ liệu mẫu ban đầu? Mọi thay đổi hiện tại sẽ được thay bằng dữ liệu demo chuẩn.')) {
-      resetToSampleData();
-      onDataRefresh();
-      alert('Đã khôi phục dữ liệu demo thành công!');
     }
   };
 
@@ -84,12 +85,16 @@ export const Navbar = ({
                 v2.5 Pro
               </span>
             </div>
-            <p className="text-xs text-slate-500 hidden sm:block">Hệ thống Quản lý Thiết bị & Tài sản Doanh nghiệp</p>
+            <p className="text-xs text-slate-500 hidden sm:block">
+              Hệ thống Quản lý Thiết bị & Tài sản Doanh nghiệp
+            </p>
           </div>
         </div>
 
         {/* Center: Quick Search */}
-        <div className={`${activeTab === 'devices' ? 'hidden' : 'order-3 w-full md:order-none md:block md:flex-1 md:max-w-md'}`}>
+        <div
+          className={`${activeTab === "devices" ? "hidden" : "order-3 w-full md:order-none md:block md:flex-1 md:max-w-md"}`}
+        >
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -98,15 +103,15 @@ export const Navbar = ({
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                if (activeTab !== 'devices' && e.target.value) {
-                  setActiveTab('devices');
+                if (activeTab !== "devices" && e.target.value) {
+                  setActiveTab("devices");
                 }
               }}
               className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 bg-slate-200 rounded-full w-4 h-4 flex items-center justify-center"
               >
                 ×
@@ -120,7 +125,7 @@ export const Navbar = ({
           {/* Quick Create Buttons */}
           <button
             onClick={onOpenNewDevice}
-            className={`${activeTab === 'devices' ? 'hidden' : 'flex'} items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-lg shadow-sm shadow-blue-500/25 transition-colors`}
+            className={`${activeTab === "devices" ? "hidden" : "flex"} items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-lg shadow-sm shadow-blue-500/25 transition-colors`}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Thêm thiết bị</span>
@@ -153,7 +158,9 @@ export const Navbar = ({
             {showNotifMenu && (
               <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">Thông báo cảnh báo ({totalAlerts})</h4>
+                  <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">
+                    Thông báo cảnh báo ({totalAlerts})
+                  </h4>
                   <button
                     onClick={() => setShowNotifMenu(false)}
                     className="text-xs text-slate-400 hover:text-slate-600"
@@ -182,7 +189,8 @@ export const Navbar = ({
                     <div className="p-2.5 rounded-lg bg-orange-50 border border-orange-200 text-xs">
                       <div className="flex items-center gap-1.5 font-medium text-orange-900 mb-1">
                         <AlertTriangle className="w-3.5 h-3.5 text-orange-600" />
-                        Có {urgentMaintenance.length} thiết bị đang bảo trì sửa chữa
+                        Có {urgentMaintenance.length} thiết bị đang bảo trì sửa
+                        chữa
                       </div>
                     </div>
                   )}
@@ -255,6 +263,7 @@ export const Navbar = ({
                   onClick={() => {
                     handleReset();
                     setShowBackupMenu(false);
+                    onResetData();
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg text-left transition-colors"
                 >
@@ -271,7 +280,9 @@ export const Navbar = ({
       {importStatus && (
         <div
           className={`px-4 py-2 text-xs font-medium text-center ${
-            importStatus.success ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+            importStatus.success
+              ? "bg-emerald-500 text-white"
+              : "bg-rose-500 text-white"
           }`}
         >
           {importStatus.message}

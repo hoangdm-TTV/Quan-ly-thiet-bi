@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
-import { DeviceManagement } from './components/DeviceManagement';
-import { UserDepartmentManagement } from './components/UserDepartmentManagement';
-import { HandoverManagement } from './components/HandoverManagement';
-import { MaintenanceManagement } from './components/MaintenanceManagement';
-import { AuditManagement } from './components/AuditManagement';
-import { ReportManagement } from './components/ReportManagement';
+import React, { useState, useEffect } from "react";
+import { Navbar } from "./components/Navbar";
+import { Sidebar } from "./components/Sidebar";
+import { Dashboard } from "./components/Dashboard";
+import { DeviceManagement } from "./components/DeviceManagement";
+import { UserDepartmentManagement } from "./components/UserDepartmentManagement";
+import { HandoverManagement } from "./components/HandoverManagement";
+import { MaintenanceManagement } from "./components/MaintenanceManagement";
+import { AuditManagement } from "./components/AuditManagement";
+import { ReportManagement } from "./components/ReportManagement";
 
 // Modals
-import { DeviceModal } from './components/modals/DeviceModal';
-import { DeviceDetailModal } from './components/modals/DeviceDetailModal';
-import { HandoverModal } from './components/modals/HandoverModal';
-import { ReturnModal } from './components/modals/ReturnModal';
-import { MaintenanceModal } from './components/modals/MaintenanceModal';
-import { AuditModal } from './components/modals/AuditModal';
-import { UserModal } from './components/modals/UserModal';
-import { PrintVoucherModal } from './components/modals/PrintVoucherModal';
-import { LoginPage } from './components/LoginPage';
-import { ChangePasswordModal } from './components/ChangePasswordModal';
+import { DeviceModal } from "./components/modals/DeviceModal";
+import { DeviceDetailModal } from "./components/modals/DeviceDetailModal";
+import { HandoverModal } from "./components/modals/HandoverModal";
+import { ReturnModal } from "./components/modals/ReturnModal";
+import { MaintenanceModal } from "./components/modals/MaintenanceModal";
+import { AuditModal } from "./components/modals/AuditModal";
+import { UserModal } from "./components/modals/UserModal";
+import { PrintVoucherModal } from "./components/modals/PrintVoucherModal";
+import { LoginPage } from "./components/LoginPage";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 
 import {
   changePassword,
@@ -30,20 +30,27 @@ import {
   logout,
   resetToSampleData,
   saveStoredData,
-} from './services/storage';
+} from "./services/storage";
 
 export default function App() {
   // Main data state
-  const [data, setData] = useState({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
+  const [data, setData] = useState({
+    devices: [],
+    users: [],
+    departments: [],
+    handovers: [],
+    maintenance: [],
+    audits: [],
+  });
   const [isBackendConnected, setIsBackendConnected] = useState(false);
-  const [databaseError, setDatabaseError] = useState('');
+  const [databaseError, setDatabaseError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authUser, setAuthUser] = useState(null);
   const [authSetupRequired, setAuthSetupRequired] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Restore the authenticated session before loading company data.
   useEffect(() => {
@@ -54,7 +61,7 @@ export default function App() {
         const { data: remoteData } = await fetchInitialData();
         setData(remoteData);
         setIsBackendConnected(true);
-        setDatabaseError('');
+        setDatabaseError("");
       } catch (error) {
         if (error.status === 401) {
           try {
@@ -77,11 +84,19 @@ export default function App() {
   useEffect(() => {
     const handleExpiredSession = () => {
       setAuthUser(null);
-      setData({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
+      setData({
+        devices: [],
+        users: [],
+        departments: [],
+        handovers: [],
+        maintenance: [],
+        audits: [],
+      });
       setIsBackendConnected(false);
     };
-    window.addEventListener('it-asset-auth-expired', handleExpiredSession);
-    return () => window.removeEventListener('it-asset-auth-expired', handleExpiredSession);
+    window.addEventListener("it-asset-auth-expired", handleExpiredSession);
+    return () =>
+      window.removeEventListener("it-asset-auth-expired", handleExpiredSession);
   }, []);
 
   const handleLogin = async (credentials) => {
@@ -93,7 +108,7 @@ export default function App() {
       const { data: remoteData } = await fetchInitialData();
       setData(remoteData);
       setIsBackendConnected(true);
-      setDatabaseError('');
+      setDatabaseError("");
     } catch (error) {
       setIsBackendConnected(false);
       setDatabaseError(error.message);
@@ -109,9 +124,16 @@ export default function App() {
       // Clear the local view even if the session has already expired.
     }
     setAuthUser(null);
-    setData({ devices: [], users: [], departments: [], handovers: [], maintenance: [], audits: [] });
+    setData({
+      devices: [],
+      users: [],
+      departments: [],
+      handovers: [],
+      maintenance: [],
+      audits: [],
+    });
     setIsBackendConnected(false);
-    setDatabaseError('');
+    setDatabaseError("");
   };
 
   const handleChangePassword = async (passwords) => {
@@ -121,11 +143,23 @@ export default function App() {
   };
 
   // Modals state
-  const [deviceModal, setDeviceModal] = useState({ open: false, editItem: null });
+  const [deviceModal, setDeviceModal] = useState({
+    open: false,
+    editItem: null,
+  });
   const [detailModal, setDetailModal] = useState({ open: false, device: null });
-  const [handoverModal, setHandoverModal] = useState({ open: false, preselectedDevice: null });
-  const [returnModal, setReturnModal] = useState({ open: false, handover: null });
-  const [maintenanceModal, setMaintenanceModal] = useState({ open: false, preselectedDevice: null });
+  const [handoverModal, setHandoverModal] = useState({
+    open: false,
+    preselectedDevice: null,
+  });
+  const [returnModal, setReturnModal] = useState({
+    open: false,
+    handover: null,
+  });
+  const [maintenanceModal, setMaintenanceModal] = useState({
+    open: false,
+    preselectedDevice: null,
+  });
   const [auditModal, setAuditModal] = useState({ open: false });
   const [userModal, setUserModal] = useState({ open: false, editItem: null });
   const [printModal, setPrintModal] = useState({ open: false, handover: null });
@@ -136,7 +170,7 @@ export default function App() {
       await saveStoredData(newData);
       setData(newData);
       setIsBackendConnected(true);
-      setDatabaseError('');
+      setDatabaseError("");
       return true;
     } catch (error) {
       setIsBackendConnected(false);
@@ -151,7 +185,7 @@ export default function App() {
       const { data: latestData } = await fetchInitialData();
       setData(latestData);
       setIsBackendConnected(true);
-      setDatabaseError('');
+      setDatabaseError("");
     } catch (error) {
       setDatabaseError(error.message);
       window.alert(`Không thể tải dữ liệu từ database: ${error.message}`);
@@ -164,14 +198,20 @@ export default function App() {
     if (deviceModal.editItem) {
       updatedDevices = data.devices.map((d) =>
         d.id === deviceModal.editItem.id
-          ? { ...d, ...deviceData, status: d.status, userId: d.userId, departmentId: d.departmentId }
-          : d
+          ? {
+              ...d,
+              ...deviceData,
+              status: d.status,
+              userId: d.userId,
+              departmentId: d.departmentId,
+            }
+          : d,
       );
     } else {
       const newDevice = {
         ...deviceData,
         id: `dev-${Date.now()}`,
-        status: 'available',
+        status: "available",
         userId: null,
         departmentId: null,
       };
@@ -181,26 +221,43 @@ export default function App() {
   };
 
   const handleDeleteDevice = (device) => {
-    const hasHandoverHistory = data.handovers.some((handover) => handover.deviceId === device.id);
-    const hasMaintenanceHistory = data.maintenance.some((item) => item.deviceId === device.id);
+    const hasHandoverHistory = data.handovers.some(
+      (handover) => handover.deviceId === device.id,
+    );
+    const hasMaintenanceHistory = data.maintenance.some(
+      (item) => item.deviceId === device.id,
+    );
     if (hasHandoverHistory || hasMaintenanceHistory) {
-      window.alert('Thiết bị đã có lịch sử bàn giao hoặc bảo trì nên không thể xóa. Hãy giữ hồ sơ để bảo toàn vòng đời tài sản.');
+      window.alert(
+        "Thiết bị đã có lịch sử bàn giao hoặc bảo trì nên không thể xóa. Hãy giữ hồ sơ để bảo toàn vòng đời tài sản.",
+      );
       return;
     }
-    if (window.confirm(`Bạn có chắc muốn xóa thiết bị "${device.name}" (${device.code})?`)) {
+    if (
+      window.confirm(
+        `Bạn có chắc muốn xóa thiết bị "${device.name}" (${device.code})?`,
+      )
+    ) {
       const updatedDevices = data.devices.filter((d) => d.id !== device.id);
       updateData({ ...data, devices: updatedDevices });
     }
   };
 
   const handleLiquidateDevice = async (device) => {
-    const reason = window.prompt(`Nhập lý do thanh lý thiết bị ${device.code}:`);
+    const reason = window.prompt(
+      `Nhập lý do thanh lý thiết bị ${device.code}:`,
+    );
     if (reason === null) return;
     if (!reason.trim()) {
-      window.alert('Cần ghi lý do thanh lý để lưu dấu vết tài sản.');
+      window.alert("Cần ghi lý do thanh lý để lưu dấu vết tài sản.");
       return;
     }
-    if (!window.confirm(`Xác nhận chuyển ${device.code} sang trạng thái Đã thanh lý?`)) return;
+    if (
+      !window.confirm(
+        `Xác nhận chuyển ${device.code} sang trạng thái Đã thanh lý?`,
+      )
+    )
+      return;
 
     let latestData;
     try {
@@ -208,31 +265,48 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      window.alert(
+        `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
+      );
       return;
     }
 
-    const currentDevice = latestData.devices.find((item) => item.id === device.id);
-    const hasActiveHandover = latestData.handovers.some((item) => item.deviceId === device.id && item.status === 'active');
-    const hasOpenMaintenance = latestData.maintenance.some(
-      (item) => item.deviceId === device.id && ['scheduled', 'in_progress'].includes(item.status)
+    const currentDevice = latestData.devices.find(
+      (item) => item.id === device.id,
     );
-    if (!currentDevice || !['available', 'broken'].includes(currentDevice.status) || hasActiveHandover || hasOpenMaintenance) {
-      window.alert('Chỉ có thể thanh lý thiết bị đang ở kho hoặc đang hỏng và không còn phiếu bàn giao/bảo trì mở.');
+    const hasActiveHandover = latestData.handovers.some(
+      (item) => item.deviceId === device.id && item.status === "active",
+    );
+    const hasOpenMaintenance = latestData.maintenance.some(
+      (item) =>
+        item.deviceId === device.id &&
+        ["scheduled", "in_progress"].includes(item.status),
+    );
+    if (
+      !currentDevice ||
+      !["available", "broken"].includes(currentDevice.status) ||
+      hasActiveHandover ||
+      hasOpenMaintenance
+    ) {
+      window.alert(
+        "Chỉ có thể thanh lý thiết bị đang ở kho hoặc đang hỏng và không còn phiếu bàn giao/bảo trì mở.",
+      );
       return;
     }
 
-    const today = new Date().toLocaleDateString('sv-SE');
-    const updatedDevices = latestData.devices.map((item) => item.id === device.id
-      ? {
-          ...item,
-          status: 'liquidated',
-          userId: null,
-          departmentId: null,
-          location: 'Đã thanh lý',
-          notes: `${item.notes || ''}${item.notes ? '\n' : ''}[Thanh lý ${today}] ${reason.trim()}`,
-        }
-      : item);
+    const today = new Date().toLocaleDateString("sv-SE");
+    const updatedDevices = latestData.devices.map((item) =>
+      item.id === device.id
+        ? {
+            ...item,
+            status: "liquidated",
+            userId: null,
+            departmentId: null,
+            location: "Đã thanh lý",
+            notes: `${item.notes || ""}${item.notes ? "\n" : ""}[Thanh lý ${today}] ${reason.trim()}`,
+          }
+        : item,
+    );
     const saved = await updateData({ ...latestData, devices: updatedDevices });
     if (saved) setDetailModal({ open: false, device: null });
   };
@@ -245,19 +319,32 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      window.alert(
+        `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
+      );
       return false;
     }
 
-    const device = latestData.devices.find((d) => d.id === handoverFormData.deviceId);
+    const device = latestData.devices.find(
+      (d) => d.id === handoverFormData.deviceId,
+    );
     const hasActiveHandover = latestData.handovers.some(
-      (h) => h.deviceId === handoverFormData.deviceId && h.status === 'active'
+      (h) => h.deviceId === handoverFormData.deviceId && h.status === "active",
     );
     const hasInProgressMaintenance = latestData.maintenance.some(
-      (item) => item.deviceId === handoverFormData.deviceId && item.status === 'in_progress'
+      (item) =>
+        item.deviceId === handoverFormData.deviceId &&
+        item.status === "in_progress",
     );
-    if (!device || device.status !== 'available' || hasActiveHandover || hasInProgressMaintenance) {
-      window.alert('Không thể bàn giao: thiết bị chưa sẵn sàng, đang có phiếu chưa trả hoặc đang được sửa chữa. Hãy tải lại dữ liệu và chọn thiết bị khác.');
+    if (
+      !device ||
+      device.status !== "available" ||
+      hasActiveHandover ||
+      hasInProgressMaintenance
+    ) {
+      window.alert(
+        "Không thể bàn giao: thiết bị chưa sẵn sàng, đang có phiếu chưa trả hoặc đang được sửa chữa. Hãy tải lại dữ liệu và chọn thiết bị khác.",
+      );
       return false;
     }
 
@@ -271,7 +358,7 @@ export default function App() {
       if (d.id === handoverFormData.deviceId) {
         return {
           ...d,
-          status: handoverFormData.type === 'borrow' ? 'borrowed' : 'in_use',
+          status: handoverFormData.type === "borrow" ? "borrowed" : "in_use",
           userId: handoverFormData.userId,
           departmentId: handoverFormData.departmentId || null,
         };
@@ -286,24 +373,42 @@ export default function App() {
     });
   };
 
-  const handleConfirmReturn = async ({ handoverId, deviceId, returnDate, condition, nextDeviceStatus, returnNotes }) => {
+  const handleConfirmReturn = async ({
+    handoverId,
+    deviceId,
+    returnDate,
+    condition,
+    nextDeviceStatus,
+    returnNotes,
+  }) => {
     let latestData;
     try {
       ({ data: latestData } = await fetchInitialData());
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(`Không thể kiểm tra trạng thái mới nhất của phiếu trả: ${error.message}`);
+      window.alert(
+        `Không thể kiểm tra trạng thái mới nhất của phiếu trả: ${error.message}`,
+      );
       return false;
     }
 
     const handover = latestData.handovers.find((h) => h.id === handoverId);
     const device = latestData.devices.find((d) => d.id === deviceId);
     const anotherActiveHandover = latestData.handovers.some(
-      (h) => h.id !== handoverId && h.deviceId === deviceId && h.status === 'active'
+      (h) =>
+        h.id !== handoverId && h.deviceId === deviceId && h.status === "active",
     );
-    if (!handover || handover.status !== 'active' || handover.deviceId !== deviceId || !device || anotherActiveHandover) {
-      window.alert('Không thể xác nhận trả: phiếu hoặc thiết bị đã thay đổi, hoặc đang có phiếu sử dụng khác. Hãy tải lại dữ liệu rồi thử lại.');
+    if (
+      !handover ||
+      handover.status !== "active" ||
+      handover.deviceId !== deviceId ||
+      !device ||
+      anotherActiveHandover
+    ) {
+      window.alert(
+        "Không thể xác nhận trả: phiếu hoặc thiết bị đã thay đổi, hoặc đang có phiếu sử dụng khác. Hãy tải lại dữ liệu rồi thử lại.",
+      );
       return false;
     }
 
@@ -312,9 +417,9 @@ export default function App() {
       if (h.id === handoverId) {
         return {
           ...h,
-          status: 'returned',
+          status: "returned",
           actualReturnDate: returnDate,
-          notes: `${h.notes || ''}${h.notes ? '\n' : ''}[Trả ngày ${returnDate}] Tình trạng khi nhận lại: ${condition || 'Chưa ghi nhận'}.${returnNotes ? ` Ghi chú: ${returnNotes}` : ''}`,
+          notes: `${h.notes || ""}${h.notes ? "\n" : ""}[Trả ngày ${returnDate}] Tình trạng khi nhận lại: ${condition || "Chưa ghi nhận"}.${returnNotes ? ` Ghi chú: ${returnNotes}` : ""}`,
         };
       }
       return h;
@@ -328,11 +433,12 @@ export default function App() {
           status: nextDeviceStatus,
           userId: null,
           departmentId: null,
-          location: nextDeviceStatus === 'available'
-            ? 'Kho IT'
-            : nextDeviceStatus === 'maintenance'
-              ? 'Khu vực bảo trì'
-              : 'Khu vực thiết bị hỏng',
+          location:
+            nextDeviceStatus === "available"
+              ? "Kho IT"
+              : nextDeviceStatus === "maintenance"
+                ? "Khu vực bảo trì"
+                : "Khu vực thiết bị hỏng",
         };
       }
       return d;
@@ -347,8 +453,10 @@ export default function App() {
 
   // --- Handlers for Maintenance ---
   const handleSaveMaintenance = async (maintenanceData) => {
-    if (!['scheduled', 'in_progress'].includes(maintenanceData.status)) {
-      window.alert('Phiếu mới chỉ có thể ở trạng thái đã lên lịch hoặc đang xử lý. Hãy nghiệm thu sau khi bắt đầu xử lý.');
+    if (!["scheduled", "in_progress"].includes(maintenanceData.status)) {
+      window.alert(
+        "Phiếu mới chỉ có thể ở trạng thái đã lên lịch hoặc đang xử lý. Hãy nghiệm thu sau khi bắt đầu xử lý.",
+      );
       return false;
     }
     let latestData;
@@ -357,21 +465,36 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(`Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`);
+      window.alert(
+        `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
+      );
       return false;
     }
 
-    const device = latestData.devices.find((item) => item.id === maintenanceData.deviceId);
+    const device = latestData.devices.find(
+      (item) => item.id === maintenanceData.deviceId,
+    );
     const hasActiveHandover = latestData.handovers.some(
-      (item) => item.deviceId === maintenanceData.deviceId && item.status === 'active'
+      (item) =>
+        item.deviceId === maintenanceData.deviceId && item.status === "active",
     );
     const hasOpenMaintenance = latestData.maintenance.some(
-      (item) => item.deviceId === maintenanceData.deviceId && ['scheduled', 'in_progress'].includes(item.status)
+      (item) =>
+        item.deviceId === maintenanceData.deviceId &&
+        ["scheduled", "in_progress"].includes(item.status),
     );
-    const canSchedule = device && ['available', 'in_use', 'borrowed', 'broken'].includes(device.status);
-    const canStartNow = device?.status === 'broken' && !hasActiveHandover;
-    if (!canSchedule || hasOpenMaintenance || maintenanceData.status === 'in_progress' && !canStartNow) {
-      window.alert('Thiết bị đang sử dụng chỉ được lên lịch. Muốn bắt đầu sửa chữa, hãy thu hồi và ghi nhận thiết bị đang hỏng trước.');
+    const canSchedule =
+      device &&
+      ["available", "in_use", "borrowed", "broken"].includes(device.status);
+    const canStartNow = device?.status === "broken" && !hasActiveHandover;
+    if (
+      !canSchedule ||
+      hasOpenMaintenance ||
+      (maintenanceData.status === "in_progress" && !canStartNow)
+    ) {
+      window.alert(
+        "Thiết bị đang sử dụng chỉ được lên lịch. Muốn bắt đầu sửa chữa, hãy thu hồi và ghi nhận thiết bị đang hỏng trước.",
+      );
       return false;
     }
 
@@ -381,9 +504,16 @@ export default function App() {
     };
 
     const updatedDevices = latestData.devices.map((item) =>
-      item.id === maintenanceData.deviceId && maintenanceData.status === 'in_progress'
-        ? { ...item, status: 'maintenance', userId: null, departmentId: null, location: 'Khu vực bảo trì' }
-        : item
+      item.id === maintenanceData.deviceId &&
+      maintenanceData.status === "in_progress"
+        ? {
+            ...item,
+            status: "maintenance",
+            userId: null,
+            departmentId: null,
+            location: "Khu vực bảo trì",
+          }
+        : item,
     );
 
     return updateData({
@@ -394,39 +524,70 @@ export default function App() {
   };
 
   const handleStartMaintenance = (maintenanceItem) => {
-    const currentItem = data.maintenance.find((item) => item.id === maintenanceItem.id);
-    const device = data.devices.find((item) => item.id === maintenanceItem.deviceId);
-    const hasActiveHandover = data.handovers.some(
-      (item) => item.deviceId === maintenanceItem.deviceId && item.status === 'active'
+    const currentItem = data.maintenance.find(
+      (item) => item.id === maintenanceItem.id,
     );
-    if (!currentItem || currentItem.status !== 'scheduled' || !device
-      || !['available', 'broken'].includes(device.status) || hasActiveHandover) {
-      window.alert('Chưa thể bắt đầu: hãy thu hồi thiết bị đang được giữ trước. Chỉ thiết bị đã ở kho hoặc ghi nhận hỏng mới vào bảo trì được.');
+    const device = data.devices.find(
+      (item) => item.id === maintenanceItem.deviceId,
+    );
+    const hasActiveHandover = data.handovers.some(
+      (item) =>
+        item.deviceId === maintenanceItem.deviceId && item.status === "active",
+    );
+    if (
+      !currentItem ||
+      currentItem.status !== "scheduled" ||
+      !device ||
+      !["available", "broken"].includes(device.status) ||
+      hasActiveHandover
+    ) {
+      window.alert(
+        "Chưa thể bắt đầu: hãy thu hồi thiết bị đang được giữ trước. Chỉ thiết bị đã ở kho hoặc ghi nhận hỏng mới vào bảo trì được.",
+      );
       return;
     }
 
     updateData({
       ...data,
       maintenance: data.maintenance.map((item) =>
-        item.id === currentItem.id ? { ...item, status: 'in_progress' } : item
+        item.id === currentItem.id ? { ...item, status: "in_progress" } : item,
       ),
-      devices: data.devices.map((item) => item.id === device.id
-        ? { ...item, status: 'maintenance', userId: null, departmentId: null, location: 'Khu vực bảo trì' }
-        : item),
+      devices: data.devices.map((item) =>
+        item.id === device.id
+          ? {
+              ...item,
+              status: "maintenance",
+              userId: null,
+              departmentId: null,
+              location: "Khu vực bảo trì",
+            }
+          : item,
+      ),
     });
   };
 
   const handleCompleteMaintenance = (maintenanceItem) => {
-    const currentItem = data.maintenance.find((item) => item.id === maintenanceItem.id);
-    const targetDev = data.devices.find((item) => item.id === maintenanceItem.deviceId);
-    if (!currentItem || currentItem.status !== 'in_progress' || !targetDev || targetDev.status !== 'maintenance') {
-      window.alert('Chỉ có thể nghiệm thu phiếu đang xử lý và thiết bị đang ở khu vực bảo trì.');
+    const currentItem = data.maintenance.find(
+      (item) => item.id === maintenanceItem.id,
+    );
+    const targetDev = data.devices.find(
+      (item) => item.id === maintenanceItem.deviceId,
+    );
+    if (
+      !currentItem ||
+      currentItem.status !== "in_progress" ||
+      !targetDev ||
+      targetDev.status !== "maintenance"
+    ) {
+      window.alert(
+        "Chỉ có thể nghiệm thu phiếu đang xử lý và thiết bị đang ở khu vực bảo trì.",
+      );
       return;
     }
-    const completeDate = new Date().toISOString().split('T')[0];
+    const completeDate = new Date().toISOString().split("T")[0];
     const costInput = window.prompt(
-      'Xác nhận nghiệm thu bảo trì xong. Nhập chi phí thực tế (VNĐ):',
-      String(maintenanceItem.cost || 0)
+      "Xác nhận nghiệm thu bảo trì xong. Nhập chi phí thực tế (VNĐ):",
+      String(maintenanceItem.cost || 0),
     );
     if (costInput === null) return;
 
@@ -436,7 +597,7 @@ export default function App() {
       if (m.id === currentItem.id) {
         return {
           ...m,
-          status: 'completed',
+          status: "completed",
           cost: actualCost,
           completedDate: completeDate,
         };
@@ -449,10 +610,10 @@ export default function App() {
       if (d.id === maintenanceItem.deviceId) {
         return {
           ...d,
-          status: 'available',
+          status: "available",
           userId: null,
           departmentId: null,
-          location: 'Kho IT',
+          location: "Kho IT",
         };
       }
       return d;
@@ -481,15 +642,23 @@ export default function App() {
     const updatedAudits = data.audits.map((a) => {
       if (a.id === auditId) {
         const existingRecords = [...(a.records || [])];
-        const recordIndex = existingRecords.findIndex((r) => r.deviceId === deviceId);
+        const recordIndex = existingRecords.findIndex(
+          (r) => r.deviceId === deviceId,
+        );
         const previous = recordIndex >= 0 ? existingRecords[recordIndex] : {};
         const next = { ...previous, ...patch, deviceId };
         if (recordIndex >= 0) existingRecords[recordIndex] = next;
         else existingRecords.push(next);
 
-        const matchedCount = existingRecords.filter((r) => r.status === 'confirmed').length;
-        const discrepancyCount = existingRecords.filter((r) => r.status === 'discrepancy').length;
-        const totalChecked = existingRecords.filter((r) => ['found', 'confirmed', 'discrepancy'].includes(r.status)).length;
+        const matchedCount = existingRecords.filter(
+          (r) => r.status === "confirmed",
+        ).length;
+        const discrepancyCount = existingRecords.filter(
+          (r) => r.status === "discrepancy",
+        ).length;
+        const totalChecked = existingRecords.filter((r) =>
+          ["found", "confirmed", "discrepancy"].includes(r.status),
+        ).length;
 
         return {
           ...a,
@@ -507,23 +676,40 @@ export default function App() {
 
   const handleFinishAudit = (auditId) => {
     const audit = data.audits.find((item) => item.id === auditId);
-    if (!audit || audit.status === 'completed') return;
-    const existingIds = new Set((audit.records || []).map((record) => record.deviceId));
-    const unverified = data.devices.filter((device) => !existingIds.has(device.id));
+    if (!audit || audit.status === "completed") return;
+    const existingIds = new Set(
+      (audit.records || []).map((record) => record.deviceId),
+    );
+    const unverified = data.devices.filter(
+      (device) => !existingIds.has(device.id),
+    );
     const message = unverified.length
       ? `Chốt đợt kiểm kê? ${unverified.length} tài sản chưa được quét sẽ chuyển thành “Chưa xác minh” để rà soát sau.`
-      : 'Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?';
+      : "Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?";
     if (window.confirm(message)) {
       const updatedAudits = data.audits.map((a) => {
         if (a.id !== auditId) return a;
-        const records = [...(a.records || []), ...unverified.map((device) => ({ deviceId: device.id, status: 'unverified' }))];
+        const records = [
+          ...(a.records || []),
+          ...unverified.map((device) => ({
+            deviceId: device.id,
+            status: "unverified",
+          })),
+        ];
         return {
           ...a,
-          status: 'completed',
+          status: "completed",
           records,
-          totalChecked: records.filter((record) => ['found', 'confirmed', 'discrepancy'].includes(record.status)).length,
-          matchedCount: records.filter((record) => record.status === 'confirmed' || record.status === 'matched').length,
-          discrepancyCount: records.filter((record) => record.status === 'discrepancy').length,
+          totalChecked: records.filter((record) =>
+            ["found", "confirmed", "discrepancy"].includes(record.status),
+          ).length,
+          matchedCount: records.filter(
+            (record) =>
+              record.status === "confirmed" || record.status === "matched",
+          ).length,
+          discrepancyCount: records.filter(
+            (record) => record.status === "discrepancy",
+          ).length,
         };
       });
       updateData({ ...data, audits: updatedAudits });
@@ -535,7 +721,7 @@ export default function App() {
     let updatedUsers;
     if (userModal.editItem) {
       updatedUsers = data.users.map((u) =>
-        u.id === userModal.editItem.id ? { ...u, ...userData } : u
+        u.id === userModal.editItem.id ? { ...u, ...userData } : u,
       );
     } else {
       const newUser = {
@@ -555,12 +741,12 @@ export default function App() {
   };
 
   const handleResetData = async () => {
-    if (window.confirm('Khôi phục toàn bộ CSDL về dữ liệu mẫu mặc định?')) {
+    if (window.confirm("Khôi phục toàn bộ CSDL về dữ liệu mẫu mặc định?")) {
       try {
         const fresh = await resetToSampleData();
         setData(fresh);
-        setDatabaseError('');
-        alert('Đã thiết lập lại dữ liệu thành công!');
+        setDatabaseError("");
+        alert("Đã thiết lập lại dữ liệu thành công!");
       } catch (error) {
         setDatabaseError(error.message);
         alert(`Không thể khôi phục dữ liệu: ${error.message}`);
@@ -569,29 +755,62 @@ export default function App() {
   };
 
   if (isAuthLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">Đang kiểm tra phiên đăng nhập…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">
+        Đang kiểm tra phiên đăng nhập…
+      </div>
+    );
   }
 
   if (!authUser) {
-    return <LoginPage onLogin={handleLogin} setupRequired={authSetupRequired} connectionError={databaseError} />;
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        setupRequired={authSetupRequired}
+        connectionError={databaseError}
+      />
+    );
   }
 
-  if (isLoading || databaseError && !isBackendConnected) {
+  if (isLoading || (databaseError && !isBackendConnected)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-lg rounded-2xl bg-white p-8 shadow-sm text-center">
-          <h1 className="text-xl font-bold text-slate-900">{isLoading ? 'Đang kết nối database…' : 'Không thể kết nối database'}</h1>
-          <p className="mt-3 text-sm text-slate-600">{isLoading ? 'Đang tải dữ liệu từ backend.' : databaseError}</p>
-          {!isLoading && <p className="mt-2 text-sm text-slate-500">Hãy chạy backend bằng <code>npm run server</code>, sau đó tải lại trang. Ứng dụng không dùng dữ liệu mẫu khi database không khả dụng.</p>}
-          {!isLoading && <button className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white" onClick={() => window.location.reload()}>Thử lại</button>}
+          <h1 className="text-xl font-bold text-slate-900">
+            {isLoading
+              ? "Đang kết nối database…"
+              : "Không thể kết nối database"}
+          </h1>
+          <p className="mt-3 text-sm text-slate-600">
+            {isLoading ? "Đang tải dữ liệu từ backend." : databaseError}
+          </p>
+          {!isLoading && (
+            <p className="mt-2 text-sm text-slate-500">
+              Hãy chạy backend bằng <code>npm run server</code>, sau đó tải lại
+              trang. Ứng dụng không dùng dữ liệu mẫu khi database không khả
+              dụng.
+            </p>
+          )}
+          {!isLoading && (
+            <button
+              className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white"
+              onClick={() => window.location.reload()}
+            >
+              Thử lại
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   // Compute counts for sidebar
-  const activeHandoversCount = data.handovers.filter((h) => h.status === 'active').length;
-  const inMaintenanceCount = data.maintenance.filter((m) => m.status === 'in_progress').length;
+  const activeHandoversCount = data.handovers.filter(
+    (h) => h.status === "active",
+  ).length;
+  const inMaintenanceCount = data.maintenance.filter(
+    (m) => m.status === "in_progress",
+  ).length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -602,8 +821,11 @@ export default function App() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onOpenNewDevice={() => setDeviceModal({ open: true, editItem: null })}
-        onOpenNewHandover={() => setHandoverModal({ open: true, preselectedDevice: null })}
+        onOpenNewHandover={() =>
+          setHandoverModal({ open: true, preselectedDevice: null })
+        }
         onDataRefresh={handleRefresh}
+        onResetData={handleResetData}
         devices={data.devices}
         users={data.users}
         departments={data.departments}
@@ -628,7 +850,7 @@ export default function App() {
 
         {/* Center Content Area */}
         <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8">
-          {activeTab === 'dashboard' && (
+          {activeTab === "dashboard" && (
             <Dashboard
               devices={data.devices}
               users={data.users}
@@ -636,11 +858,13 @@ export default function App() {
               handovers={data.handovers}
               maintenance={data.maintenance}
               setActiveTab={setActiveTab}
-              onOpenDeviceDetail={(dev) => setDetailModal({ open: true, device: dev })}
+              onOpenDeviceDetail={(dev) =>
+                setDetailModal({ open: true, device: dev })
+              }
             />
           )}
 
-          {activeTab === 'devices' && (
+          {activeTab === "devices" && (
             <DeviceManagement
               devices={data.devices}
               maintenance={data.maintenance}
@@ -648,16 +872,26 @@ export default function App() {
               departments={data.departments}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              onOpenNewDevice={() => setDeviceModal({ open: true, editItem: null })}
-              onEditDevice={(dev) => setDeviceModal({ open: true, editItem: dev })}
+              onOpenNewDevice={() =>
+                setDeviceModal({ open: true, editItem: null })
+              }
+              onEditDevice={(dev) =>
+                setDeviceModal({ open: true, editItem: dev })
+              }
               onDeleteDevice={handleDeleteDevice}
-              onOpenDeviceDetail={(dev) => setDetailModal({ open: true, device: dev })}
-              onHandoverDevice={(dev) => setHandoverModal({ open: true, preselectedDevice: dev })}
-              onMaintainDevice={(dev) => setMaintenanceModal({ open: true, preselectedDevice: dev })}
+              onOpenDeviceDetail={(dev) =>
+                setDetailModal({ open: true, device: dev })
+              }
+              onHandoverDevice={(dev) =>
+                setHandoverModal({ open: true, preselectedDevice: dev })
+              }
+              onMaintainDevice={(dev) =>
+                setMaintenanceModal({ open: true, preselectedDevice: dev })
+              }
             />
           )}
 
-          {activeTab === 'users' && (
+          {activeTab === "users" && (
             <UserDepartmentManagement
               users={data.users}
               departments={data.departments}
@@ -666,33 +900,41 @@ export default function App() {
               onOpenNewUser={() => setUserModal({ open: true, editItem: null })}
               onEditUser={(u) => setUserModal({ open: true, editItem: u })}
               onDeleteUser={handleDeleteUser}
-              onOpenDeviceDetail={(dev) => setDetailModal({ open: true, device: dev })}
+              onOpenDeviceDetail={(dev) =>
+                setDetailModal({ open: true, device: dev })
+              }
             />
           )}
 
-          {activeTab === 'handovers' && (
+          {activeTab === "handovers" && (
             <HandoverManagement
               handovers={data.handovers}
               devices={data.devices}
               users={data.users}
               departments={data.departments}
-              onOpenNewHandover={() => setHandoverModal({ open: true, preselectedDevice: null })}
-              onReturnDevice={(h) => setReturnModal({ open: true, handover: h })}
+              onOpenNewHandover={() =>
+                setHandoverModal({ open: true, preselectedDevice: null })
+              }
+              onReturnDevice={(h) =>
+                setReturnModal({ open: true, handover: h })
+              }
               onPrintVoucher={(h) => setPrintModal({ open: true, handover: h })}
             />
           )}
 
-          {activeTab === 'maintenance' && (
+          {activeTab === "maintenance" && (
             <MaintenanceManagement
               maintenance={data.maintenance}
               devices={data.devices}
-              onOpenNewMaintenance={() => setMaintenanceModal({ open: true, preselectedDevice: null })}
+              onOpenNewMaintenance={() =>
+                setMaintenanceModal({ open: true, preselectedDevice: null })
+              }
               onCompleteMaintenance={handleCompleteMaintenance}
               onStartMaintenance={handleStartMaintenance}
             />
           )}
 
-          {activeTab === 'audits' && (
+          {activeTab === "audits" && (
             <AuditManagement
               audits={data.audits}
               devices={data.devices}
@@ -705,7 +947,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'reports' && (
+          {activeTab === "reports" && (
             <ReportManagement
               devices={data.devices}
               users={data.users}
@@ -737,14 +979,20 @@ export default function App() {
         handovers={data.handovers}
         maintenance={data.maintenance}
         onEdit={(dev) => setDeviceModal({ open: true, editItem: dev })}
-        onHandover={(dev) => setHandoverModal({ open: true, preselectedDevice: dev })}
-        onMaintain={(dev) => setMaintenanceModal({ open: true, preselectedDevice: dev })}
+        onHandover={(dev) =>
+          setHandoverModal({ open: true, preselectedDevice: dev })
+        }
+        onMaintain={(dev) =>
+          setMaintenanceModal({ open: true, preselectedDevice: dev })
+        }
         onLiquidate={handleLiquidateDevice}
       />
 
       <HandoverModal
         isOpen={handoverModal.open}
-        onClose={() => setHandoverModal({ open: false, preselectedDevice: null })}
+        onClose={() =>
+          setHandoverModal({ open: false, preselectedDevice: null })
+        }
         onSave={handleSaveHandover}
         preselectedDevice={handoverModal.preselectedDevice}
         devices={data.devices}
@@ -757,14 +1005,18 @@ export default function App() {
         isOpen={returnModal.open}
         onClose={() => setReturnModal({ open: false, handover: null })}
         handover={returnModal.handover}
-        device={data.devices.find((d) => d.id === returnModal.handover?.deviceId)}
+        device={data.devices.find(
+          (d) => d.id === returnModal.handover?.deviceId,
+        )}
         user={data.users.find((u) => u.id === returnModal.handover?.userId)}
         onConfirmReturn={handleConfirmReturn}
       />
 
       <MaintenanceModal
         isOpen={maintenanceModal.open}
-        onClose={() => setMaintenanceModal({ open: false, preselectedDevice: null })}
+        onClose={() =>
+          setMaintenanceModal({ open: false, preselectedDevice: null })
+        }
         onSave={handleSaveMaintenance}
         preselectedDevice={maintenanceModal.preselectedDevice}
         devices={data.devices}
@@ -791,9 +1043,13 @@ export default function App() {
         isOpen={printModal.open}
         onClose={() => setPrintModal({ open: false, handover: null })}
         handover={printModal.handover}
-        device={data.devices.find((d) => d.id === printModal.handover?.deviceId)}
+        device={data.devices.find(
+          (d) => d.id === printModal.handover?.deviceId,
+        )}
         user={data.users.find((u) => u.id === printModal.handover?.userId)}
-        department={data.departments.find((dep) => dep.id === printModal.handover?.departmentId)}
+        department={data.departments.find(
+          (dep) => dep.id === printModal.handover?.departmentId,
+        )}
       />
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
