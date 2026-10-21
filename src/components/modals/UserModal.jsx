@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, User, Upload, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X, Save, User, Upload, Image as ImageIcon } from "lucide-react";
 
 export const UserModal = ({
   isOpen,
@@ -9,34 +9,34 @@ export const UserModal = ({
   departments,
   users,
 }) => {
-  const [imageError, setImageError] = useState('');
+  const [imageError, setImageError] = useState("");
   const [formData, setFormData] = useState({
-    code: '',
-    name: '',
-    email: '',
-    phone: '',
-    departmentId: '',
-    position: '',
-    avatar: '',
+    code: "",
+    name: "",
+    email: "",
+    phone: "",
+    departmentId: "",
+    position: "",
+    avatar: "",
   });
 
   useEffect(() => {
-    setImageError('');
+    setImageError("");
     if (userToEdit) {
       setFormData(userToEdit);
     } else {
       const maxCode = (users || []).reduce((max, user) => {
-        const match = /^NV(\d+)$/i.exec(user.code || '');
+        const match = /^NV(\d+)$/i.exec(user.code || "");
         return match ? Math.max(max, Number(match[1])) : max;
       }, 0);
       setFormData({
-        code: `NV${String(maxCode + 1).padStart(3, '0')}`,
-        name: '',
-        email: '',
-        phone: '',
-        departmentId: departments[0]?.id || '',
-        position: 'Chuyên viên',
-        avatar: '',
+        code: `NV${String(maxCode + 1).padStart(3, "0")}`,
+        name: "",
+        email: "",
+        phone: "",
+        departmentId: departments[0]?.id || "",
+        position: "Nhân viên",
+        avatar: "",
       });
     }
   }, [userToEdit, isOpen, departments, users]);
@@ -46,14 +46,14 @@ export const UserModal = ({
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setImageError('Vui lòng chọn một tệp hình ảnh.');
-      event.target.value = '';
+    if (!file.type.startsWith("image/")) {
+      setImageError("Vui lòng chọn một tệp hình ảnh.");
+      event.target.value = "";
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setImageError('Ảnh gốc cần nhỏ hơn 10 MB.');
-      event.target.value = '';
+      setImageError("Ảnh gốc cần nhỏ hơn 10 MB.");
+      event.target.value = "";
       return;
     }
 
@@ -62,30 +62,37 @@ export const UserModal = ({
       const image = new Image();
       image.onload = () => {
         const maxSide = 320;
-        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-        const canvas = document.createElement('canvas');
+        const scale = Math.min(
+          1,
+          maxSide / Math.max(image.width, image.height),
+        );
+        const canvas = document.createElement("canvas");
         canvas.width = Math.max(1, Math.round(image.width * scale));
         canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext("2d");
         if (!context) {
-          setImageError('Không thể xử lý ảnh trên trình duyệt này.');
+          setImageError("Không thể xử lý ảnh trên trình duyệt này.");
           return;
         }
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        setFormData((current) => ({ ...current, avatar: canvas.toDataURL('image/jpeg', 0.75) }));
-        setImageError('');
+        setFormData((current) => ({
+          ...current,
+          avatar: canvas.toDataURL("image/jpeg", 0.75),
+        }));
+        setImageError("");
       };
-      image.onerror = () => setImageError('Không đọc được nội dung ảnh đã chọn.');
+      image.onerror = () =>
+        setImageError("Không đọc được nội dung ảnh đã chọn.");
       image.src = String(reader.result);
     };
-    reader.onerror = () => setImageError('Không thể đọc tệp ảnh.');
+    reader.onerror = () => setImageError("Không thể đọc tệp ảnh.");
     reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.code.trim()) {
-      alert('Vui lòng nhập Tên nhân viên và Mã nhân viên!');
+      alert("Vui lòng nhập Tên nhân viên và Mã nhân viên!");
       return;
     }
 
@@ -93,7 +100,7 @@ export const UserModal = ({
       ...formData,
       avatar:
         formData.avatar ||
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
     });
     onClose();
   };
@@ -109,9 +116,11 @@ export const UserModal = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">
-                {userToEdit ? 'Chỉnh Sửa Nhân Viên' : 'Thêm Nhân Viên Mới'}
+                {userToEdit ? "Chỉnh Sửa Nhân Viên" : "Thêm Nhân Viên Mới"}
               </h3>
-              <p className="text-xs text-slate-500">Thông tin nhân sự tiếp nhận và sử dụng thiết bị</p>
+              <p className="text-xs text-slate-500">
+                Thông tin nhân sự tiếp nhận và sử dụng thiết bị
+              </p>
             </div>
           </div>
           <button
@@ -123,7 +132,10 @@ export const UserModal = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs sm:text-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 text-xs sm:text-sm"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
@@ -147,7 +159,9 @@ export const UserModal = ({
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Nguyễn Văn A"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               />
@@ -156,22 +170,30 @@ export const UserModal = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Email công việc</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Email công việc
+              </label>
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="ten.nv@company.com"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Số điện thoại</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Số điện thoại
+              </label>
               <input
                 type="text"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 placeholder="0912345678"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               />
@@ -180,10 +202,14 @@ export const UserModal = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Phòng ban</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Phòng ban
+              </label>
               <select
                 value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, departmentId: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               >
                 {departments.map((d) => (
@@ -195,11 +221,15 @@ export const UserModal = ({
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Chức vụ</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Chức vụ
+              </label>
               <input
                 type="text"
                 value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, position: e.target.value })
+                }
                 placeholder="Lập trình viên, Kế toán..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               />
@@ -207,24 +237,54 @@ export const UserModal = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-2">Ảnh đại diện</label>
+            <label className="block font-semibold text-slate-700 mb-2">
+              Ảnh đại diện
+            </label>
             <div className="flex items-center gap-4">
               {formData.avatar ? (
-                <img src={formData.avatar} alt="Xem trước ảnh đại diện" className="h-16 w-16 rounded-xl border border-slate-200 object-cover" />
+                <img
+                  src={formData.avatar}
+                  alt="Xem trước ảnh đại diện"
+                  className="h-16 w-16 rounded-xl border border-slate-200 object-cover"
+                />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400"><ImageIcon className="h-6 w-6" /></div>
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+                  <ImageIcon className="h-6 w-6" />
+                </div>
               )}
               <div className="min-w-0 flex-1">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">
                   <Upload className="h-4 w-4" />
                   <span>Chọn ảnh từ thiết bị</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleAvatarChange}
+                  />
                 </label>
-                <p className="mt-1 text-[11px] text-slate-500">Có thể chọn ảnh trên máy tính hoặc điện thoại; ảnh sẽ được thu nhỏ trước khi lưu.</p>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Có thể chọn ảnh trên máy tính hoặc điện thoại; ảnh sẽ được thu
+                  nhỏ trước khi lưu.
+                </p>
               </div>
             </div>
-            {imageError && <p role="alert" className="mt-2 text-xs text-rose-600">{imageError}</p>}
-            {formData.avatar && <button type="button" className="mt-2 text-xs font-semibold text-rose-600 hover:underline" onClick={() => setFormData((current) => ({ ...current, avatar: '' }))}>Xóa ảnh đã chọn</button>}
+            {imageError && (
+              <p role="alert" className="mt-2 text-xs text-rose-600">
+                {imageError}
+              </p>
+            )}
+            {formData.avatar && (
+              <button
+                type="button"
+                className="mt-2 text-xs font-semibold text-rose-600 hover:underline"
+                onClick={() =>
+                  setFormData((current) => ({ ...current, avatar: "" }))
+                }
+              >
+                Xóa ảnh đã chọn
+              </button>
+            )}
           </div>
 
           {/* Actions */}
@@ -241,7 +301,7 @@ export const UserModal = ({
               className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
-              <span>{userToEdit ? 'Lưu thay đổi' : 'Thêm nhân sự'}</span>
+              <span>{userToEdit ? "Lưu thay đổi" : "Thêm nhân sự"}</span>
             </button>
           </div>
         </form>
