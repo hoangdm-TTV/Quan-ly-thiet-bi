@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Wrench, Coins } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { getLocalDateInputValue } from "../../utils/formatters";
 
 export const MaintenanceModal = ({
   isOpen,
@@ -11,62 +11,90 @@ export const MaintenanceModal = ({
   handovers = [],
 }) => {
   const [formData, setFormData] = useState({
-    code: '',
-    deviceId: '',
-    issue: '',
-    solution: '',
-    cost: '',
-    vendor: 'Trung tâm Bảo hành Chính hãng',
-    status: 'scheduled', // 'scheduled' | 'in_progress'
-    startDate: new Date().toISOString().split('T')[0],
-    technician: '',
-    notes: '',
+    code: "",
+    deviceId: "",
+    issue: "",
+    solution: "",
+    cost: "",
+    vendor: "Trung tâm Bảo hành Chính hãng",
+    status: "scheduled", // 'scheduled' | 'in_progress'
+    startDate: getLocalDateInputValue(),
+    technician: "",
+    notes: "",
   });
 
   useEffect(() => {
     if (isOpen) {
       const year = new Date().getFullYear();
       const randomNum = String(Math.floor(Math.random() * 900) + 100);
-      const selectableDevices = devices.filter((device) =>
-        ['available', 'in_use', 'borrowed', 'broken'].includes(device.status)
-        && !maintenance.some((item) => item.deviceId === device.id && ['scheduled', 'in_progress'].includes(item.status))
+      const selectableDevices = devices.filter(
+        (device) =>
+          ["available", "in_use", "borrowed", "broken"].includes(
+            device.status,
+          ) &&
+          !maintenance.some(
+            (item) =>
+              item.deviceId === device.id &&
+              ["scheduled", "in_progress"].includes(item.status),
+          ),
       );
-      const selectedDevice = selectableDevices.find((device) => device.id === preselectedDevice?.id)
-        || selectableDevices[0];
-      const selectedHasActiveHandover = handovers.some((item) =>
-        item.deviceId === selectedDevice?.id && item.status === 'active');
+      const selectedDevice =
+        selectableDevices.find(
+          (device) => device.id === preselectedDevice?.id,
+        ) || selectableDevices[0];
+      const selectedHasActiveHandover = handovers.some(
+        (item) =>
+          item.deviceId === selectedDevice?.id && item.status === "active",
+      );
       setFormData({
         code: `BT-${year}-${randomNum}`,
-        deviceId: selectedDevice?.id || '',
-        issue: '',
-        solution: '',
-        cost: '0',
-        vendor: 'Trung tâm Bảo hành Chính hãng',
-        status: selectedDevice?.status === 'broken' && !selectedHasActiveHandover ? 'in_progress' : 'scheduled',
-        startDate: new Date().toISOString().split('T')[0],
-        technician: 'Kỹ thuật viên IT',
-        notes: '',
+        deviceId: selectedDevice?.id || "",
+        issue: "",
+        solution: "",
+        cost: "0",
+        vendor: "Trung tâm Bảo hành Chính hãng",
+        status:
+          selectedDevice?.status === "broken" && !selectedHasActiveHandover
+            ? "in_progress"
+            : "scheduled",
+        startDate: getLocalDateInputValue(),
+        technician: "Kỹ thuật viên IT",
+        notes: "",
       });
     }
   }, [isOpen, preselectedDevice, devices, maintenance, handovers]);
 
   if (!isOpen) return null;
 
-  const eligibleDevices = devices.filter((device) => ['available', 'in_use', 'borrowed', 'broken'].includes(device.status)
-    && !maintenance.some((item) => item.deviceId === device.id && ['scheduled', 'in_progress'].includes(item.status)));
+  const eligibleDevices = devices.filter(
+    (device) =>
+      ["available", "in_use", "borrowed", "broken"].includes(device.status) &&
+      !maintenance.some(
+        (item) =>
+          item.deviceId === device.id &&
+          ["scheduled", "in_progress"].includes(item.status),
+      ),
+  );
 
-  const selectedDevice = devices.find((device) => device.id === formData.deviceId);
-  const selectedHasActiveHandover = handovers.some((item) => item.deviceId === formData.deviceId && item.status === 'active');
-  const canStartRepairNow = selectedDevice?.status === 'broken' && !selectedHasActiveHandover;
+  const selectedDevice = devices.find(
+    (device) => device.id === formData.deviceId,
+  );
+  const selectedHasActiveHandover = handovers.some(
+    (item) => item.deviceId === formData.deviceId && item.status === "active",
+  );
+  const canStartRepairNow =
+    selectedDevice?.status === "broken" && !selectedHasActiveHandover;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.issue.trim()) {
-      alert('Vui lòng chọn thiết bị và mô tả hiện trạng sự cố!');
+      alert("Vui lòng chọn thiết bị và mô tả hiện trạng sự cố!");
       return;
     }
-    if (formData.status === 'in_progress' && !canStartRepairNow) {
-      alert('Chỉ được bắt đầu sửa chữa khi thiết bị đã được thu hồi và ghi nhận đang hỏng. Thiết bị đang dùng chỉ có thể lên lịch bảo trì.');
+    if (formData.status === "in_progress" && !canStartRepairNow) {
+      alert(
+        "Chỉ được bắt đầu sửa chữa khi thiết bị đã được thu hồi và ghi nhận đang hỏng. Thiết bị đang dùng chỉ có thể lên lịch bảo trì.",
+      );
       return;
     }
 
@@ -88,8 +116,13 @@ export const MaintenanceModal = ({
               <Wrench className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Lên Lịch Bảo Trì / Sửa Chữa</h3>
-              <p className="text-xs text-slate-500">Thiết bị đang dùng chỉ được lên lịch; sửa chữa bắt đầu sau khi thu hồi máy hỏng</p>
+              <h3 className="font-bold text-slate-900 text-base">
+                Lên Lịch Bảo Trì / Sửa Chữa
+              </h3>
+              <p className="text-xs text-slate-500">
+                Thiết bị đang dùng chỉ được lên lịch; sửa chữa bắt đầu sau khi
+                thu hồi máy hỏng
+              </p>
             </div>
           </div>
           <button
@@ -101,26 +134,37 @@ export const MaintenanceModal = ({
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Mã phiếu bảo trì</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Mã phiếu bảo trì
+              </label>
               <input
                 type="text"
                 required
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Ngày dự kiến / tiếp nhận</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Ngày dự kiến / tiếp nhận
+              </label>
               <input
                 type="date"
                 required
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, startDate: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
@@ -129,26 +173,37 @@ export const MaintenanceModal = ({
           {/* Select Device */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              Thiết bị bảo trì / sửa chữa <span className="text-rose-500">*</span>
+              Thiết bị bảo trì / sửa chữa{" "}
+              <span className="text-rose-500">*</span>
             </label>
             <select
               value={formData.deviceId}
               onChange={(e) => {
-                const device = devices.find((item) => item.id === e.target.value);
-                const hasActive = handovers.some((item) => item.deviceId === e.target.value && item.status === 'active');
+                const device = devices.find(
+                  (item) => item.id === e.target.value,
+                );
+                const hasActive = handovers.some(
+                  (item) =>
+                    item.deviceId === e.target.value &&
+                    item.status === "active",
+                );
                 setFormData({
                   ...formData,
                   deviceId: e.target.value,
-                  status: device?.status === 'broken' && !hasActive ? 'in_progress' : 'scheduled',
+                  status:
+                    device?.status === "broken" && !hasActive
+                      ? "in_progress"
+                      : "scheduled",
                 });
               }}
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-orange-500 outline-none"
               required
             >
               <option value="">-- Chọn thiết bị --</option>
-                {eligibleDevices.map((d) => (
+              {eligibleDevices.map((d) => (
                 <option key={d.id} value={d.id}>
-                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ''} - Hiện tại: {d.status}
+                  [{d.code}] {d.name} {d.serial ? `(S/N: ${d.serial})` : ""} -
+                  Hiện tại: {d.status}
                 </option>
               ))}
             </select>
@@ -157,27 +212,38 @@ export const MaintenanceModal = ({
           {/* Issue */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              {formData.status === 'scheduled' ? 'Nội dung bảo trì dự kiến' : 'Mô tả hiện trạng sự cố'} <span className="text-rose-500">*</span>
+              {formData.status === "scheduled"
+                ? "Nội dung bảo trì dự kiến"
+                : "Mô tả hiện trạng sự cố"}{" "}
+              <span className="text-rose-500">*</span>
             </label>
             <textarea
               rows={2}
               required
               value={formData.issue}
-              onChange={(e) => setFormData({ ...formData, issue: e.target.value })}
-              placeholder={formData.status === 'scheduled'
-                ? 'VD: Vệ sinh định kỳ, kiểm tra pin, cập nhật hệ điều hành...'
-                : 'VD: Không lên nguồn, quạt kêu to, sọc màn hình, bàn phím liệt...'}
+              onChange={(e) =>
+                setFormData({ ...formData, issue: e.target.value })
+              }
+              placeholder={
+                formData.status === "scheduled"
+                  ? "VD: Vệ sinh định kỳ, kiểm tra pin, cập nhật hệ điều hành..."
+                  : "VD: Không lên nguồn, quạt kêu to, sọc màn hình, bàn phím liệt..."
+              }
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
             />
           </div>
 
           {/* Solution */}
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Phương án xử lý / Linh kiện thay thế</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Phương án xử lý / Linh kiện thay thế
+            </label>
             <textarea
               rows={2}
               value={formData.solution}
-              onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, solution: e.target.value })
+              }
               placeholder="VD: Thay cáp màn hình, tra keo tản nhiệt, bảo hành đổi nguồn mới..."
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
             />
@@ -186,11 +252,15 @@ export const MaintenanceModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Cost */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Chi phí sửa chữa (VNĐ)</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Chi phí sửa chữa (VNĐ)
+              </label>
               <input
                 type="number"
                 value={formData.cost}
-                onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, cost: e.target.value })
+                }
                 placeholder="0"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />
@@ -198,11 +268,15 @@ export const MaintenanceModal = ({
 
             {/* Start repair only for a device that has been returned as broken. */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Quy trình</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Quy trình
+              </label>
               {canStartRepairNow ? (
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none font-medium text-slate-800"
                 >
                   <option value="in_progress">Bắt đầu sửa chữa ngay</option>
@@ -210,7 +284,8 @@ export const MaintenanceModal = ({
                 </select>
               ) : (
                 <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-blue-800">
-                  Chỉ tạo lịch. Muốn bắt đầu sửa chữa, hãy thu hồi thiết bị và ghi nhận tình trạng hỏng.
+                  Chỉ tạo lịch. Muốn bắt đầu sửa chữa, hãy thu hồi thiết bị và
+                  ghi nhận tình trạng hỏng.
                 </div>
               )}
             </div>
@@ -219,11 +294,15 @@ export const MaintenanceModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Vendor */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Đơn vị sửa chữa / Đối tác</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Đơn vị sửa chữa / Đối tác
+              </label>
               <input
                 type="text"
                 value={formData.vendor}
-                onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, vendor: e.target.value })
+                }
                 placeholder="Trung tâm BH Hãng, Cty sửa chữa Á Châu..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />
@@ -231,11 +310,15 @@ export const MaintenanceModal = ({
 
             {/* Technician */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Kỹ thuật viên phụ trách</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Kỹ thuật viên phụ trách
+              </label>
               <input
                 type="text"
                 value={formData.technician}
-                onChange={(e) => setFormData({ ...formData, technician: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, technician: e.target.value })
+                }
                 placeholder="Tên kỹ thuật viên"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none"
               />

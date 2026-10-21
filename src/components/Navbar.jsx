@@ -16,6 +16,7 @@ import {
   restoreFromJsonFile,
   exportDevicesToExcel,
 } from "../services/storage";
+import { getLocalDateInputValue } from "../utils/formatters";
 
 export const Navbar = ({
   activeTab,
@@ -37,7 +38,7 @@ export const Navbar = ({
   const [importStatus, setImportStatus] = useState(null);
 
   // Compute alerts
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDateInputValue();
   const overdueHandovers = handovers.filter(
     (h) =>
       h.status === "active" &&

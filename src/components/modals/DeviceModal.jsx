@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Laptop, Tag } from 'lucide-react';
-import { CATEGORIES } from '../../data/mockData';
+import React, { useState, useEffect } from "react";
+import { X, Save, Laptop, Tag } from "lucide-react";
+import { CATEGORIES } from "../../data/mockData";
+import { getLocalDateInputValue } from "../../utils/formatters";
 
 export const DeviceModal = ({
   isOpen,
@@ -11,50 +12,50 @@ export const DeviceModal = ({
   users,
 }) => {
   const [formData, setFormData] = useState({
-    code: '',
-    name: '',
-    category: 'laptop',
-    brand: '',
-    model: '',
-    serial: '',
-    specs: '',
-    status: 'available',
-    userId: '',
-    departmentId: '',
-    purchaseDate: '',
-    purchaseCost: '',
-    warrantyUntil: '',
-    location: '',
-    notes: '',
+    code: "",
+    name: "",
+    category: "laptop",
+    brand: "",
+    model: "",
+    serial: "",
+    specs: "",
+    status: "available",
+    userId: "",
+    departmentId: "",
+    purchaseDate: "",
+    purchaseCost: "",
+    warrantyUntil: "",
+    location: "",
+    notes: "",
   });
 
   useEffect(() => {
     if (deviceToEdit) {
       setFormData({
         ...deviceToEdit,
-        userId: deviceToEdit.userId || '',
-        departmentId: deviceToEdit.departmentId || '',
-        purchaseCost: deviceToEdit.purchaseCost || '',
+        userId: deviceToEdit.userId || "",
+        departmentId: deviceToEdit.departmentId || "",
+        purchaseCost: deviceToEdit.purchaseCost || "",
       });
     } else {
       // Auto generate code TS-xxx
       const randomCode = `TS-${String(Math.floor(Math.random() * 900) + 100)}`;
       setFormData({
         code: randomCode,
-        name: '',
-        category: 'laptop',
-        brand: '',
-        model: '',
-        serial: '',
-        specs: '',
-        status: 'available',
-        userId: '',
-        departmentId: '',
-        purchaseDate: new Date().toISOString().split('T')[0],
-        purchaseCost: '',
-        warrantyUntil: '',
-        location: 'Kho IT Tầng 4',
-        notes: '',
+        name: "",
+        category: "laptop",
+        brand: "",
+        model: "",
+        serial: "",
+        specs: "",
+        status: "available",
+        userId: "",
+        departmentId: "",
+        purchaseDate: getLocalDateInputValue(),
+        purchaseCost: "",
+        warrantyUntil: "",
+        location: "Kho IT Tầng 4",
+        notes: "",
       });
     }
   }, [deviceToEdit, isOpen]);
@@ -64,7 +65,7 @@ export const DeviceModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.code.trim() || !formData.name.trim()) {
-      alert('Vui lòng nhập Mã tài sản và Tên thiết bị!');
+      alert("Vui lòng nhập Mã tài sản và Tên thiết bị!");
       return;
     }
 
@@ -88,9 +89,11 @@ export const DeviceModal = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">
-                {deviceToEdit ? 'Chỉnh Sửa Thiết Bị' : 'Thêm Thiết Bị Mới'}
+                {deviceToEdit ? "Chỉnh Sửa Thiết Bị" : "Thêm Thiết Bị Mới"}
               </h3>
-              <p className="text-xs text-slate-500">Cập nhật hồ sơ tài sản và thông số kỹ thuật</p>
+              <p className="text-xs text-slate-500">
+                Cập nhật hồ sơ tài sản và thông số kỹ thuật
+              </p>
             </div>
           </div>
           <button
@@ -102,7 +105,10 @@ export const DeviceModal = ({
         </div>
 
         {/* Modal Body Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4 text-xs sm:text-sm"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Asset Code */}
             <div>
@@ -113,7 +119,9 @@ export const DeviceModal = ({
                 type="text"
                 required
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 placeholder="TS-001"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none font-mono"
               />
@@ -121,10 +129,14 @@ export const DeviceModal = ({
 
             {/* Category */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Loại thiết bị</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Loại thiết bị
+              </label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               >
                 {CATEGORIES.map((c) => (
@@ -145,7 +157,9 @@ export const DeviceModal = ({
               type="text"
               required
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="VD: MacBook Pro 14 M3, Dell Latitude 5440..."
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
             />
@@ -154,11 +168,15 @@ export const DeviceModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Brand */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Hãng sản xuất</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Hãng sản xuất
+              </label>
               <input
                 type="text"
                 value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
+                }
                 placeholder="Apple, Dell, HP..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
@@ -166,11 +184,15 @@ export const DeviceModal = ({
 
             {/* Model */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Model / Dòng máy</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Model / Dòng máy
+              </label>
               <input
                 type="text"
                 value={formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, model: e.target.value })
+                }
                 placeholder="Latitude 5440"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
@@ -178,11 +200,15 @@ export const DeviceModal = ({
 
             {/* Serial Number */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Số Serial (S/N)</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Số Serial (S/N)
+              </label>
               <input
                 type="text"
                 value={formData.serial}
-                onChange={(e) => setFormData({ ...formData, serial: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, serial: e.target.value })
+                }
                 placeholder="Số serial tem máy"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none font-mono"
               />
@@ -191,11 +217,15 @@ export const DeviceModal = ({
 
           {/* Specs */}
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Cấu hình chi tiết</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Cấu hình chi tiết
+            </label>
             <textarea
               rows={2}
               value={formData.specs}
-              onChange={(e) => setFormData({ ...formData, specs: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, specs: e.target.value })
+              }
               placeholder="CPU Intel Core i7, RAM 16GB, SSD 512GB, Màn hình 14 FHD..."
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
             />
@@ -203,18 +233,23 @@ export const DeviceModal = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-              Trạng thái, người giữ và phòng ban được cập nhật theo phiếu bàn giao, trả thiết bị và bảo trì để giữ đúng lịch sử tài sản.
+              Trạng thái, người giữ và phòng ban được cập nhật theo phiếu bàn
+              giao, trả thiết bị và bảo trì để giữ đúng lịch sử tài sản.
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Purchase Cost */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Giá mua (VNĐ)</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Giá mua (VNĐ)
+              </label>
               <input
                 type="number"
                 value={formData.purchaseCost}
-                onChange={(e) => setFormData({ ...formData, purchaseCost: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, purchaseCost: e.target.value })
+                }
                 placeholder="25000000"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
@@ -222,22 +257,30 @@ export const DeviceModal = ({
 
             {/* Purchase Date */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Ngày mua</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Ngày mua
+              </label>
               <input
                 type="date"
                 value={formData.purchaseDate}
-                onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, purchaseDate: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
             </div>
 
             {/* Warranty Date */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Hạn bảo hành</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Hạn bảo hành
+              </label>
               <input
                 type="date"
                 value={formData.warrantyUntil}
-                onChange={(e) => setFormData({ ...formData, warrantyUntil: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, warrantyUntil: e.target.value })
+                }
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
             </div>
@@ -246,11 +289,15 @@ export const DeviceModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Location */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Vị trí lưu trữ / Làm việc</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Vị trí lưu trữ / Làm việc
+              </label>
               <input
                 type="text"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
                 placeholder="P.402 Bàn Kỹ thuật, Kho IT Tầng 4..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
@@ -258,11 +305,15 @@ export const DeviceModal = ({
 
             {/* Notes */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Ghi chú phụ kiện kèm theo</label>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Ghi chú phụ kiện kèm theo
+              </label>
               <input
                 type="text"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 placeholder="Kèm adapter sạc 65W, bao da..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
               />
@@ -283,7 +334,7 @@ export const DeviceModal = ({
               className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
-              <span>{deviceToEdit ? 'Lưu thay đổi' : 'Tạo thiết bị'}</span>
+              <span>{deviceToEdit ? "Lưu thay đổi" : "Tạo thiết bị"}</span>
             </button>
           </div>
         </form>

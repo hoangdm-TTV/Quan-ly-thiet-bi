@@ -20,6 +20,7 @@ import { UserModal } from "./components/modals/UserModal";
 import { PrintVoucherModal } from "./components/modals/PrintVoucherModal";
 import { LoginPage } from "./components/LoginPage";
 import { ChangePasswordModal } from "./components/ChangePasswordModal";
+import { getLocalDateInputValue } from "./utils/formatters";
 
 import {
   changePassword,
@@ -294,7 +295,7 @@ export default function App() {
       return;
     }
 
-    const today = new Date().toLocaleDateString("sv-SE");
+    const today = getLocalDateInputValue();
     const updatedDevices = latestData.devices.map((item) =>
       item.id === device.id
         ? {
@@ -584,7 +585,7 @@ export default function App() {
       );
       return;
     }
-    const completeDate = new Date().toISOString().split("T")[0];
+    const completeDate = getLocalDateInputValue();
     const costInput = window.prompt(
       "Xác nhận nghiệm thu bảo trì xong. Nhập chi phí thực tế (VNĐ):",
       String(maintenanceItem.cost || 0),

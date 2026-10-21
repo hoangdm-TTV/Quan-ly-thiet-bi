@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { X, Save, ClipboardCheck } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Save, ClipboardCheck } from "lucide-react";
+import { getLocalDateInputValue } from "../../utils/formatters";
 
 export const AuditModal = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     code: `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`,
     title: `Kiểm kê tài sản thiết bị IT Quý ${Math.floor(new Date().getMonth() / 3) + 1}/${new Date().getFullYear()}`,
-    auditDate: new Date().toISOString().split('T')[0],
-    auditor: 'Tổ Kiểm kê Tài sản Công nghệ Thông tin',
-    notes: 'Kiểm kê định kỳ hiện trạng tài sản, rà soát thất thoát và lập kế hoạch bảo trì.',
+    auditDate: getLocalDateInputValue(),
+    auditor: "Tổ Kiểm kê Tài sản Công nghệ Thông tin",
+    notes:
+      "Kiểm kê định kỳ hiện trạng tài sản, rà soát thất thoát và lập kế hoạch bảo trì.",
   });
 
   if (!isOpen) return null;
@@ -15,13 +17,13 @@ export const AuditModal = ({ isOpen, onClose, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert('Vui lòng nhập tên đợt kiểm kê!');
+      alert("Vui lòng nhập tên đợt kiểm kê!");
       return;
     }
 
     onSave({
       ...formData,
-      status: 'in_progress',
+      status: "in_progress",
       records: [],
     });
     onClose();
@@ -37,8 +39,12 @@ export const AuditModal = ({ isOpen, onClose, onSave }) => {
               <ClipboardCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Khởi Tạo Đợt Kiểm Kê Mới</h3>
-              <p className="text-xs text-slate-500">Đối chiếu danh sách tài sản với thực tế</p>
+              <h3 className="font-bold text-slate-900 text-base">
+                Khởi Tạo Đợt Kiểm Kê Mới
+              </h3>
+              <p className="text-xs text-slate-500">
+                Đối chiếu danh sách tài sản với thực tế
+              </p>
             </div>
           </div>
           <button
@@ -50,14 +56,21 @@ export const AuditModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs sm:text-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 text-xs sm:text-sm"
+        >
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Mã đợt kiểm kê</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Mã đợt kiểm kê
+            </label>
             <input
               type="text"
               required
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, code: e.target.value })
+              }
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 font-mono outline-none"
             />
           </div>
@@ -70,40 +83,54 @@ export const AuditModal = ({ isOpen, onClose, onSave }) => {
               type="text"
               required
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               placeholder="VD: Kiểm kê tài sản IT Quý 4..."
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Ngày thực hiện</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Ngày thực hiện
+            </label>
             <input
               type="date"
               required
               value={formData.auditDate}
-              onChange={(e) => setFormData({ ...formData, auditDate: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, auditDate: e.target.value })
+              }
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Tổ / Cán bộ kiểm kê</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Tổ / Cán bộ kiểm kê
+            </label>
             <input
               type="text"
               value={formData.auditor}
-              onChange={(e) => setFormData({ ...formData, auditor: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, auditor: e.target.value })
+              }
               placeholder="Nguyễn Văn A (IT) & Trần Thị B (Kế toán)"
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Mục đích & Ghi chú</label>
+            <label className="block font-semibold text-slate-700 mb-1">
+              Mục đích & Ghi chú
+            </label>
             <textarea
               rows={2}
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
             />
           </div>

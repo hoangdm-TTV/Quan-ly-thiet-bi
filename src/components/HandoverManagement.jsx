@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Repeat,
   Plus,
@@ -14,9 +14,9 @@ import {
   UserCheck,
   Building,
   Laptop,
-} from 'lucide-react';
-import { formatDate } from '../utils/formatters';
-import { exportHandoversToExcel } from '../services/storage';
+} from "lucide-react";
+import { formatDate, getLocalDateInputValue } from "../utils/formatters";
+import { exportHandoversToExcel } from "../services/storage";
 
 export const HandoverManagement = ({
   handovers,
@@ -27,23 +27,26 @@ export const HandoverManagement = ({
   onReturnDevice,
   onPrintVoucher,
 }) => {
-  const [filterType, setFilterType] = useState('all'); // 'all' | 'handover' | 'borrow'
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'active' | 'returned'
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState("all"); // 'all' | 'handover' | 'borrow'
+  const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'active' | 'returned'
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateInputValue();
 
   const filteredHandovers = handovers.filter((h) => {
-    if (filterType !== 'all' && h.type !== filterType) return false;
-    if (filterStatus !== 'all' && h.status !== filterStatus) return false;
+    if (filterType !== "all" && h.type !== filterType) return false;
+    if (filterStatus !== "all" && h.status !== filterStatus) return false;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const codeMatch = (h.code || '').toLowerCase().includes(q);
-      const notesMatch = (h.notes || '').toLowerCase().includes(q);
+      const codeMatch = (h.code || "").toLowerCase().includes(q);
+      const notesMatch = (h.notes || "").toLowerCase().includes(q);
 
       const dev = devices.find((d) => d.id === h.deviceId);
-      const devMatch = dev && (dev.name.toLowerCase().includes(q) || dev.code.toLowerCase().includes(q));
+      const devMatch =
+        dev &&
+        (dev.name.toLowerCase().includes(q) ||
+          dev.code.toLowerCase().includes(q));
 
       const user = users.find((u) => u.id === h.userId);
       const userMatch = user && user.name.toLowerCase().includes(q);
@@ -66,13 +69,21 @@ export const HandoverManagement = ({
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Lập phiếu bàn giao, theo dõi hạn trả, xuất biên bản in A4 và ghi nhận hoàn trả
+            Lập phiếu bàn giao, theo dõi hạn trả, xuất biên bản in A4 và ghi
+            nhận hoàn trả
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => exportHandoversToExcel(filteredHandovers, devices, users, departments)}
+            onClick={() =>
+              exportHandoversToExcel(
+                filteredHandovers,
+                devices,
+                users,
+                departments,
+              )
+            }
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -157,13 +168,16 @@ export const HandoverManagement = ({
                   const dept = departments.find((d) => d.id === h.departmentId);
 
                   const isOverdue =
-                    h.status === 'active' &&
-                    h.type === 'borrow' &&
+                    h.status === "active" &&
+                    h.type === "borrow" &&
                     h.expectedReturnDate &&
                     h.expectedReturnDate < today;
 
                   return (
-                    <tr key={h.id} className="hover:bg-indigo-50/30 transition-colors">
+                    <tr
+                      key={h.id}
+                      className="hover:bg-indigo-50/30 transition-colors"
+                    >
                       {/* Code */}
                       <td className="py-3 px-4 font-mono font-bold text-indigo-700 whitespace-nowrap">
                         {h.code}
@@ -173,12 +187,12 @@ export const HandoverManagement = ({
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                            h.type === 'handover'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            h.type === "handover"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
                           }`}
                         >
-                          {h.type === 'handover' ? 'Bàn giao' : 'Cho mượn'}
+                          {h.type === "handover" ? "Bàn giao" : "Cho mượn"}
                         </span>
                       </td>
 
@@ -186,40 +200,54 @@ export const HandoverManagement = ({
                       <td className="py-3 px-4 max-w-xs">
                         {dev ? (
                           <div>
-                            <p className="font-semibold text-slate-900 truncate">{dev.name}</p>
+                            <p className="font-semibold text-slate-900 truncate">
+                              {dev.name}
+                            </p>
                             <p className="font-mono text-[11px] text-slate-500">
                               {dev.code} • S/N: {dev.serial}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Thiết bị không tồn tại</span>
+                          <span className="text-slate-400 italic">
+                            Thiết bị không tồn tại
+                          </span>
                         )}
                       </td>
 
                       {/* Recipient */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <p className="font-semibold text-slate-800">{user ? user.name : '—'}</p>
-                        <p className="text-[11px] text-slate-500">{dept ? dept.name : '—'}</p>
+                        <p className="font-semibold text-slate-800">
+                          {user ? user.name : "—"}
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {dept ? dept.name : "—"}
+                        </p>
                       </td>
 
                       {/* Dates */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="text-slate-700">Giao: {formatDate(h.handoverDate)}</div>
-                        {h.type === 'borrow' && (
+                        <div className="text-slate-700">
+                          Giao: {formatDate(h.handoverDate)}
+                        </div>
+                        {h.type === "borrow" && (
                           <div
                             className={`text-[11px] font-medium flex items-center gap-1 ${
-                              isOverdue ? 'text-rose-600 font-bold' : 'text-slate-500'
+                              isOverdue
+                                ? "text-rose-600 font-bold"
+                                : "text-slate-500"
                             }`}
                           >
                             Hạn trả: {formatDate(h.expectedReturnDate)}
-                            {isOverdue && <AlertTriangle className="w-3 h-3 text-rose-500" />}
+                            {isOverdue && (
+                              <AlertTriangle className="w-3 h-3 text-rose-500" />
+                            )}
                           </div>
                         )}
                       </td>
 
                       {/* Status */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        {h.status === 'returned' ? (
+                        {h.status === "returned" ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                             <CheckCircle className="w-3 h-3 text-slate-500" />
                             Đã trả ({formatDate(h.actualReturnDate)})
@@ -239,10 +267,16 @@ export const HandoverManagement = ({
 
                       {/* Condition & Notes */}
                       <td className="py-3 px-4 max-w-xs">
-                        <p className="text-slate-700 truncate" title={h.condition}>
-                          {h.condition || 'Bình thường'}
+                        <p
+                          className="text-slate-700 truncate"
+                          title={h.condition}
+                        >
+                          {h.condition || "Bình thường"}
                         </p>
-                        <p className="text-[11px] text-slate-400 truncate" title={h.notes}>
+                        <p
+                          className="text-[11px] text-slate-400 truncate"
+                          title={h.notes}
+                        >
                           {h.notes}
                         </p>
                       </td>
@@ -260,7 +294,7 @@ export const HandoverManagement = ({
                           </button>
 
                           {/* Return button if active */}
-                          {h.status === 'active' && (
+                          {h.status === "active" && (
                             <button
                               onClick={() => onReturnDevice(h)}
                               title="Thu hồi / Hoàn trả thiết bị"
