@@ -207,18 +207,35 @@ export const exportHandoversToExcel = (handovers, devices, users, departments) =
   XLSX.writeFile(workbook, `Lich_Su_Ban_Giao_Muon_Tra_${dateStr}.xlsx`);
 };
 
-export const exportAuditsToExcel = (audit, devices) => {
-  const devMap = Object.fromEntries(devices.map((d) => [d.id, d]));
-  const rows = (audit.records || []).map((rec, idx) => {
-    const dev = devMap[rec.deviceId] || {};
+export const exportAuditsToExcel = (audit, devices, users = [], departments = []) => {
+  const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+  const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
+  const recordMap = new Map((audit.records || []).map((record) => [record.deviceId, record]));
+  const rows = devices.map((dev, idx) => {
+    const rec = recordMap.get(dev.id) || { status: 'not_checked' };
+    const baseline = { ...{
+      holder: userMap[dev.userId]?.name || 'Không có người giữ',
+      department: deptMap[dev.departmentId] || 'Chưa gán phòng ban',
+      location: dev.location || 'Chưa ghi vị trí',
+      status: dev.status || '',
+    }, ...(rec.systemSnapshot || {}) };
+    const discrepancyText = (rec.discrepancies || []).map((item) => `${item.label}: ${item.expected} → ${item.actual}`).join('; ');
     return {
       'STT': idx + 1,
       'Mã tài sản': dev.code || '',
       'Tên thiết bị': dev.name || '',
       'Serial': dev.serial || '',
-      'Vị trí hệ thống': dev.location || '',
-      'Trạng thái kiểm kê': rec.status === 'matched' ? 'Khớp tài sản' : 'Có chênh lệch / Lỗi',
+      'Người giữ theo hệ thống': baseline.holder,
+      'Phòng ban theo hệ thống': baseline.department,
+      'Vị trí theo hệ thống': baseline.location,
+      'Trạng thái thiết bị': baseline.status,
+      'Trạng thái kiểm kê': ({ found: 'Đã tìm thấy - chờ xác nhận', confirmed: 'Đã xác nhận đúng', matched: 'Đã xác nhận đúng', discrepancy: 'Có chênh lệch', unverified: 'Chưa xác minh', not_checked: 'Chưa kiểm' })[rec.status] || 'Chưa kiểm',
+      'Chi tiết chênh lệch (hệ thống → thực tế)': discrepancyText,
       'Ghi chú kiểm kê': rec.note || '',
+      'Thời điểm tìm thấy': rec.foundAt || '',
+      'Người ghi nhận tìm thấy': rec.foundBy || '',
+      'Thời điểm đối chiếu': rec.checkedAt || '',
+      'Người đối chiếu': rec.checkedBy || '',
     };
   });
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   X,
   QrCode,
@@ -308,19 +309,16 @@ export const DeviceDetailModal = ({
                 <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   TÀI SẢN DOANH NGHIỆP
                 </div>
-                {/* Simulated Barcode */}
-                <div className="bg-white p-2 rounded-lg border border-slate-200 mb-2">
-                  <div className="flex items-center gap-0.5 h-10 px-2">
-                    {[1, 3, 2, 4, 1, 3, 1, 2, 4, 2, 1, 3, 2, 4, 1, 3, 2].map((w, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-black inline-block h-full"
-                        style={{ width: `${w * 2}px` }}
-                      ></span>
-                    ))}
-                  </div>
-                  <div className="font-mono font-bold text-xs tracking-widest text-slate-800 mt-1">
-                    *{device.code}*
+                <div className="mb-2 rounded-lg border border-slate-200 bg-white p-2">
+                  <QRCodeSVG
+                    value={device.code}
+                    size={144}
+                    level="M"
+                    includeMargin
+                    title={`Mã QR tài sản ${device.code}`}
+                  />
+                  <div className="mt-1 font-mono text-xs font-bold tracking-widest text-slate-900">
+                    {device.code}
                   </div>
                 </div>
 

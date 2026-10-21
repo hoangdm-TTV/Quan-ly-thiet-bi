@@ -84,8 +84,14 @@ CREATE TABLE IF NOT EXISTS audits (
 CREATE TABLE IF NOT EXISTS audit_records (
   audit_id TEXT NOT NULL REFERENCES audits(id) ON DELETE CASCADE,
   device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE RESTRICT,
-  status TEXT NOT NULL CHECK (status IN ('matched', 'discrepancy')),
+  status TEXT NOT NULL CHECK (status IN ('found', 'confirmed', 'discrepancy', 'unverified')),
   note TEXT,
+  found_at TIMESTAMPTZ,
+  found_by TEXT,
+  checked_at TIMESTAMPTZ,
+  checked_by TEXT,
+  discrepancies JSONB NOT NULL DEFAULT '[]'::jsonb,
+  system_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
   PRIMARY KEY (audit_id, device_id)
 );
 

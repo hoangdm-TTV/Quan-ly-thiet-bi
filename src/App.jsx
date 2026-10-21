@@ -477,24 +477,24 @@ export default function App() {
     });
   };
 
-  const handleUpdateAuditItem = (auditId, deviceId, status, note) => {
+  const handleUpdateAuditItem = (auditId, deviceId, patch) => {
     const updatedAudits = data.audits.map((a) => {
       if (a.id === auditId) {
         const existingRecords = [...(a.records || [])];
         const recordIndex = existingRecords.findIndex((r) => r.deviceId === deviceId);
+        const previous = recordIndex >= 0 ? existingRecords[recordIndex] : {};
+        const next = { ...previous, ...patch, deviceId };
+        if (recordIndex >= 0) existingRecords[recordIndex] = next;
+        else existingRecords.push(next);
 
-        if (recordIndex >= 0) {
-          existingRecords[recordIndex] = { deviceId, status, note };
-        } else {
-          existingRecords.push({ deviceId, status, note });
-        }
-
-        const matchedCount = existingRecords.filter((r) => r.status === 'matched').length;
+        const matchedCount = existingRecords.filter((r) => r.status === 'confirmed').length;
         const discrepancyCount = existingRecords.filter((r) => r.status === 'discrepancy').length;
+        const totalChecked = existingRecords.filter((r) => ['found', 'confirmed', 'discrepancy'].includes(r.status)).length;
 
         return {
           ...a,
           records: existingRecords,
+          totalChecked,
           matchedCount,
           discrepancyCount,
         };
@@ -502,14 +502,30 @@ export default function App() {
       return a;
     });
 
-    updateData({ ...data, audits: updatedAudits });
+    return updateData({ ...data, audits: updatedAudits });
   };
 
   const handleFinishAudit = (auditId) => {
-    if (window.confirm('Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?')) {
-      const updatedAudits = data.audits.map((a) =>
-        a.id === auditId ? { ...a, status: 'completed' } : a
-      );
+    const audit = data.audits.find((item) => item.id === auditId);
+    if (!audit || audit.status === 'completed') return;
+    const existingIds = new Set((audit.records || []).map((record) => record.deviceId));
+    const unverified = data.devices.filter((device) => !existingIds.has(device.id));
+    const message = unverified.length
+      ? `Chốt đợt kiểm kê? ${unverified.length} tài sản chưa được quét sẽ chuyển thành “Chưa xác minh” để rà soát sau.`
+      : 'Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?';
+    if (window.confirm(message)) {
+      const updatedAudits = data.audits.map((a) => {
+        if (a.id !== auditId) return a;
+        const records = [...(a.records || []), ...unverified.map((device) => ({ deviceId: device.id, status: 'unverified' }))];
+        return {
+          ...a,
+          status: 'completed',
+          records,
+          totalChecked: records.filter((record) => ['found', 'confirmed', 'discrepancy'].includes(record.status)).length,
+          matchedCount: records.filter((record) => record.status === 'confirmed' || record.status === 'matched').length,
+          discrepancyCount: records.filter((record) => record.status === 'discrepancy').length,
+        };
+      });
       updateData({ ...data, audits: updatedAudits });
     }
   };
@@ -680,6 +696,9 @@ export default function App() {
             <AuditManagement
               audits={data.audits}
               devices={data.devices}
+              users={data.users}
+              departments={data.departments}
+              currentUser={authUser}
               onOpenNewAudit={() => setAuditModal({ open: true })}
               onUpdateAuditItem={handleUpdateAuditItem}
               onFinishAudit={handleFinishAudit}

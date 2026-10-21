@@ -21,6 +21,8 @@ export const pool = new Pool({
 export const initializeSchema = async () => {
   const sql = await fs.readFile(path.join(currentDir, 'schema.sql'), 'utf8');
   await pool.query(sql);
+  const auditWorkflowMigration = await fs.readFile(path.join(currentDir, 'migrations', '20261020_audit_workflow.sql'), 'utf8');
+  await pool.query(auditWorkflowMigration);
   await pool.query(
     `INSERT INTO app_metadata (key, value) VALUES ('dataVersion', '0')
      ON CONFLICT (key) DO NOTHING`,
@@ -222,8 +224,9 @@ export const replaceSnapshot = async (input, expectedVersion, options = {}) => {
       );
       for (const record of audit.records || []) {
         await client.query(
-          'INSERT INTO audit_records (audit_id, device_id, status, note) VALUES ($1,$2,$3,$4)',
-          [audit.id, record.deviceId, record.status, cleanText(record.note)],
+          `INSERT INTO audit_records (audit_id, device_id, status, note, found_at, found_by, checked_at, checked_by, discrepancies, system_snapshot)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb)`,
+          [audit.id, record.deviceId, record.status === 'matched' ? 'confirmed' : record.status, cleanText(record.note), dateValue(record.foundAt), cleanText(record.foundBy), dateValue(record.checkedAt), cleanText(record.checkedBy), JSON.stringify(record.discrepancies || []), JSON.stringify(record.systemSnapshot || {})],
         );
       }
     }
@@ -258,14 +261,14 @@ export const getSnapshot = async () => {
     pool.query('SELECT id, code, type, device_id AS "deviceId", user_id AS "userId", department_id AS "departmentId", handover_date AS "handoverDate", expected_return_date AS "expectedReturnDate", actual_return_date AS "actualReturnDate", status, giver_id AS "giverId", giver_name AS "giverName", device_condition AS condition, notes FROM handovers ORDER BY handover_date DESC NULLS LAST, id'),
     pool.query('SELECT id, code, device_id AS "deviceId", issue, solution, cost::float8 AS cost, vendor, status, start_date AS "startDate", completed_date AS "completedDate", technician, notes FROM maintenance ORDER BY start_date DESC NULLS LAST, id'),
     pool.query('SELECT id, code, title, audit_date AS "auditDate", auditor, status, notes, total_checked AS "totalChecked", matched_count AS "matchedCount", discrepancy_count AS "discrepancyCount" FROM audits ORDER BY audit_date DESC NULLS LAST, id'),
-    pool.query('SELECT audit_id AS "auditId", device_id AS "deviceId", status, note FROM audit_records ORDER BY audit_id, device_id'),
+    pool.query('SELECT audit_id AS "auditId", device_id AS "deviceId", status, note, found_at AS "foundAt", found_by AS "foundBy", checked_at AS "checkedAt", checked_by AS "checkedBy", discrepancies, system_snapshot AS "systemSnapshot" FROM audit_records ORDER BY audit_id, device_id'),
     pool.query("SELECT key, value FROM app_metadata WHERE key IN ('updatedAt', 'dataVersion')"),
   ]);
 
   const recordsByAudit = new Map();
   for (const record of records.rows) {
     const group = recordsByAudit.get(record.auditId) || [];
-    group.push({ deviceId: record.deviceId, status: record.status, note: record.note });
+    group.push({ deviceId: record.deviceId, status: record.status, note: record.note, foundAt: record.foundAt, foundBy: record.foundBy, checkedAt: record.checkedAt, checkedBy: record.checkedBy, discrepancies: record.discrepancies || [], systemSnapshot: record.systemSnapshot || {} });
     recordsByAudit.set(record.auditId, group);
   }
   const metadataByKey = Object.fromEntries(metadata.rows.map(({ key, value }) => [key, value]));
