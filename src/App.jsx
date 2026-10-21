@@ -784,6 +784,7 @@ export default function App() {
         onSave={handleSaveUser}
         userToEdit={userModal.editItem}
         departments={data.departments}
+        users={data.users}
       />
 
       <PrintVoucherModal

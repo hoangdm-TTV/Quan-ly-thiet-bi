@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User } from 'lucide-react';
+import { X, Save, User, Upload, Image as ImageIcon } from 'lucide-react';
 
 export const UserModal = ({
   isOpen,
@@ -7,7 +7,9 @@ export const UserModal = ({
   onSave,
   userToEdit,
   departments,
+  users,
 }) => {
+  const [imageError, setImageError] = useState('');
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -19,12 +21,16 @@ export const UserModal = ({
   });
 
   useEffect(() => {
+    setImageError('');
     if (userToEdit) {
       setFormData(userToEdit);
     } else {
-      const randomNum = String(Math.floor(Math.random() * 900) + 100);
+      const maxCode = (users || []).reduce((max, user) => {
+        const match = /^NV(\d+)$/i.exec(user.code || '');
+        return match ? Math.max(max, Number(match[1])) : max;
+      }, 0);
       setFormData({
-        code: `NV${randomNum}`,
+        code: `NV${String(maxCode + 1).padStart(3, '0')}`,
         name: '',
         email: '',
         phone: '',
@@ -33,9 +39,48 @@ export const UserModal = ({
         avatar: '',
       });
     }
-  }, [userToEdit, isOpen, departments]);
+  }, [userToEdit, isOpen, departments, users]);
 
   if (!isOpen) return null;
+
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageError('Vui lòng chọn một tệp hình ảnh.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setImageError('Ảnh gốc cần nhỏ hơn 10 MB.');
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 320;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          setImageError('Không thể xử lý ảnh trên trình duyệt này.');
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        setFormData((current) => ({ ...current, avatar: canvas.toDataURL('image/jpeg', 0.75) }));
+        setImageError('');
+      };
+      image.onerror = () => setImageError('Không đọc được nội dung ảnh đã chọn.');
+      image.src = String(reader.result);
+    };
+    reader.onerror = () => setImageError('Không thể đọc tệp ảnh.');
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -88,7 +133,8 @@ export const UserModal = ({
                 type="text"
                 required
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                readOnly
+                title="Mã nhân viên được hệ thống tự tạo theo số tiếp theo"
                 className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
@@ -161,14 +207,24 @@ export const UserModal = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Đường dẫn ảnh đại diện (Avatar URL)</label>
-            <input
-              type="text"
-              value={formData.avatar}
-              onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-              placeholder="https://..."
-              className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none"
-            />
+            <label className="block font-semibold text-slate-700 mb-2">Ảnh đại diện</label>
+            <div className="flex items-center gap-4">
+              {formData.avatar ? (
+                <img src={formData.avatar} alt="Xem trước ảnh đại diện" className="h-16 w-16 rounded-xl border border-slate-200 object-cover" />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400"><ImageIcon className="h-6 w-6" /></div>
+              )}
+              <div className="min-w-0 flex-1">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">
+                  <Upload className="h-4 w-4" />
+                  <span>Chọn ảnh từ thiết bị</span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+                </label>
+                <p className="mt-1 text-[11px] text-slate-500">Có thể chọn ảnh trên máy tính hoặc điện thoại; ảnh sẽ được thu nhỏ trước khi lưu.</p>
+              </div>
+            </div>
+            {imageError && <p role="alert" className="mt-2 text-xs text-rose-600">{imageError}</p>}
+            {formData.avatar && <button type="button" className="mt-2 text-xs font-semibold text-rose-600 hover:underline" onClick={() => setFormData((current) => ({ ...current, avatar: '' }))}>Xóa ảnh đã chọn</button>}
           </div>
 
           {/* Actions */}
