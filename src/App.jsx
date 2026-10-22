@@ -24,12 +24,14 @@ import { getLocalDateInputValue } from "./utils/formatters";
 
 import {
   changePassword,
+  createAudit,
   fetchInitialData,
+  finishAuditRequest,
   getAuthStatus,
   getCurrentUser,
   login,
   logout,
-  resetToSampleData,
+  saveAuditRecord,
   saveStoredData,
 } from "./services/storage";
 
@@ -628,92 +630,62 @@ export default function App() {
   };
 
   // --- Handlers for Audits ---
-  const handleSaveAudit = (auditData) => {
-    const newAudit = {
-      ...auditData,
-      id: `audit-${Date.now()}`,
-    };
-    updateData({
-      ...data,
-      audits: [newAudit, ...data.audits],
-    });
+  const applyAudit = (audit) =>
+    setData((current) => ({
+      ...current,
+      audits: current.audits.some((item) => item.id === audit.id)
+        ? current.audits.map((item) => (item.id === audit.id ? audit : item))
+        : [audit, ...current.audits],
+    }));
+
+  const handleSaveAudit = async (auditData) => {
+    try {
+      applyAudit(
+        await createAudit({ ...auditData, id: `audit-${Date.now()}` }),
+      );
+      return true;
+    } catch (error) {
+      window.alert(`Không thể tạo đợt kiểm kê: ${error.message}`);
+      return false;
+    }
   };
 
-  const handleUpdateAuditItem = (auditId, deviceId, patch) => {
-    const updatedAudits = data.audits.map((a) => {
-      if (a.id === auditId) {
-        const existingRecords = [...(a.records || [])];
-        const recordIndex = existingRecords.findIndex(
-          (r) => r.deviceId === deviceId,
-        );
-        const previous = recordIndex >= 0 ? existingRecords[recordIndex] : {};
-        const next = { ...previous, ...patch, deviceId };
-        if (recordIndex >= 0) existingRecords[recordIndex] = next;
-        else existingRecords.push(next);
-
-        const matchedCount = existingRecords.filter(
-          (r) => r.status === "confirmed",
-        ).length;
-        const discrepancyCount = existingRecords.filter(
-          (r) => r.status === "discrepancy",
-        ).length;
-        const totalChecked = existingRecords.filter((r) =>
-          ["found", "confirmed", "discrepancy"].includes(r.status),
-        ).length;
-
-        return {
-          ...a,
-          records: existingRecords,
-          totalChecked,
-          matchedCount,
-          discrepancyCount,
-        };
-      }
-      return a;
-    });
-
-    return updateData({ ...data, audits: updatedAudits });
+  const handleUpdateAuditItem = async (auditId, deviceId, patch) => {
+    const audit = data.audits.find((item) => item.id === auditId);
+    const previous =
+      audit?.records?.find((record) => record.deviceId === deviceId) || {};
+    try {
+      applyAudit(
+        await saveAuditRecord(auditId, deviceId, {
+          ...previous,
+          ...patch,
+          deviceId,
+        }),
+      );
+      return true;
+    } catch (error) {
+      window.alert(`Không thể lưu kết quả kiểm kê: ${error.message}`);
+      return false;
+    }
   };
 
-  const handleFinishAudit = (auditId) => {
+  const handleFinishAudit = async (auditId) => {
     const audit = data.audits.find((item) => item.id === auditId);
     if (!audit || audit.status === "completed") return;
     const existingIds = new Set(
       (audit.records || []).map((record) => record.deviceId),
     );
-    const unverified = data.devices.filter(
+    const unverifiedCount = data.devices.filter(
       (device) => !existingIds.has(device.id),
-    );
-    const message = unverified.length
-      ? `Chốt đợt kiểm kê? ${unverified.length} tài sản chưa được quét sẽ chuyển thành “Chưa xác minh” để rà soát sau.`
+    ).length;
+    const message = unverifiedCount
+      ? `Chốt đợt kiểm kê? ${unverifiedCount} tài sản chưa được quét sẽ chuyển thành “Chưa xác minh” để rà soát sau.`
       : "Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?";
-    if (window.confirm(message)) {
-      const updatedAudits = data.audits.map((a) => {
-        if (a.id !== auditId) return a;
-        const records = [
-          ...(a.records || []),
-          ...unverified.map((device) => ({
-            deviceId: device.id,
-            status: "unverified",
-          })),
-        ];
-        return {
-          ...a,
-          status: "completed",
-          records,
-          totalChecked: records.filter((record) =>
-            ["found", "confirmed", "discrepancy"].includes(record.status),
-          ).length,
-          matchedCount: records.filter(
-            (record) =>
-              record.status === "confirmed" || record.status === "matched",
-          ).length,
-          discrepancyCount: records.filter(
-            (record) => record.status === "discrepancy",
-          ).length,
-        };
-      });
-      updateData({ ...data, audits: updatedAudits });
+    if (!window.confirm(message)) return;
+    try {
+      applyAudit(await finishAuditRequest(auditId));
+    } catch (error) {
+      window.alert(`Không thể chốt đợt kiểm kê: ${error.message}`);
     }
   };
 
@@ -738,28 +710,6 @@ export default function App() {
     if (window.confirm(`Bạn có chắc muốn xóa nhân sự "${user.name}"?`)) {
       const updatedUsers = data.users.filter((u) => u.id !== user.id);
       updateData({ ...data, users: updatedUsers });
-    }
-  };
-
-  const handleResetData = async () => {
-    const typed = window.prompt(
-      "CẢNH BÁO: toàn bộ dữ liệu hiện có sẽ bị XÓA và thay bằng dữ liệu mẫu.\n\nNhập chính xác chữ RESET để tiếp tục:",
-    );
-    if (typed === null) return;
-    if (typed.trim() !== "RESET") {
-      window.alert('Chưa nhập đúng "RESET". Đã hủy thao tác.');
-      return;
-    }
-    {
-      try {
-        const fresh = await resetToSampleData();
-        setData(fresh);
-        setDatabaseError("");
-        alert("Đã thiết lập lại dữ liệu thành công!");
-      } catch (error) {
-        setDatabaseError(error.message);
-        alert(`Không thể khôi phục dữ liệu: ${error.message}`);
-      }
     }
   };
 
@@ -834,7 +784,6 @@ export default function App() {
           setHandoverModal({ open: true, preselectedDevice: null })
         }
         onDataRefresh={handleRefresh}
-        onResetData={handleResetData}
         devices={data.devices}
         users={data.users}
         departments={data.departments}
@@ -963,7 +912,6 @@ export default function App() {
               departments={data.departments}
               handovers={data.handovers}
               maintenance={data.maintenance}
-              onResetData={handleResetData}
             />
           )}
         </main>

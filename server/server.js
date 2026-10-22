@@ -13,14 +13,6 @@ import {
   updateAdminPassword,
   verifyCredentials,
 } from "./auth.js";
-import {
-  INITIAL_DEPARTMENTS,
-  INITIAL_USERS,
-  INITIAL_DEVICES,
-  INITIAL_HANDOVERS,
-  INITIAL_MAINTENANCE,
-  INITIAL_AUDITS,
-} from "../src/data/mockData.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
@@ -205,15 +197,6 @@ app.post("/api/auth/password", async (req, res, next) => {
   }
 });
 
-const initialSample = () => ({
-  departments: INITIAL_DEPARTMENTS,
-  users: INITIAL_USERS,
-  devices: INITIAL_DEVICES,
-  handovers: INITIAL_HANDOVERS,
-  maintenance: INITIAL_MAINTENANCE,
-  audits: INITIAL_AUDITS,
-});
-
 app.get("/api/health", async (_req, res) => {
   try {
     const { pool } = await import("./database.js");
@@ -257,38 +240,59 @@ app.post("/api/data", async (req, res, next) => {
     const db = await replaceSnapshot(req.body, req.get("If-Match"));
     res.json({ success: true, message: "Đã lưu dữ liệu vào PostgreSQL.", db });
   } catch (error) {
-    if (error.code === "23505") {
-      return res.status(422).json({
-        error:
-          "Có mã bị trùng (mã tài sản, mã phiếu, mã nhân viên hoặc mã đợt kiểm kê). Hãy đổi mã khác rồi lưu lại.",
-      });
-    }
-    if (error.status === 409 || error.status === 428 || error.status === 422) {
-      return res.status(error.status).json({ error: error.message });
-    }
-    next(error);
+    sendDbError(error, res, next);
   }
 });
 
-app.post("/api/reset", async (_req, res, next) => {
-  if (process.env.NODE_ENV === "production") {
-    return res.status(404).json({ error: "Không tìm thấy API." });
-  }
-  try {
-    const { replaceSnapshot } = await import("./database.js");
-    const db = await replaceSnapshot(initialSample(), _req.get("If-Match"), {
-      allowReset: true,
+const sendDbError = (error, res, next) => {
+  if (error.code === "23505") {
+    return res.status(422).json({
+      error:
+        "Có mã bị trùng (mã tài sản, mã phiếu, mã nhân viên hoặc mã đợt kiểm kê). Hãy đổi mã khác rồi lưu lại.",
     });
+  }
+  if (error.code === "23503") {
+    return res.status(422).json({
+      error:
+        "Không thể xóa: bản ghi này đang được dùng ở nơi khác (ví dụ thiết bị đã có trong biên bản kiểm kê). Hãy ghi nhận thanh lý thay vì xóa.",
+    });
+  }
+  if ([404, 409, 422, 428].includes(error.status)) {
+    return res.status(error.status).json({ error: error.message });
+  }
+  return next(error);
+};
+
+app.post("/api/audits", async (req, res, next) => {
+  try {
+    const { createAudit } = await import("./database.js");
+    res.status(201).json({ audit: await createAudit(req.body) });
+  } catch (error) {
+    sendDbError(error, res, next);
+  }
+});
+
+app.put("/api/audits/:auditId/records/:deviceId", async (req, res, next) => {
+  try {
+    const { saveAuditRecord } = await import("./database.js");
     res.json({
-      success: true,
-      message: "Đã khôi phục dữ liệu mẫu trong PostgreSQL.",
-      db,
+      audit: await saveAuditRecord(
+        req.params.auditId,
+        req.params.deviceId,
+        req.body,
+      ),
     });
   } catch (error) {
-    if (error.status === 409 || error.status === 428 || error.status === 422) {
-      return res.status(error.status).json({ error: error.message });
-    }
-    next(error);
+    sendDbError(error, res, next);
+  }
+});
+
+app.post("/api/audits/:auditId/finish", async (req, res, next) => {
+  try {
+    const { finishAudit } = await import("./database.js");
+    res.json({ audit: await finishAudit(req.params.auditId) });
+  } catch (error) {
+    sendDbError(error, res, next);
   }
 });
 

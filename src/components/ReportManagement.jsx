@@ -21,7 +21,6 @@ export const ReportManagement = ({
   departments,
   handovers,
   maintenance,
-  onResetData,
 }) => {
   // Aggregate statistics
   const totalValue = devices.reduce(
@@ -248,33 +247,6 @@ export const ReportManagement = ({
           </button>
         </div>
       </div>
-
-      {/* Danger zone: chỉ hiện khi chạy chế độ phát triển */}
-      {import.meta.env.DEV && onResetData && (
-        <div className="rounded-2xl border-2 border-dashed border-rose-300 bg-rose-50 p-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-bold text-sm text-rose-900">
-                Khu vực nguy hiểm (chỉ dành cho phát triển)
-              </h3>
-              <p className="text-xs text-rose-800 mt-1 leading-relaxed">
-                Thao tác bên dưới sẽ{" "}
-                <strong>xóa toàn bộ dữ liệu hiện có</strong> trong PostgreSQL và
-                thay bằng dữ liệu mẫu. Hãy bấm "Tải file Sao lưu" ở trên trước.
-                Không dùng trên hệ thống đang chứa dữ liệu thật.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onResetData}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Khôi phục Dữ liệu Demo</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 };

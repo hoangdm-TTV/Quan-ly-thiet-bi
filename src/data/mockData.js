@@ -1,4 +1,4 @@
-export const INITIAL_DEPARTMENTS = [
+/**export const INITIAL_DEPARTMENTS = [
   { id: 'dept-1', name: 'Ban Giám Đốc', code: 'BGD', manager: 'Trần Đình Quang', room: 'P.701 - Tầng 7' },
   { id: 'dept-2', name: 'Phòng Công Nghệ Thông Tin (IT)', code: 'IT', manager: 'Nguyễn Văn Hùng', room: 'P.402 - Tầng 4' },
   { id: 'dept-3', name: 'Phòng Phát Triển Sản Phẩm (R&D)', code: 'RND', manager: 'Lê Hoàng Nam', room: 'P.405 - Tầng 4' },
@@ -460,4 +460,4 @@ export const INITIAL_AUDITS = [
     discrepancyCount: 0,
     records: []
   }
-];
+];**/

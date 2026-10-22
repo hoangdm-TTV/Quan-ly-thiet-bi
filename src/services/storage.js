@@ -117,22 +117,6 @@ export const saveStoredData = async (data) => {
   return { success: true, isBackend: true };
 };
 
-export const resetToSampleData = async () => {
-  if (currentRevision === null || currentRevision === undefined) {
-    throw new Error(
-      "Chưa có phiên bản dữ liệu từ database. Hãy tải lại trang trước khi khôi phục.",
-    );
-  }
-  const result = await request("/reset", {
-    method: "POST",
-    headers: { "If-Match": String(currentRevision) },
-  });
-  const defaultData = result.db;
-  currentRevision = defaultData.revision;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-  return defaultData;
-};
-
 export const backupToJsonFile = () => {
   const data = getLocalStoredData();
   const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -303,4 +287,46 @@ export const exportAuditsToExcel = (
   XLSX.utils.book_append_sheet(workbook, worksheet, "KetQuaKiemKe");
 
   XLSX.writeFile(workbook, `Ket_Qua_Kiem_Ke_${audit.code || "BaoCao"}.xlsx`);
+};
+
+const cacheAudit = (audit) => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const cached = JSON.parse(raw);
+    const audits = cached.audits || [];
+    cached.audits = audits.some((item) => item.id === audit.id)
+      ? audits.map((item) => (item.id === audit.id ? audit : item))
+      : [audit, ...audits];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
+  } catch {
+    // Cache chỉ phục vụ sao lưu; lỗi ở đây không ảnh hưởng dữ liệu thật.
+  }
+};
+
+export const createAudit = async (audit) => {
+  const { audit: saved } = await request("/audits", {
+    method: "POST",
+    body: JSON.stringify(audit),
+  });
+  cacheAudit(saved);
+  return saved;
+};
+
+export const saveAuditRecord = async (auditId, deviceId, record) => {
+  const { audit } = await request(
+    `/audits/${encodeURIComponent(auditId)}/records/${encodeURIComponent(deviceId)}`,
+    { method: "PUT", body: JSON.stringify(record) },
+  );
+  cacheAudit(audit);
+  return audit;
+};
+
+export const finishAuditRequest = async (auditId) => {
+  const { audit } = await request(
+    `/audits/${encodeURIComponent(auditId)}/finish`,
+    { method: "POST" },
+  );
+  cacheAudit(audit);
+  return audit;
 };
