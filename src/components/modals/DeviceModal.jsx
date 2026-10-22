@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, Laptop, Tag } from "lucide-react";
-import { CATEGORIES } from "../../data/mockData";
+import { CATEGORIES } from "../../data/assetMetadata";
 import { getLocalDateInputValue } from "../../utils/formatters";
 import { getNextCode } from "../../utils/formatters";
 

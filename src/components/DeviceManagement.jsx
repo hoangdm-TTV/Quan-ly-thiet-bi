@@ -26,7 +26,7 @@ import {
   User,
   CheckCircle,
 } from 'lucide-react';
-import { CATEGORIES, STATUS_MAP } from '../data/mockData';
+import { CATEGORIES, STATUS_MAP } from '../data/assetMetadata';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportDevicesToExcel } from '../services/storage';
 

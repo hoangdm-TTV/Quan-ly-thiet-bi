@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, Send, Calendar, User, Laptop } from "lucide-react";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
-import { STATUS_MAP } from "../../data/mockData";
+import { STATUS_MAP } from "../../data/assetMetadata";
 
 export const HandoverModal = ({
   isOpen,
@@ -33,10 +33,15 @@ export const HandoverModal = ({
       const isBorrow = formData.type === "borrow";
       const prefix = isBorrow ? "PM" : "BG";
       const year = new Date().getFullYear();
+      const nextCode = getNextCode(
+        handovers.map((handover) => handover.code),
+        prefix,
+        { year },
+      );
 
       setFormData((prev) => ({
         ...prev,
-        code: `${prefix}-${year}-${randomNum}`,
+        code: nextCode,
         deviceId:
           preselectedDevice?.status === "available" &&
           !maintenance.some(

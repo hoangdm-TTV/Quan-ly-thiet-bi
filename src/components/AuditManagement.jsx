@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from '../utils/formatters';
 import { exportAuditsToExcel } from '../services/storage';
-import { STATUS_MAP } from '../data/mockData';
+import { STATUS_MAP } from '../data/assetMetadata';
 import { QRScannerModal } from './modals/QRScannerModal';
 
 const FIELD_DEFS = [

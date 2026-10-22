@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { getLocalDateInputValue } from "../utils/formatters";
-import { CATEGORIES, STATUS_MAP } from "../data/mockData";
+import { CATEGORIES, STATUS_MAP } from "../data/assetMetadata";
 
 const STORAGE_KEY = "IT_ASSET_MASTER_V1";
 const API_URL = "/api";

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Save, Wrench, X } from "lucide-react";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
-import { STATUS_MAP } from "../../data/mockData";
+import { STATUS_MAP } from "../../data/assetMetadata";
 
 export const MaintenanceModal = ({
   isOpen,

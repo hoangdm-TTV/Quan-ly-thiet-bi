@@ -19,7 +19,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { CATEGORIES, STATUS_MAP } from '../../data/mockData';
+import { CATEGORIES, STATUS_MAP } from '../../data/assetMetadata';
 
 export const DeviceDetailModal = ({
   isOpen,
