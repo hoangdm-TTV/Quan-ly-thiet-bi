@@ -456,9 +456,9 @@ export default function App() {
 
   // --- Handlers for Maintenance ---
   const handleSaveMaintenance = async (maintenanceData) => {
-    if (!["scheduled", "in_progress"].includes(maintenanceData.status)) {
+    if (maintenanceData.status !== "scheduled") {
       window.alert(
-        "Phiếu mới chỉ có thể ở trạng thái đã lên lịch hoặc đang xử lý. Hãy nghiệm thu sau khi bắt đầu xử lý.",
+        "Phiếu mới chỉ được tạo ở trạng thái đã lên lịch. Hãy dùng nút Bắt đầu xử lý khi thiết bị thực sự được tiếp nhận.",
       );
       return false;
     }
@@ -477,10 +477,6 @@ export default function App() {
     const device = latestData.devices.find(
       (item) => item.id === maintenanceData.deviceId,
     );
-    const hasActiveHandover = latestData.handovers.some(
-      (item) =>
-        item.deviceId === maintenanceData.deviceId && item.status === "active",
-    );
     const hasOpenMaintenance = latestData.maintenance.some(
       (item) =>
         item.deviceId === maintenanceData.deviceId &&
@@ -489,14 +485,9 @@ export default function App() {
     const canSchedule =
       device &&
       ["available", "in_use", "borrowed", "broken"].includes(device.status);
-    const canStartNow = device?.status === "broken" && !hasActiveHandover;
-    if (
-      !canSchedule ||
-      hasOpenMaintenance ||
-      (maintenanceData.status === "in_progress" && !canStartNow)
-    ) {
+    if (!canSchedule || hasOpenMaintenance) {
       window.alert(
-        "Thiết bị đang sử dụng chỉ được lên lịch. Muốn bắt đầu sửa chữa, hãy thu hồi và ghi nhận thiết bị đang hỏng trước.",
+        "Không thể tạo lịch: thiết bị không còn phù hợp hoặc đã có phiếu bảo trì đang mở. Hãy tải lại danh sách và kiểm tra phiếu hiện có.",
       );
       return false;
     }
@@ -506,22 +497,8 @@ export default function App() {
       id: `maint-${Date.now()}`,
     };
 
-    const updatedDevices = latestData.devices.map((item) =>
-      item.id === maintenanceData.deviceId &&
-      maintenanceData.status === "in_progress"
-        ? {
-            ...item,
-            status: "maintenance",
-            userId: null,
-            departmentId: null,
-            location: "Khu vực bảo trì",
-          }
-        : item,
-    );
-
     return updateData({
       ...latestData,
-      devices: updatedDevices,
       maintenance: [newRecord, ...latestData.maintenance],
     });
   };
@@ -884,6 +861,7 @@ export default function App() {
             <MaintenanceManagement
               maintenance={data.maintenance}
               devices={data.devices}
+              handovers={data.handovers}
               onOpenNewMaintenance={() =>
                 setMaintenanceModal({ open: true, preselectedDevice: null })
               }
@@ -980,7 +958,6 @@ export default function App() {
         preselectedDevice={maintenanceModal.preselectedDevice}
         devices={data.devices}
         maintenance={data.maintenance}
-        handovers={data.handovers}
       />
 
       <AuditModal

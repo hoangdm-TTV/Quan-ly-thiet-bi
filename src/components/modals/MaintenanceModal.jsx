@@ -10,7 +10,6 @@ export const MaintenanceModal = ({
   preselectedDevice,
   devices,
   maintenance = [],
-  handovers = [],
 }) => {
   const [formData, setFormData] = useState({
     code: "",
@@ -43,10 +42,6 @@ export const MaintenanceModal = ({
         selectableDevices.find(
           (device) => device.id === preselectedDevice?.id,
         ) || selectableDevices[0];
-      const selectedHasActiveHandover = handovers.some(
-        (item) =>
-          item.deviceId === selectedDevice?.id && item.status === "active",
-      );
       setFormData({
         code: getNextCode(
           maintenance.map((m) => m.code),
@@ -58,16 +53,13 @@ export const MaintenanceModal = ({
         solution: "",
         cost: "0",
         vendor: "Trung tâm Bảo hành Chính hãng",
-        status:
-          selectedDevice?.status === "broken" && !selectedHasActiveHandover
-            ? "in_progress"
-            : "scheduled",
+        status: "scheduled",
         startDate: getLocalDateInputValue(),
         technician: "Kỹ thuật viên IT",
         notes: "",
       });
     }
-  }, [isOpen, preselectedDevice, devices, maintenance, handovers]);
+  }, [isOpen, preselectedDevice, devices, maintenance]);
 
   if (!isOpen) return null;
 
@@ -81,30 +73,15 @@ export const MaintenanceModal = ({
       ),
   );
 
-  const selectedDevice = devices.find(
-    (device) => device.id === formData.deviceId,
-  );
-  const selectedHasActiveHandover = handovers.some(
-    (item) => item.deviceId === formData.deviceId && item.status === "active",
-  );
-  const canStartRepairNow =
-    selectedDevice?.status === "broken" && !selectedHasActiveHandover;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.issue.trim()) {
       alert("Vui lòng chọn thiết bị và mô tả hiện trạng sự cố!");
       return;
     }
-    if (formData.status === "in_progress" && !canStartRepairNow) {
-      alert(
-        "Chỉ được bắt đầu sửa chữa khi thiết bị đã được thu hồi và ghi nhận đang hỏng. Thiết bị đang dùng chỉ có thể lên lịch bảo trì.",
-      );
-      return;
-    }
-
     const saved = await onSave({
       ...formData,
+      status: "scheduled",
       cost: Number(formData.cost) || 0,
       completedDate: null,
     });
@@ -125,8 +102,7 @@ export const MaintenanceModal = ({
                 Lên Lịch Bảo Trì / Sửa Chữa
               </h3>
               <p className="text-xs text-slate-500">
-                Thiết bị đang dùng chỉ được lên lịch; sửa chữa bắt đầu sau khi
-                thu hồi máy hỏng
+                Tạo lịch trước; trạng thái máy chỉ đổi khi bắt đầu tiếp nhận sửa chữa
               </p>
             </div>
           </div>
@@ -161,7 +137,7 @@ export const MaintenanceModal = ({
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Ngày dự kiến / tiếp nhận
+                Ngày hẹn bảo trì / tiếp nhận dự kiến
               </label>
               <input
                 type="date"
@@ -184,21 +160,10 @@ export const MaintenanceModal = ({
             <select
               value={formData.deviceId}
               onChange={(e) => {
-                const device = devices.find(
-                  (item) => item.id === e.target.value,
-                );
-                const hasActive = handovers.some(
-                  (item) =>
-                    item.deviceId === e.target.value &&
-                    item.status === "active",
-                );
                 setFormData({
                   ...formData,
                   deviceId: e.target.value,
-                  status:
-                    device?.status === "broken" && !hasActive
-                      ? "in_progress"
-                      : "scheduled",
+                  status: "scheduled",
                 });
               }}
               className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-orange-500 outline-none"
@@ -276,23 +241,9 @@ export const MaintenanceModal = ({
               <label className="block font-semibold text-slate-700 mb-1">
                 Quy trình
               </label>
-              {canStartRepairNow ? (
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white outline-none font-medium text-slate-800"
-                >
-                  <option value="in_progress">Bắt đầu sửa chữa ngay</option>
-                  <option value="scheduled">Lên lịch sửa chữa</option>
-                </select>
-              ) : (
-                <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-blue-800">
-                  Chỉ tạo lịch. Muốn bắt đầu sửa chữa, hãy thu hồi thiết bị và
-                  ghi nhận tình trạng hỏng.
-                </div>
-              )}
+              <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-blue-800">
+                Lập phiếu chỉ tạo lịch và giữ nguyên trạng thái thiết bị. Khi đã tiếp nhận máy để sửa, bấm “Bắt đầu xử lý” trong danh sách phiếu.
+              </div>
             </div>
           </div>
 

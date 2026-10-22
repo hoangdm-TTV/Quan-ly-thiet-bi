@@ -14,6 +14,13 @@ export const getLocalDateInputValue = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+export const getLocalDateOffsetValue = (days = 0, from = new Date()) => {
+  const date = new Date(from);
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return getLocalDateInputValue(date);
+};
+
 export const formatDate = (dateString) => {
   if (!dateString) return "—";
   try {

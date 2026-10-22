@@ -16,7 +16,7 @@ import {
   restoreFromJsonFile,
   exportDevicesToExcel,
 } from "../services/storage";
-import { getLocalDateInputValue } from "../utils/formatters";
+import { formatDate, getLocalDateInputValue, getLocalDateOffsetValue } from "../utils/formatters";
 
 export const Navbar = ({
   activeTab,
@@ -48,8 +48,18 @@ export const Navbar = ({
   const urgentMaintenance = maintenance.filter(
     (m) => m.status === "in_progress",
   );
+  const nextSevenDays = getLocalDateOffsetValue(7);
+  const scheduledMaintenance = maintenance.filter(
+    (m) => m.status === "scheduled" && m.startDate,
+  );
+  const maintenanceDueGroups = [
+    { label: "Quá hạn", items: scheduledMaintenance.filter((m) => m.startDate < today), tone: "text-rose-900 bg-rose-50 border-rose-200" },
+    { label: "Đến hạn hôm nay", items: scheduledMaintenance.filter((m) => m.startDate === today), tone: "text-amber-900 bg-amber-50 border-amber-200" },
+    { label: "Trong 7 ngày tới", items: scheduledMaintenance.filter((m) => m.startDate > today && m.startDate <= nextSevenDays), tone: "text-blue-900 bg-blue-50 border-blue-200" },
+  ];
+  const scheduledDueCount = maintenanceDueGroups.reduce((sum, group) => sum + group.items.length, 0);
 
-  const totalAlerts = overdueHandovers.length + urgentMaintenance.length;
+  const totalAlerts = overdueHandovers.length + urgentMaintenance.length + scheduledDueCount;
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -194,6 +204,25 @@ export const Navbar = ({
                       </div>
                     </div>
                   )}
+
+                  {maintenanceDueGroups.map((group) => group.items.length > 0 && (
+                    <div key={group.label} className={`p-2.5 rounded-lg border text-xs ${group.tone}`}>
+                      <div className="flex items-center gap-1.5 font-medium mb-1">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        {group.label}: {group.items.length} lịch bảo trì
+                      </div>
+                      <ul className="space-y-1">
+                        {group.items.slice(0, 5).map((item) => (
+                          <li key={item.id}>
+                            <button onClick={() => { setActiveTab("maintenance"); setShowNotifMenu(false); }} className="w-full text-left hover:underline">
+                              {item.code} · {formatDate(item.startDate)}
+                            </button>
+                          </li>
+                        ))}
+                        {group.items.length > 5 && <li>và {group.items.length - 5} lịch khác…</li>}
+                      </ul>
+                    </div>
+                  ))}
 
                   {totalAlerts === 0 && (
                     <div className="py-4 text-center text-xs text-slate-500">

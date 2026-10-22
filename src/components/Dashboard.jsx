@@ -6,6 +6,7 @@ import {
   Wrench,
   Clock,
   Coins,
+  Calendar,
   ArrowUpRight,
   ShieldAlert,
   ChevronRight,
@@ -28,6 +29,7 @@ import {
   formatCurrency,
   formatDate,
   getLocalDateInputValue,
+  getLocalDateOffsetValue,
 } from "../utils/formatters";
 import { CATEGORIES, STATUS_MAP } from "../data/assetMetadata";
 
@@ -117,6 +119,19 @@ export const Dashboard = ({
 
   const activeMaintenance = maintenance.filter(
     (m) => m.status === "in_progress",
+  );
+  const nextSevenDays = getLocalDateOffsetValue(7);
+  const scheduledMaintenance = maintenance.filter(
+    (item) => item.status === "scheduled" && item.startDate,
+  );
+  const overdueMaintenance = scheduledMaintenance.filter(
+    (item) => item.startDate < today,
+  );
+  const todayMaintenance = scheduledMaintenance.filter(
+    (item) => item.startDate === today,
+  );
+  const upcomingMaintenance = scheduledMaintenance.filter(
+    (item) => item.startDate > today && item.startDate <= nextSevenDays,
   );
 
   return (
@@ -316,6 +331,56 @@ export const Dashboard = ({
             </div>
           )}
         </div>
+      )}
+
+      {(overdueMaintenance.length > 0 || todayMaintenance.length > 0 || upcomingMaintenance.length > 0) && (
+        <section className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-orange-600" />
+                Lịch bảo trì cần theo dõi
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">Lên lịch chưa làm thay đổi trạng thái thiết bị; chỉ chuyển sang bảo trì khi bắt đầu xử lý.</p>
+            </div>
+            <button onClick={() => setActiveTab("maintenance")} className="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1">
+              Mở danh sách phiếu <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            {[
+              { title: "Quá hạn", items: overdueMaintenance, tone: "text-rose-700 bg-rose-50" },
+              { title: "Hôm nay", items: todayMaintenance, tone: "text-amber-700 bg-amber-50" },
+              { title: "Trong 7 ngày tới", items: upcomingMaintenance, tone: "text-blue-700 bg-blue-50" },
+            ].map((group) => (
+              <div key={group.title} className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`px-2 py-1 rounded-md text-xs font-semibold ${group.tone}`}>{group.title}</span>
+                  <span className="text-xs text-slate-500">{group.items.length} phiếu</span>
+                </div>
+                {group.items.length === 0 ? (
+                  <p className="text-xs text-slate-400">Không có lịch.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {group.items.slice(0, 4).map((item) => {
+                      const device = devices.find((entry) => entry.id === item.deviceId);
+                      return (
+                        <li key={item.id} className="text-xs">
+                          <button onClick={() => setActiveTab("maintenance")} className="text-left w-full hover:text-blue-700">
+                            <span className="font-semibold text-slate-800">{item.code}</span>
+                            <span className="text-slate-500"> · {device?.code || device?.name || "Thiết bị"}</span>
+                            <span className="block text-slate-500 mt-0.5">Hẹn: {formatDate(item.startDate)}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                    {group.items.length > 4 && <li className="text-xs text-slate-500">và {group.items.length - 4} phiếu khác…</li>}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Charts Section */}

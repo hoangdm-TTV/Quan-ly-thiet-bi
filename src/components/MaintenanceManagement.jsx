@@ -13,17 +13,22 @@ import {
   ChevronRight,
   ShieldCheck,
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, getLocalDateInputValue, getLocalDateOffsetValue } from '../utils/formatters';
+import { STATUS_MAP } from '../data/assetMetadata';
 
 export const MaintenanceManagement = ({
   maintenance,
   devices,
+  handovers = [],
   onOpenNewMaintenance,
   onCompleteMaintenance,
   onStartMaintenance,
 }) => {
   const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'scheduled' | 'in_progress' | 'completed'
+  const [filterDue, setFilterDue] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const today = getLocalDateInputValue();
+  const nextSevenDays = getLocalDateOffsetValue(7);
 
   // Stats
   const totalCost = maintenance.reduce((sum, m) => sum + (Number(m.cost) || 0), 0);
@@ -33,6 +38,13 @@ export const MaintenanceManagement = ({
 
   const filtered = maintenance.filter((m) => {
     if (filterStatus !== 'all' && m.status !== filterStatus) return false;
+    if (filterDue !== 'all') {
+      if (m.status !== 'scheduled' || !m.startDate) return false;
+      if (filterDue === 'overdue' && m.startDate >= today) return false;
+      if (filterDue === 'today' && m.startDate !== today) return false;
+      if (filterDue === 'next7' && !(m.startDate > today && m.startDate <= nextSevenDays)) return false;
+      if (filterDue === 'later' && m.startDate <= nextSevenDays) return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const codeMatch = (m.code || '').toLowerCase().includes(q);
@@ -45,6 +57,19 @@ export const MaintenanceManagement = ({
       if (!codeMatch && !issueMatch && !solutionMatch && !vendorMatch && !devMatch) return false;
     }
     return true;
+  }).sort((a, b) => {
+    const priority = (item) => {
+      if (item.status === 'scheduled' && item.startDate < today) return 0;
+      if (item.status === 'scheduled' && item.startDate === today) return 1;
+      if (item.status === 'scheduled' && item.startDate <= nextSevenDays) return 2;
+      if (item.status === 'in_progress') return 3;
+      if (item.status === 'scheduled') return 4;
+      return 5;
+    };
+    const rankDifference = priority(a) - priority(b);
+    if (rankDifference) return rankDifference;
+    if (a.status === 'scheduled' && b.status === 'scheduled') return (a.startDate || '').localeCompare(b.startDate || '');
+    return (b.startDate || '').localeCompare(a.startDate || '');
   });
 
   return (
@@ -137,6 +162,18 @@ export const MaintenanceManagement = ({
             <option value="in_progress">Đang xử lý</option>
             <option value="completed">Đã hoàn thành</option>
           </select>
+          <select
+            value={filterDue}
+            onChange={(e) => setFilterDue(e.target.value)}
+            className="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none text-slate-700"
+            aria-label="Lọc lịch theo hạn"
+          >
+            <option value="all">Tất cả hạn</option>
+            <option value="overdue">Lịch quá hạn</option>
+            <option value="today">Đến hạn hôm nay</option>
+            <option value="next7">Trong 7 ngày tới</option>
+            <option value="later">Sau 7 ngày</option>
+          </select>
         </div>
       </div>
 
@@ -149,6 +186,14 @@ export const MaintenanceManagement = ({
         ) : (
           filtered.map((item) => {
             const dev = devices.find((d) => d.id === item.deviceId);
+            const deviceHasActiveHandover = handovers.some((handover) => handover.deviceId === item.deviceId && handover.status === 'active');
+            const canStartNow = dev && ['available', 'broken'].includes(dev.status) && !deviceHasActiveHandover;
+            const dueLabel = item.status === 'scheduled' && item.startDate
+              ? item.startDate < today ? { text: 'QUÁ HẠN', style: 'bg-rose-100 text-rose-700 border-rose-200' }
+                : item.startDate === today ? { text: 'ĐẾN HẠN HÔM NAY', style: 'bg-amber-100 text-amber-700 border-amber-200' }
+                  : item.startDate <= nextSevenDays ? { text: 'SẮP ĐẾN HẠN', style: 'bg-blue-100 text-blue-700 border-blue-200' }
+                    : { text: 'ĐÃ LÊN LỊCH', style: 'bg-slate-100 text-slate-600 border-slate-200' }
+              : null;
 
             return (
               <div
@@ -165,8 +210,9 @@ export const MaintenanceManagement = ({
                         {dev ? `${dev.name} (${dev.code})` : 'Thiết bị'}
                       </h4>
                       <p className="text-xs text-slate-500">
-                        Bắt đầu: {formatDate(item.startDate)} • Kỹ thuật viên: {item.technician || 'Nội bộ'}
+                        Ngày hẹn: {formatDate(item.startDate)} • Kỹ thuật viên: {item.technician || 'Nội bộ'}
                       </p>
+                      {dev && <p className="text-[11px] text-slate-500 mt-1">Trạng thái thiết bị: <span className="font-medium text-slate-700">{STATUS_MAP[dev.status]?.label || dev.status}</span> · Lên lịch không làm đổi trạng thái máy</p>}
                     </div>
                   </div>
 
@@ -188,18 +234,31 @@ export const MaintenanceManagement = ({
                         : 'Lên lịch trước'}
                     </span>
 
+                    {dueLabel && <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-[10px] font-bold ${dueLabel.style}`}>{dueLabel.text}</span>}
+
                     {/* Cost */}
                     <span className="font-bold text-sm text-slate-900">
                       {formatCurrency(item.cost)}
                     </span>
 
                     {item.status === 'scheduled' && (
-                      <button
-                        onClick={() => onStartMaintenance(item)}
-                        className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition"
-                      >
-                        Bắt đầu xử lý
-                      </button>
+                      canStartNow ? (
+                        <button
+                          onClick={() => onStartMaintenance(item)}
+                          className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition"
+                        >
+                          Bắt đầu xử lý
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          title="Thu hồi thiết bị trước khi bắt đầu sửa chữa"
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 text-xs font-semibold cursor-not-allowed"
+                        >
+                          Chờ thu hồi thiết bị
+                        </button>
+                      )
                     )}
 
                     {/* Complete button is available only after work has started. */}
