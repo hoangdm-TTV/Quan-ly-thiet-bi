@@ -2,13 +2,15 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "quan-ly-thiet-bi",
   "compatibility_date": "2026-10-25",
-  "pages_build_output_dir": "./dist",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "it-assetmaster",
       "database_id": "f3708f8d-6701-4c07-a9f7-c7fe84a5a9bf",
-      "migrations_dir": "migrations",
     },
   ],
 }
