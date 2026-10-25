@@ -1,8 +1,12 @@
 # 🖥️ IT AssetMaster - Hệ Thống Quản Lý Thiết Bị IT & Tài Sản Doanh Nghiệp
 
-Ứng dụng web nội bộ quản lý thiết bị và tài sản công nghệ thông tin: hồ sơ thiết bị, bàn giao/mượn trả, bảo trì, kiểm kê bằng QR và báo cáo. Dữ liệu lưu trong PostgreSQL, đăng nhập bằng tài khoản quản trị viên.
+Ứng dụng web nội bộ quản lý thiết bị và tài sản công nghệ thông tin: hồ sơ thiết bị, bàn giao/mượn trả, bảo trì, kiểm kê bằng QR và báo cáo. Chế độ local hiện có dùng PostgreSQL; bản Cloudflare dùng Pages Functions + D1, đăng nhập bằng tài khoản quản trị viên.
 
-**Công nghệ:** React 18, Vite, Tailwind CSS, Recharts (giao diện); Express 5, PostgreSQL (`pg`) (backend).
+**Công nghệ:** React 18, Vite, Tailwind CSS, Recharts (giao diện); Express 5 + PostgreSQL cho local hiện có; Cloudflare Pages Functions + D1 cho bản Cloudflare.
+
+### Deploy Cloudflare Pages + D1
+
+Để chạy/test cùng API Cloudflare ở local, cấu hình database, secrets, migration và deploy từ Git, xem hướng dẫn [CLOUDFLARE-D1.md](./CLOUDFLARE-D1.md). Giữ nguyên `npm run dev` nếu cần chạy phiên bản PostgreSQL cũ; dùng `npm run pages:dev` để thử Pages Functions + D1.
 
 ---
 

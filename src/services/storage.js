@@ -12,6 +12,8 @@ const request = async (path, options = {}) => {
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...options.headers },
   });
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
   if (!response.ok) {
     if (
       response.status === 401 &&
@@ -21,8 +23,7 @@ const request = async (path, options = {}) => {
       localStorage.removeItem(STORAGE_KEY);
       window.dispatchEvent(new Event("it-asset-auth-expired"));
     }
-    const contentType = response.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
+    if (isJson) {
       const body = await response.json().catch(() => ({}));
       const error = new Error(
         body.error ||
@@ -32,15 +33,23 @@ const request = async (path, options = {}) => {
       error.status = response.status;
       throw error;
     }
-    const message =
-      response.status === 404 && path.startsWith("/auth/")
-        ? "Backend đang chạy chưa có API đăng nhập mới. Hãy dừng backend bằng Ctrl+C, chạy lại `npm run server`, rồi tải lại trang."
-        : `Backend trả về HTTP ${response.status} nhưng không có phản hồi JSON.`;
+    const message = `API ${path} trả HTTP ${response.status} nhưng không phải JSON. Trên Cloudflare, hãy kiểm tra Pages Functions trong thư mục functions/ đã được deploy cùng dist chưa; không deploy riêng thư mục dist.`;
     const error = new Error(message);
     error.status = response.status;
     throw error;
   }
-  return response.json();
+  if (!isJson) {
+    const error = new Error(`API ${path} trả về HTML thay vì JSON. Có thể Cloudflare Pages chưa deploy Pages Function; kiểm tra thư mục functions/ và redeploy từ Git.`);
+    error.status = response.status;
+    throw error;
+  }
+  try {
+    return await response.json();
+  } catch {
+    const error = new Error(`API ${path} trả JSON không hợp lệ. Hãy kiểm tra Pages Functions logs.`);
+    error.status = response.status;
+    throw error;
+  }
 };
 
 export const getCurrentUser = () => request("/auth/me");

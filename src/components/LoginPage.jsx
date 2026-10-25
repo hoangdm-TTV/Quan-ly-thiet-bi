@@ -35,7 +35,7 @@ export const LoginPage = ({ onLogin, setupRequired = false, connectionError = ''
 
         {setupRequired ? (
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Chưa tạo tài khoản admin. Thêm <code>AUTH_ADMIN_EMAIL</code> và <code>AUTH_ADMIN_PASSWORD</code> (tối thiểu 12 ký tự) vào file <code>.env</code>, rồi khởi động lại backend.
+            Chưa tạo tài khoản admin. Cấu hình <code>AUTH_ADMIN_EMAIL</code> và <code>AUTH_ADMIN_PASSWORD</code> (tối thiểu 12 ký tự) trong Cloudflare Pages secrets; khi chạy local, đặt chúng trong <code>.dev.vars</code>.
           </div>
         ) : (
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
