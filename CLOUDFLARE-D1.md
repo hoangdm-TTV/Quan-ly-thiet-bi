@@ -11,7 +11,7 @@ npx wrangler login
 npx wrangler d1 create it-assetmaster
 ```
 
-Lệnh tạo database trả về `database_id`. Mở `wrangler.jsonc`, thay `00000000-0000-0000-0000-000000000000` bằng ID thật. Không đưa mật khẩu database hoặc token vào file này.
+Lệnh tạo database trả về `database_id`. Mở `wrangler.jsonc` và bảo đảm `database_id` khớp với database đang gắn vào Pages binding `DB`. Không đưa mật khẩu database hoặc token vào file này.
 
 Áp dụng schema lên D1 local và D1 production:
 
@@ -24,7 +24,7 @@ D1 local là database tách biệt dùng để thử. D1 remote là database th�
 
 ## 2. Chạy bản Cloudflare local
 
-Tạo file `.dev.vars` từ mẫu:
+Tạo file `.dev.vars` từ mẫu có sẵn trong repository:
 
 ```powershell
 Copy-Item .dev.vars.example .dev.vars

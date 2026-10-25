@@ -180,7 +180,7 @@ Test-NetConnection 127.0.0.1 -Port 5432
 
 ### Tài khoản quản trị
 
-Lần đầu backend khởi động, nó tạo admin từ `AUTH_ADMIN_EMAIL` và `AUTH_ADMIN_PASSWORD` (mật khẩu được băm bằng scrypt). Sau khi log báo đã tạo admin, **xóa `AUTH_ADMIN_PASSWORD` khỏi `.env`** và khởi động lại backend. Phiên đăng nhập hết hạn sau 12 giờ; đăng nhập sai quá 5 lần sẽ bị khóa tạm 15 phút. Đổi mật khẩu ở thanh bên (ít nhất 12 ký tự).
+Lần đầu backend khởi động, nó tạo admin từ `AUTH_ADMIN_EMAIL` và `AUTH_ADMIN_PASSWORD` (bản local dùng scrypt; bản Cloudflare Pages dùng PBKDF2-SHA256 tương thích Web Crypto). Sau khi log báo đã tạo admin, **xóa `AUTH_ADMIN_PASSWORD` khỏi `.env`** và khởi động lại backend. Phiên đăng nhập hết hạn sau 12 giờ; đăng nhập sai quá 5 lần sẽ bị khóa tạm 15 phút. Đổi mật khẩu ở thanh bên (ít nhất 12 ký tự).
 
 Hệ thống hiện chỉ có **một tài khoản admin chung**, mọi người dùng tài khoản này đều có quyền sửa dữ liệu và không phân biệt được ai thực hiện từng thay đổi. Khi triển khai trên domain công ty, đặt `CORS_ORIGINS` đúng origin của website và chỉ mở `API_HOST` ra mạng khi backend nằm sau HTTPS.
 
