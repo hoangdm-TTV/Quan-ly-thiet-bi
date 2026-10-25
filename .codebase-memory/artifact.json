@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "13ed9e6a3aead0943a4c3f0202e4e68ad31fa23a",
-    "indexed_at": "2026-10-25T06:58:47Z",
+    "commit": "33f27683bb200a34d37be0946a8bd7199d909287",
+    "indexed_at": "2026-10-25T07:15:35Z",
     "project": "D-Quan-ly-thiet-bi",
     "nodes": 273,
-    "edges": 660,
+    "edges": 664,
     "original_size": 3997696,
-    "compressed_size": 527105,
+    "compressed_size": 527277,
     "compression_level": 3
 }
