@@ -718,13 +718,13 @@ export default function App() {
               : "Không thể kết nối database"}
           </h1>
           <p className="mt-3 text-sm text-slate-600">
-            {isLoading ? "Đang tải dữ liệu từ backend." : databaseError}
+            {isLoading ? "Đang tải dữ liệu từ Cloudflare D1." : databaseError}
           </p>
           {!isLoading && (
             <p className="mt-2 text-sm text-slate-500">
-              Hãy chạy backend bằng <code>npm run server</code>, sau đó tải lại
-              trang. Ứng dụng không dùng dữ liệu mẫu khi database không khả
-              dụng.
+              Hãy chạy lại <code>npm run dev</code> để khởi động Pages Functions
+              local, sau đó tải lại trang. Ứng dụng không dùng dữ liệu mẫu khi
+              database không khả dụng.
             </p>
           )}
           {!isLoading && (

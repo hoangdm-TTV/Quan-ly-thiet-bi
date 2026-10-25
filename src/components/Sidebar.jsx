@@ -127,11 +127,11 @@ export const Sidebar = ({
           <div className="flex items-center gap-2 mb-1.5">
             <div className={`w-2 h-2 rounded-full ${isBackendConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></div>
             <span className="text-xs font-semibold text-slate-200">
-              {isBackendConnected ? 'Database Backend' : 'Database Offline'}
+              {isBackendConnected ? 'Cloudflare D1' : 'Database Offline'}
             </span>
           </div>
           <p className="hidden sm:block text-[11px] text-slate-300">
-            {isBackendConnected ? 'Đang lưu trực tiếp vào PostgreSQL' : 'Không thể lưu dữ liệu. Hãy khởi động backend.'}
+            {isBackendConnected ? 'Đang lưu trực tiếp vào D1' : 'Không thể lưu dữ liệu. Hãy chạy lại ứng dụng local.'}
           </p>
         </div>
       </div>

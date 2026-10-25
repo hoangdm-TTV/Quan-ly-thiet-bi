@@ -220,7 +220,7 @@ export const ReportManagement = ({
               An Toàn & Sao Lưu CSDL (Backup & Restore)
             </h3>
             <p className="text-xs text-slate-300">
-              Dữ liệu được lưu trong cơ sở dữ liệu PostgreSQL của hệ thống. Bạn
+              Dữ liệu được lưu trong cơ sở dữ liệu Cloudflare D1 của hệ thống. Bạn
               có thể xuất file JSON để lưu một bản sao dự phòng hoặc chuyển sang
               máy khác.
             </p>
