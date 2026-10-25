@@ -16,7 +16,11 @@ import {
   restoreFromJsonFile,
   exportDevicesToExcel,
 } from "../services/storage";
-import { formatDate, getLocalDateInputValue, getLocalDateOffsetValue } from "../utils/formatters";
+import {
+  formatDate,
+  getLocalDateInputValue,
+  getLocalDateOffsetValue,
+} from "../utils/formatters";
 
 export const Navbar = ({
   activeTab,
@@ -53,13 +57,31 @@ export const Navbar = ({
     (m) => m.status === "scheduled" && m.startDate,
   );
   const maintenanceDueGroups = [
-    { label: "Quá hạn", items: scheduledMaintenance.filter((m) => m.startDate < today), tone: "text-rose-900 bg-rose-50 border-rose-200" },
-    { label: "Đến hạn hôm nay", items: scheduledMaintenance.filter((m) => m.startDate === today), tone: "text-amber-900 bg-amber-50 border-amber-200" },
-    { label: "Trong 7 ngày tới", items: scheduledMaintenance.filter((m) => m.startDate > today && m.startDate <= nextSevenDays), tone: "text-blue-900 bg-blue-50 border-blue-200" },
+    {
+      label: "Quá hạn",
+      items: scheduledMaintenance.filter((m) => m.startDate < today),
+      tone: "text-rose-900 bg-rose-50 border-rose-200",
+    },
+    {
+      label: "Đến hạn hôm nay",
+      items: scheduledMaintenance.filter((m) => m.startDate === today),
+      tone: "text-amber-900 bg-amber-50 border-amber-200",
+    },
+    {
+      label: "Trong 7 ngày tới",
+      items: scheduledMaintenance.filter(
+        (m) => m.startDate > today && m.startDate <= nextSevenDays,
+      ),
+      tone: "text-blue-900 bg-blue-50 border-blue-200",
+    },
   ];
-  const scheduledDueCount = maintenanceDueGroups.reduce((sum, group) => sum + group.items.length, 0);
+  const scheduledDueCount = maintenanceDueGroups.reduce(
+    (sum, group) => sum + group.items.length,
+    0,
+  );
 
-  const totalAlerts = overdueHandovers.length + urgentMaintenance.length + scheduledDueCount;
+  const totalAlerts =
+    overdueHandovers.length + urgentMaintenance.length + scheduledDueCount;
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -79,7 +101,7 @@ export const Navbar = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200/80 shadow-xs">
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur">
       <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 min-h-16 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -117,7 +139,7 @@ export const Navbar = ({
                   setActiveTab("devices");
                 }
               }}
-              className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2 pl-9 pr-4 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
             />
             {searchQuery && (
               <button
@@ -205,24 +227,38 @@ export const Navbar = ({
                     </div>
                   )}
 
-                  {maintenanceDueGroups.map((group) => group.items.length > 0 && (
-                    <div key={group.label} className={`p-2.5 rounded-lg border text-xs ${group.tone}`}>
-                      <div className="flex items-center gap-1.5 font-medium mb-1">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        {group.label}: {group.items.length} lịch bảo trì
-                      </div>
-                      <ul className="space-y-1">
-                        {group.items.slice(0, 5).map((item) => (
-                          <li key={item.id}>
-                            <button onClick={() => { setActiveTab("maintenance"); setShowNotifMenu(false); }} className="w-full text-left hover:underline">
-                              {item.code} · {formatDate(item.startDate)}
-                            </button>
-                          </li>
-                        ))}
-                        {group.items.length > 5 && <li>và {group.items.length - 5} lịch khác…</li>}
-                      </ul>
-                    </div>
-                  ))}
+                  {maintenanceDueGroups.map(
+                    (group) =>
+                      group.items.length > 0 && (
+                        <div
+                          key={group.label}
+                          className={`p-2.5 rounded-lg border text-xs ${group.tone}`}
+                        >
+                          <div className="flex items-center gap-1.5 font-medium mb-1">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            {group.label}: {group.items.length} lịch bảo trì
+                          </div>
+                          <ul className="space-y-1">
+                            {group.items.slice(0, 5).map((item) => (
+                              <li key={item.id}>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("maintenance");
+                                    setShowNotifMenu(false);
+                                  }}
+                                  className="w-full text-left hover:underline"
+                                >
+                                  {item.code} · {formatDate(item.startDate)}
+                                </button>
+                              </li>
+                            ))}
+                            {group.items.length > 5 && (
+                              <li>và {group.items.length - 5} lịch khác…</li>
+                            )}
+                          </ul>
+                        </div>
+                      ),
+                  )}
 
                   {totalAlerts === 0 && (
                     <div className="py-4 text-center text-xs text-slate-500">
