@@ -152,13 +152,13 @@ export const Dashboard = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setActiveTab("devices")}
-              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 text-sm font-medium px-4 py-2 rounded-xl transition"
+              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/30 text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition"
             >
               Xem toàn bộ thiết bị
             </button>
             <button
               onClick={() => setActiveTab("audits")}
-              className="bg-white text-blue-700 hover:bg-blue-50 text-sm font-semibold px-4 py-2 rounded-xl shadow transition"
+              className="bg-white text-brand-800 hover:bg-rose-50 text-sm font-bold px-4 py-2 rounded-xl shadow-md shadow-black/10 transition"
             >
               Kiểm kê tài sản
             </button>

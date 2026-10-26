@@ -160,7 +160,7 @@ export const Navbar = ({
           {/* Quick Create Buttons */}
           <button
             onClick={onOpenNewDevice}
-            className={`${activeTab === "devices" ? "hidden" : "flex"} items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-lg shadow-sm shadow-blue-500/25 transition-colors`}
+            className={`${activeTab === "devices" ? "hidden" : "flex"} items-center gap-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow-md shadow-brand-700/25 transition-colors`}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Thêm thiết bị</span>
@@ -169,7 +169,7 @@ export const Navbar = ({
 
           <button
             onClick={onOpenNewHandover}
-            className="hidden sm:flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+            className="hidden sm:flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-brand-800 border border-rose-200 text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Tạo bàn giao</span>

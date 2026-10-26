@@ -33,6 +33,25 @@
 
   button {
     -webkit-tap-highlight-color: transparent;
+    transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease, background-color 160ms ease, color 160ms ease;
+  }
+
+  button:not(:disabled):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+
+  button:not(:disabled):active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  button:not(:disabled):focus-visible {
+    box-shadow: 0 0 0 4px rgb(254 205 211 / 0.9);
   }
 
   input::placeholder,
@@ -42,12 +61,12 @@
   }
 
   ::selection {
-    background: #bfdbfe;
-    color: #172554;
+    background: #fecdd3;
+    color: #5f0a14;
   }
 
   :focus-visible {
-    outline: 3px solid rgb(96 165 250 / 0.45);
+    outline: 3px solid rgb(225 29 72 / 0.4);
     outline-offset: 2px;
   }
 
