@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 export const LoginPage = ({ onLogin, setupRequired = false, connectionError = '' }) => {
   const [email, setEmail] = useState('');
@@ -23,10 +23,12 @@ export const LoginPage = ({ onLogin, setupRequired = false, connectionError = ''
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-brand-50/70 flex items-center justify-center p-5">
       <section className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/60 border border-slate-200/80">
-        <div className="mx-auto mb-4 flex items-center justify-center gap-2 text-brand-800">
-          <div className="brand-mark grid h-14 w-14 place-items-center rounded-2xl text-white shadow-lg shadow-blue-500/20">
-            <BookOpen className="h-7 w-7" strokeWidth={2.2} />
-          </div>
+        <div className="mx-auto mb-4 flex items-center justify-center">
+          <img
+            src="/tri-thuc-viet-logo.jpg"
+            alt="Logo Tri Thức Việt"
+            className="h-28 w-28 rounded-2xl border border-rose-100 bg-white object-contain p-1 shadow-lg shadow-rose-500/15"
+          />
         </div>
         <p className="text-center text-xs font-bold tracking-[0.18em] text-brand-700">TRI THỨC VIỆT</p>
         <h1 className="text-center text-xl font-bold text-slate-900">Đăng nhập quản trị thiết bị</h1>

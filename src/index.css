@@ -60,7 +60,7 @@
 
 @layer components {
   .brand-mark {
-    background: linear-gradient(145deg, #1098dc 0%, #08639e 58%, #0d4568 100%);
+    background: linear-gradient(145deg, #e11d48 0%, #a50f22 58%, #5f0a14 100%);
     position: relative;
     overflow: hidden;
   }
