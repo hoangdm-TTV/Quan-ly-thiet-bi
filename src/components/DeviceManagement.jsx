@@ -176,11 +176,11 @@ export const DeviceManagement = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-4 sm:space-y-5">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="flex flex-wrap items-center gap-2 text-base sm:text-xl font-bold text-slate-900 tracking-tight">
+          <h2 className="flex flex-wrap items-center gap-2 text-base leading-tight sm:text-xl font-bold text-slate-900 tracking-tight">
             <span>Danh Sách Thiết Bị & Tài Sản IT</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">
               {filteredDevices.length} / {devices.length}
@@ -191,7 +191,7 @@ export const DeviceManagement = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {/* Toggle Grid/Table view */}
           <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button
@@ -217,7 +217,7 @@ export const DeviceManagement = ({
           {/* Export button */}
           <button
             onClick={() => exportDevicesToExcel(filteredDevices, users, departments)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 sm:flex-none"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Xuất Excel</span>
@@ -226,7 +226,7 @@ export const DeviceManagement = ({
           {/* Add Device button */}
           <button
             onClick={onOpenNewDevice}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20 transition"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-500/20 transition hover:bg-blue-700 sm:flex-none"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm thiết bị</span>
@@ -236,7 +236,7 @@ export const DeviceManagement = ({
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* Search box */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -363,7 +363,7 @@ export const DeviceManagement = ({
       ) : (
         <>
           {viewMode === 'table' && (
-            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="hidden lg:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2">
             <p className="text-[11px] text-slate-500">
               Giữ chuột trái và kéo bảng, hoặc giữ <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 font-sans">Shift</kbd> khi lăn chuột.
@@ -556,7 +556,7 @@ export const DeviceManagement = ({
             </div>
           )}
           {/* Cards are the mobile layout; desktop can switch between cards and table. */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${viewMode === 'table' ? 'md:hidden' : ''}`}>
+          <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 sm:gap-4 ${viewMode === 'table' ? 'lg:hidden' : ''}`}>
           {filteredDevices.map((dev) => {
             const Icon = getCategoryIconComponent(dev.category);
             const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
@@ -570,12 +570,12 @@ export const DeviceManagement = ({
               >
                 <div>
                   {/* Card Header: Tag & Status */}
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
                     <span className="font-mono font-bold text-xs text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
                       {dev.code}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusMeta.color}`}
+                      className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusMeta.color}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
                       {statusMeta.label}
@@ -590,7 +590,7 @@ export const DeviceManagement = ({
                     <div className="min-w-0">
                       <h4
                         onClick={() => onOpenDeviceDetail(dev)}
-                        className="font-bold text-slate-900 text-sm hover:text-blue-600 cursor-pointer line-clamp-1"
+                        className="cursor-pointer break-words text-sm font-bold leading-5 text-slate-900 hover:text-blue-600 line-clamp-2"
                         title={dev.name}
                       >
                         {dev.name}
@@ -603,7 +603,7 @@ export const DeviceManagement = ({
 
                   {/* Specs & Serial */}
                   <div className="mt-3 bg-slate-50 p-2.5 rounded-xl space-y-1 text-xs">
-                    <div className="text-slate-600 line-clamp-2">
+                    <div className="break-words text-slate-600 line-clamp-3 leading-5">
                       <span className="font-semibold text-slate-700">Cấu hình:</span> {dev.specs || 'Chưa cập nhật'}
                     </div>
                     <div className="font-mono text-[11px] text-slate-500">
@@ -613,21 +613,21 @@ export const DeviceManagement = ({
 
                   {/* Assignment Info */}
                   <div className="mt-3 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="text-slate-400">Người dùng:</span>
-                      <span className="font-semibold text-slate-800">
+                    <div className="flex items-start justify-between gap-3 text-slate-600">
+                      <span className="shrink-0 text-slate-400">Người dùng:</span>
+                      <span className="min-w-0 text-right font-semibold text-slate-800">
                         {userName || <span className="text-slate-400 italic">Chưa cấp</span>}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="text-slate-400">Phòng ban:</span>
-                      <span className="text-slate-700 truncate max-w-[150px]">
+                    <div className="flex items-start justify-between gap-3 text-slate-600">
+                      <span className="shrink-0 text-slate-400">Phòng ban:</span>
+                      <span className="min-w-0 max-w-[65%] text-right text-slate-700 break-words">
                         {deptName || <span className="text-slate-400 italic">Chưa gán</span>}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="text-slate-400">Vị trí:</span>
-                      <span className="text-slate-700 truncate max-w-[180px]">{dev.location || 'Kho'}</span>
+                    <div className="flex items-start justify-between gap-3 text-slate-600">
+                      <span className="shrink-0 text-slate-400">Vị trí:</span>
+                      <span className="min-w-0 max-w-[65%] text-right text-slate-700 break-words">{dev.location || 'Kho'}</span>
                     </div>
                   </div>
                 </div>
