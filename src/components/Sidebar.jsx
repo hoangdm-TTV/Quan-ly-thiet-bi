@@ -86,7 +86,7 @@ export const Sidebar = ({
               onClick={() => setActiveTab(item.id)}
               className={`w-auto lg:w-full shrink-0 flex items-center justify-between px-3 lg:px-3.5 py-2 lg:py-2.5 rounded-xl text-xs lg:text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-blue-600 text-white shadow-sm shadow-blue-500/25"
+                  ? "bg-brand-700 text-white shadow-sm shadow-brand-600/25"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
@@ -133,7 +133,7 @@ export const Sidebar = ({
             </button>
           </div>
         </div>
-        <div className="rounded-xl bg-gradient-to-br from-slate-900 to-blue-950 p-2 sm:p-3 text-white shadow-sm sm:flex-1 lg:flex-none">
+        <div className="rounded-xl bg-gradient-to-br from-brand-900 to-brand-800 p-2 sm:p-3 text-white shadow-sm sm:flex-1 lg:flex-none">
           <div className="flex items-center gap-2 mb-1.5">
             <div
               className={`w-2 h-2 rounded-full ${isBackendConnected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`}

@@ -16,6 +16,18 @@ export default {
         mono: ["JetBrains Mono", "Cascadia Code", "Consolas", "monospace"],
       },
       colors: {
+        brand: {
+          50: "#eff8ff",
+          100: "#dff1ff",
+          200: "#b9e2ff",
+          300: "#7dccff",
+          400: "#36b5f2",
+          500: "#1098dc",
+          600: "#087bc0",
+          700: "#08639e",
+          800: "#0b527f",
+          900: "#0d4568",
+        },
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",

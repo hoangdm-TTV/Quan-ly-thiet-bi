@@ -137,14 +137,14 @@ export const Dashboard = ({
   return (
     <div className="space-y-6">
       {/* Top Banner / Greeting */}
-      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-r from-brand-700 via-brand-600 to-brand-900 rounded-2xl p-6 text-white shadow-lg shadow-brand-900/15 relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 transform skew-x-12 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">
               Tổng Quan Hạ Tầng & Thiết Bị IT
             </h2>
-            <p className="text-blue-100 text-sm mt-1">
+            <p className="text-brand-100 text-sm mt-1">
               Kiểm soát tài sản máy tính, thiết bị mạng, theo dõi luân chuyển và
               bảo trì chuẩn xác.
             </p>

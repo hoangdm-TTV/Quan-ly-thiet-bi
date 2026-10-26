@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  Server,
+  BookOpen,
   Plus,
   Download,
   Upload,
@@ -105,20 +105,20 @@ export const Navbar = ({
       <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 min-h-16 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-            <Server className="w-5 h-5" />
+          <div className="brand-mark h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-2xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <BookOpen className="w-5 h-5" strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="whitespace-nowrap font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                IT AssetMaster
+              <span className="whitespace-nowrap font-extrabold text-base sm:text-lg tracking-[0.02em] text-brand-800">
+                TRI THỨC VIỆT
               </span>
-              <span className="hidden sm:inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                v2.5 Pro
+              <span className="hidden sm:inline-flex text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                NỘI BỘ
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
-              Hệ thống Quản lý Thiết bị & Tài sản Doanh nghiệp
+              Quản lý thiết bị & tài sản doanh nghiệp
             </p>
           </div>
         </div>
