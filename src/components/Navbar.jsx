@@ -104,7 +104,7 @@ export const Navbar = ({
       <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 min-h-16 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="h-10 w-10 sm:h-11 sm:w-11 shrink-0 overflow-hidden rounded-xl border border-rose-100 bg-white p-0.5 shadow-md shadow-rose-500/15">
+          <div className="h-10 w-10 sm:h-11 sm:w-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0.5 shadow-md shadow-slate-200/70">
             <img
               src="/tri-thuc-viet-logo.jpg"
               alt="Logo Tri Thức Việt"
@@ -113,8 +113,9 @@ export const Navbar = ({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="whitespace-nowrap font-extrabold text-base sm:text-lg tracking-[0.02em] text-brand-800">
-                TRI THỨC VIỆT
+              <span className="whitespace-nowrap font-extrabold text-base sm:text-lg tracking-[0.02em]">
+                <span className="text-[#006454]">TRI THỨC</span>{" "}
+                <span className="text-[#a30f18]">VIỆT</span>
               </span>
               <span className="hidden sm:inline-flex text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
                 NỘI BỘ

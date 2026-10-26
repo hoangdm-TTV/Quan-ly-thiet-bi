@@ -71,27 +71,7 @@ export const Sidebar = ({
   ];
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50/90 p-2 sm:p-3 lg:w-72 lg:justify-between lg:border-b-0 lg:border-r lg:p-4">
-      <div className="lg:space-y-4">
-        <div className="hidden items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm lg:flex">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0.5 shadow-sm">
-            <img
-              src="/tri-thuc-viet-logo.jpg"
-              alt="Logo Tri Thức Việt"
-              className="h-full w-full object-contain"
-            />
-          </div>
-          <div className="min-w-0 leading-none">
-            <div className="whitespace-nowrap text-[15px] font-extrabold tracking-[0.08em]">
-              <span className="text-[#006454]">TRI THỨC</span>{" "}
-              <span className="text-[#a30f18]">VIỆT</span>
-            </div>
-            <p className="mt-2 text-[10px] font-semibold tracking-[0.12em] text-slate-500">
-              QUẢN LÝ THIẾT BỊ
-            </p>
-          </div>
-        </div>
-
+    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200/80 bg-white/90 p-2 sm:p-3 lg:w-64 lg:justify-between lg:border-b-0 lg:border-r lg:p-4">
       <div className="flex gap-1 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
         <div className="hidden lg:block px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
           Menu Quản Trị
@@ -130,7 +110,6 @@ export const Sidebar = ({
             </button>
           );
         })}
-      </div>
       </div>
 
       <div className="mt-2 lg:mt-8 flex flex-col sm:flex-row lg:flex-col gap-2 lg:gap-0 lg:space-y-3">
