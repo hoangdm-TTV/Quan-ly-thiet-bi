@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   X,
@@ -35,6 +35,10 @@ export const DeviceDetailModal = ({
   onLiquidate,
 }) => {
   const [activeTab, setActiveTab] = useState("info"); // 'info' | 'handovers' | 'maintenance' | 'sticker'
+
+  useEffect(() => {
+    if (isOpen && device?.id) setActiveTab("info");
+  }, [device?.id, isOpen]);
 
   if (!isOpen || !device) return null;
 

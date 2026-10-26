@@ -17,6 +17,7 @@ import { ReturnModal } from "./components/modals/ReturnModal";
 import { MaintenanceModal } from "./components/modals/MaintenanceModal";
 import { AuditModal } from "./components/modals/AuditModal";
 import { DepartmentModal } from "./components/modals/DepartmentModal";
+import { QRScannerModal } from "./components/modals/QRScannerModal";
 import { UserModal } from "./components/modals/UserModal";
 import { PrintVoucherModal } from "./components/modals/PrintVoucherModal";
 import { LoginPage } from "./components/LoginPage";
@@ -168,6 +169,7 @@ export default function App() {
   });
   const [auditModal, setAuditModal] = useState({ open: false, editItem: null });
   const [departmentModal, setDepartmentModal] = useState({ open: false, editItem: null });
+  const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
   const [userModal, setUserModal] = useState({ open: false, editItem: null });
   const [printModal, setPrintModal] = useState({ open: false, handover: null });
 
@@ -197,6 +199,32 @@ export default function App() {
       setDatabaseError(error.message);
       window.alert(`Không thể tải dữ liệu từ database: ${error.message}`);
     }
+  };
+
+  const handleGlobalQRDetected = (rawValue) => {
+    const normalizedValue = String(rawValue || "").trim();
+    let lookupValue = normalizedValue;
+    try {
+      const url = new URL(normalizedValue);
+      lookupValue = url.searchParams.get("code") || url.searchParams.get("assetCode") || url.searchParams.get("serial") || normalizedValue;
+    } catch {
+      const match = normalizedValue.match(/[?&](?:code|assetCode|serial)=([^&]+)/i);
+      if (match) {
+        try { lookupValue = decodeURIComponent(match[1]); } catch { lookupValue = match[1]; }
+      }
+    }
+
+    const value = lookupValue.toUpperCase();
+    const device = data.devices.find((item) =>
+      String(item.code || "").toUpperCase() === value ||
+      (item.serial && String(item.serial).toUpperCase() === value),
+    );
+    setIsGlobalQRScannerOpen(false);
+    if (!device) {
+      window.alert(`Không tìm thấy thiết bị theo mã QR: ${lookupValue}`);
+      return;
+    }
+    setDetailModal({ open: true, device });
   };
 
   // --- Handlers for Devices ---
@@ -812,6 +840,7 @@ export default function App() {
         onOpenNewHandover={() =>
           setHandoverModal({ open: true, preselectedDevice: null })
         }
+        onOpenQRScanner={() => setIsGlobalQRScannerOpen(true)}
         onDataRefresh={handleRefresh}
         devices={data.devices}
         users={data.users}
@@ -980,6 +1009,13 @@ export default function App() {
         }
         onLiquidate={handleLiquidateDevice}
       />
+
+      {isGlobalQRScannerOpen && (
+        <QRScannerModal
+          onDetected={handleGlobalQRDetected}
+          onClose={() => setIsGlobalQRScannerOpen(false)}
+        />
+      )}
 
       <HandoverModal
         isOpen={handoverModal.open}
