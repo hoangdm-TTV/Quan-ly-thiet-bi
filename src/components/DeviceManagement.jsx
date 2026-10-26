@@ -175,6 +175,11 @@ export const DeviceManagement = ({
     return d ? d.name : null;
   };
 
+  // Tổng nguyên giá của các thiết bị đang lọc
+  const totalPurchaseCost = useMemo(() => {
+    return filteredDevices.reduce((sum, dev) => sum + (Number(dev.purchaseCost) || 0), 0);
+  }, [filteredDevices]);
+
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
       {/* Header Bar */}
@@ -182,22 +187,24 @@ export const DeviceManagement = ({
         <div>
           <h2 className="flex flex-wrap items-center gap-2 text-base leading-tight sm:text-xl font-bold text-slate-900 tracking-tight">
             <span>Danh Sách Thiết Bị & Tài Sản IT</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80 font-bold">
               {filteredDevices.length} / {devices.length}
             </span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-1">
             Quản lý chi tiết cấu hình, số serial, vị trí và vòng đời sử dụng tài sản
           </p>
         </div>
 
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {/* Toggle Grid/Table view */}
-          <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-md transition ${
-                viewMode === 'table' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'table'
+                  ? 'bg-white text-blue-600 shadow-sm font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Dạng bảng chi tiết"
             >
@@ -205,8 +212,10 @@ export const DeviceManagement = ({
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition ${
-                viewMode === 'grid' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-white text-blue-600 shadow-sm font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Dạng thẻ lưới"
             >
@@ -217,7 +226,7 @@ export const DeviceManagement = ({
           {/* Export button */}
           <button
             onClick={() => exportDevicesToExcel(filteredDevices, users, departments)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100/90 hover:border-emerald-300 shadow-xs sm:flex-none"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Xuất Excel</span>
@@ -226,7 +235,7 @@ export const DeviceManagement = ({
           {/* Add Device button */}
           <button
             onClick={onOpenNewDevice}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-500/20 transition hover:bg-blue-700 sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-500/25 transition hover:bg-blue-700 active:scale-[0.99] sm:flex-none"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm thiết bị</span>
@@ -235,25 +244,33 @@ export const DeviceManagement = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Search box */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Tìm mã TS, tên, serial, model..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
+              className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 w-4 h-4 rounded-full flex items-center justify-center text-xs"
+              >
+                ×
+              </button>
+            )}
           </div>
 
           {/* Category Filter */}
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none text-slate-700"
+            className="text-xs sm:text-sm px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none text-slate-700 transition"
           >
             <option value="all">Tất cả loại thiết bị</option>
             {CATEGORIES.map((c) => (
@@ -267,7 +284,7 @@ export const DeviceManagement = ({
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none text-slate-700"
+            className="text-xs sm:text-sm px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none text-slate-700 transition"
           >
             <option value="all">Tất cả trạng thái</option>
             {Object.entries(STATUS_MAP).map(([key, val]) => (
@@ -281,7 +298,7 @@ export const DeviceManagement = ({
           <select
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            className="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none text-slate-700"
+            className="text-xs sm:text-sm px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none text-slate-700 transition"
           >
             <option value="all">Tất cả phòng ban</option>
             {departments.map((d) => (
@@ -294,36 +311,36 @@ export const DeviceManagement = ({
 
         {/* Active Filter Tags */}
         {(selectedCategory !== 'all' || selectedStatus !== 'all' || selectedDept !== 'all' || searchQuery) && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
             <span className="text-slate-400 font-medium">Đang lọc theo:</span>
             {selectedCategory !== 'all' && (
-              <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-medium">
+              <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-medium border border-blue-200/60">
                 Loại: {CATEGORIES.find((c) => c.id === selectedCategory)?.name}
-                <button onClick={() => setSelectedCategory('all')} className="hover:text-blue-900 ml-1">
+                <button onClick={() => setSelectedCategory('all')} className="hover:text-blue-900 ml-1 font-bold">
                   ×
                 </button>
               </span>
             )}
             {selectedStatus !== 'all' && (
-              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium">
+              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg font-medium border border-amber-200/60">
                 Trạng thái: {STATUS_MAP[selectedStatus]?.label}
-                <button onClick={() => setSelectedStatus('all')} className="hover:text-amber-900 ml-1">
+                <button onClick={() => setSelectedStatus('all')} className="hover:text-amber-900 ml-1 font-bold">
                   ×
                 </button>
               </span>
             )}
             {selectedDept !== 'all' && (
-              <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-medium">
+              <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg font-medium border border-indigo-200/60">
                 Phòng ban: {departments.find((d) => d.id === selectedDept)?.name}
-                <button onClick={() => setSelectedDept('all')} className="hover:text-indigo-900 ml-1">
+                <button onClick={() => setSelectedDept('all')} className="hover:text-indigo-900 ml-1 font-bold">
                   ×
                 </button>
               </span>
             )}
             {searchQuery && (
-              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium border border-slate-200/60">
                 Từ khóa: "{searchQuery}"
-                <button onClick={() => setSearchQuery('')} className="hover:text-slate-900 ml-1">
+                <button onClick={() => setSearchQuery('')} className="hover:text-slate-900 ml-1 font-bold">
                   ×
                 </button>
               </span>
@@ -335,7 +352,7 @@ export const DeviceManagement = ({
                 setSelectedDept('all');
                 setSearchQuery('');
               }}
-              className="text-xs text-rose-600 hover:underline ml-2"
+              className="text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium ml-1"
             >
               Xóa tất cả bộ lọc
             </button>
@@ -345,8 +362,8 @@ export const DeviceManagement = ({
 
       {/* Main Content: Table or Grid */}
       {filteredDevices.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-          <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
             <Search className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-slate-800 text-base">Không tìm thấy thiết bị nào</h3>
@@ -355,7 +372,7 @@ export const DeviceManagement = ({
           </p>
           <button
             onClick={onOpenNewDevice}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition"
+            className="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm"
           >
             Thêm thiết bị mới
           </button>
@@ -364,195 +381,223 @@ export const DeviceManagement = ({
         <>
           {viewMode === 'table' && (
             <div className="hidden lg:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2">
-            <p className="text-[11px] text-slate-500">
-              Giữ chuột trái và kéo bảng, hoặc giữ <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 font-sans">Shift</kbd> khi lăn chuột.
-            </p>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                aria-label="Cuộn bảng sang trái"
-                onClick={() => deviceTableScrollRef.current?.scrollBy({ left: -480, behavior: 'smooth' })}
-                className="rounded-md border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100"
+              <div
+                ref={deviceTableScrollRef}
+                onPointerDown={handleTablePointerDown}
+                onClickCapture={handleTableClickCapture}
+                className="overflow-x-auto"
               >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                aria-label="Cuộn bảng sang phải"
-                onClick={() => deviceTableScrollRef.current?.scrollBy({ left: 480, behavior: 'smooth' })}
-                className="rounded-md border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <div
-            ref={deviceTableScrollRef}
-            onPointerDown={handleTablePointerDown}
-            onClickCapture={handleTableClickCapture}
-            className={`overflow-x-auto overscroll-x-contain ${isDraggingTable ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
-          >
-            <table className="w-[1460px] min-w-full table-fixed text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase font-semibold text-[11px] tracking-wider">
-                <tr>
-                  <th className="sticky left-0 z-20 w-[100px] bg-slate-50 py-3 px-4 whitespace-nowrap">Mã tài sản</th>
-                  <th className="w-[300px] py-3 px-4">Thiết bị & Model</th>
-                  <th className="w-[180px] py-3 px-4">Số Serial</th>
-                  <th className="w-[210px] py-3 px-4">Trạng thái</th>
-                  <th className="w-[180px] py-3 px-4">Người sử dụng</th>
-                  <th className="w-[190px] py-3 px-4">Phòng ban</th>
-                  <th className="w-[140px] py-3 px-4">Nguyên giá</th>
-                  <th className="w-[160px] py-3 px-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredDevices.map((dev) => {
-                  const Icon = getCategoryIconComponent(dev.category);
-                  const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
-                  const userName = getUserName(dev.userId);
-                  const deptName = getDeptName(dev.departmentId);
-
-                  return (
-                    <tr
-                      key={dev.id}
-                      className="hover:bg-blue-50/40 transition-colors group"
-                    >
-                      {/* Asset Code */}
-                      <td className="sticky left-0 z-10 bg-white py-3 px-4 font-mono font-bold text-blue-700 whitespace-nowrap group-hover:bg-blue-50/40">
-                        <span
-                          onClick={() => onOpenDeviceDetail(dev)}
-                          className="cursor-pointer hover:underline flex items-center gap-1.5"
-                        >
-                          <Tag className="w-3.5 h-3.5 text-blue-500" />
-                          {dev.code}
-                        </span>
-                      </td>
-
-                      {/* Device Name & Specs */}
-                      <td className="py-3 px-4 max-w-xs">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 group-hover:text-blue-700 transition">
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <p
-                              onClick={() => onOpenDeviceDetail(dev)}
-                              className="font-semibold text-slate-900 truncate hover:text-blue-600 cursor-pointer"
-                              title={dev.name}
-                            >
-                              {dev.name}
-                            </p>
-                            <p className="text-[11px] text-slate-500 truncate" title={dev.specs}>
-                              {dev.brand} {dev.model ? `• ${dev.model}` : ''}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Serial */}
-                      <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap">
-                        {dev.serial || '—'}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${statusMeta.color}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
-                          {statusMeta.label}
-                        </span>
-                      </td>
-
-                      {/* User */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {userName ? (
-                          <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                            <User className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{userName}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic">Chưa cấp</span>
-                        )}
-                      </td>
-
-                      {/* Department */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {deptName ? (
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <Building className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{deptName}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic">Chưa gán</span>
-                        )}
-                      </td>
-
-                      {/* Cost */}
-                      <td className="py-3 px-4 whitespace-nowrap font-medium text-slate-700">
-                        {formatCurrency(dev.purchaseCost)}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* Quick Handover button */}
-                          {dev.status === 'available' && !hasInProgressMaintenance(dev.id) && (
-                            <button
-                              onClick={() => onHandoverDevice(dev)}
-                              title="Bàn giao / Cấp phát"
-                              className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition"
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {/* Quick Maintenance button */}
-                          {['available', 'in_use', 'borrowed', 'broken'].includes(dev.status) && !hasOpenMaintenance(dev.id) && (
-                            <button
-                              onClick={() => onMaintainDevice(dev)}
-                              title={dev.status === 'broken' ? 'Lập phiếu sửa chữa' : 'Lên lịch bảo trì định kỳ'}
-                              className="p-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition"
-                            >
-                              <Wrench className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {/* Detail button */}
-                          <button
-                            onClick={() => onOpenDeviceDetail(dev)}
-                            title="Xem chi tiết"
-                            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Edit button */}
-                          <button
-                            onClick={() => onEditDevice(dev)}
-                            title="Sửa thông tin"
-                            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Delete button */}
-                          <button
-                            onClick={() => onDeleteDevice(dev)}
-                            title="Xóa thiết bị"
-                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
+                <table className="w-full min-w-[1100px] text-left text-xs border-collapse">
+                  <thead className="bg-slate-50/90 text-slate-600 border-b border-slate-200 uppercase font-semibold text-[11px] tracking-wider">
+                    <tr>
+                      <th className="sticky left-0 z-20 w-[110px] min-w-[110px] bg-slate-50 py-3.5 px-4 whitespace-nowrap">
+                        Mã tài sản
+                      </th>
+                      <th className="w-[280px] min-w-[240px] py-3.5 px-4">
+                        Thiết bị & Model
+                      </th>
+                      <th className="w-[140px] min-w-[130px] py-3.5 px-4">
+                        Số Serial
+                      </th>
+                      <th className="w-[170px] min-w-[150px] py-3.5 px-4">
+                        Trạng thái
+                      </th>
+                      <th className="w-[180px] min-w-[160px] py-3.5 px-4">
+                        Người sử dụng
+                      </th>
+                      <th className="w-[220px] min-w-[190px] py-3.5 px-4">
+                        Phòng ban
+                      </th>
+                      <th className="w-[140px] min-w-[130px] py-3.5 px-4 text-right">
+                        Nguyên giá
+                      </th>
+                      <th className="w-[160px] min-w-[150px] py-3.5 px-4 text-right">
+                        Thao tác
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredDevices.map((dev) => {
+                      const Icon = getCategoryIconComponent(dev.category);
+                      const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
+                      const userName = getUserName(dev.userId);
+                      const deptName = getDeptName(dev.departmentId);
+
+                      return (
+                        <tr
+                          key={dev.id}
+                          className="hover:bg-slate-50/80 transition-colors group"
+                        >
+                          {/* Asset Code */}
+                          <td className="sticky left-0 z-10 bg-white py-3.5 px-4 whitespace-nowrap group-hover:bg-slate-50/80 transition-colors">
+                            <button
+                              onClick={() => onOpenDeviceDetail(dev)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/90 hover:bg-blue-100 text-blue-700 font-mono font-bold text-xs border border-blue-200/60 transition-colors"
+                              title="Xem chi tiết thiết bị"
+                            >
+                              <Tag className="w-3.5 h-3.5 text-blue-500" />
+                              <span>{dev.code}</span>
+                            </button>
+                          </td>
+
+                          {/* Device Name & Specs */}
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/60 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200/60 transition-colors">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 max-w-[240px]">
+                                <p
+                                  onClick={() => onOpenDeviceDetail(dev)}
+                                  className="font-semibold text-slate-900 truncate hover:text-blue-600 cursor-pointer text-[13px] leading-tight"
+                                  title={dev.name}
+                                >
+                                  {dev.name}
+                                </p>
+                                <p className="text-[11px] text-slate-500 truncate mt-0.5" title={`${dev.brand || ''} ${dev.model ? `• ${dev.model}` : ''}`}>
+                                  <span className="font-medium text-slate-600">{dev.brand}</span> {dev.model ? `• ${dev.model}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Serial */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            {dev.serial ? (
+                              <span
+                                className="inline-block px-2 py-0.5 rounded font-mono text-[11px] font-medium bg-slate-100/90 text-slate-700 border border-slate-200/70"
+                                title={dev.serial}
+                              >
+                                {dev.serial}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 font-mono text-xs">—</span>
+                            )}
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${statusMeta.color}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
+                              {statusMeta.label}
+                            </span>
+                          </td>
+
+                          {/* User */}
+                          <td className="py-3.5 px-4">
+                            {userName ? (
+                              <div className="flex items-center gap-2 max-w-[170px]" title={userName}>
+                                <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                  {userName.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="truncate font-medium text-slate-800 text-xs">{userName}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic text-[11px]">Chưa cấp</span>
+                            )}
+                          </td>
+
+                          {/* Department */}
+                          <td className="py-3.5 px-4">
+                            {deptName ? (
+                              <div className="flex items-center gap-1.5 text-slate-600 max-w-[210px]" title={deptName}>
+                                <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate text-xs font-medium text-slate-700">{deptName}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic text-[11px]">Chưa gán</span>
+                            )}
+                          </td>
+
+                          {/* Cost */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <span className="font-semibold text-slate-900 tabular-nums text-[13px]">
+                              {formatCurrency(dev.purchaseCost)}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60">
+                              {/* Quick Handover button */}
+                              {dev.status === 'available' && !hasInProgressMaintenance(dev.id) && (
+                                <button
+                                  onClick={() => onHandoverDevice(dev)}
+                                  title="Bàn giao / Cấp phát"
+                                  className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-100/70 transition"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              {/* Quick Maintenance button */}
+                              {['available', 'in_use', 'borrowed', 'broken'].includes(dev.status) && !hasOpenMaintenance(dev.id) && (
+                                <button
+                                  onClick={() => onMaintainDevice(dev)}
+                                  title={dev.status === 'broken' ? 'Lập phiếu sửa chữa' : 'Lên lịch bảo trì định kỳ'}
+                                  className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-100/70 transition"
+                                >
+                                  <Wrench className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              {/* Detail button */}
+                              <button
+                                onClick={() => onOpenDeviceDetail(dev)}
+                                title="Xem chi tiết"
+                                className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100/70 transition"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Edit button */}
+                              <button
+                                onClick={() => onEditDevice(dev)}
+                                title="Sửa thông tin"
+                                className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-200/70 transition"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Delete button */}
+                              <button
+                                onClick={() => onDeleteDevice(dev)}
+                                title="Xóa thiết bị"
+                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-100/70 transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  {/* Table Footer: Summary stats */}
+                  <tfoot className="bg-slate-50/90 border-t border-slate-200 text-xs font-medium text-slate-600">
+                    <tr>
+                      <td colSpan={6} className="py-3 px-4">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <span>
+                            Hiển thị <strong className="font-semibold text-slate-800">{filteredDevices.length}</strong> thiết bị
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                          Tổng nguyên giá
+                        </span>
+                        <span className="font-bold text-slate-900 tabular-nums text-sm text-blue-700">
+                          {formatCurrency(totalPurchaseCost)}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           )}
           {/* Cards are the mobile layout; desktop can switch between cards and table. */}
