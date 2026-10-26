@@ -51,7 +51,7 @@
   }
 
   button:not(:disabled):focus-visible {
-    box-shadow: 0 0 0 4px rgb(254 205 211 / 0.9);
+    box-shadow: 0 0 0 4px rgb(191 219 254 / 0.9);
   }
 
   input::placeholder,
@@ -61,12 +61,12 @@
   }
 
   ::selection {
-    background: #fecdd3;
-    color: #5f0a14;
+    background: #bfdbfe;
+    color: #172554;
   }
 
   :focus-visible {
-    outline: 3px solid rgb(225 29 72 / 0.4);
+    outline: 3px solid rgb(59 130 246 / 0.4);
     outline-offset: 2px;
   }
 
@@ -79,7 +79,7 @@
 
 @layer components {
   .brand-mark {
-    background: linear-gradient(145deg, #e11d48 0%, #a50f22 58%, #5f0a14 100%);
+    background: linear-gradient(145deg, #1098dc 0%, #08639e 58%, #0d4568 100%);
     position: relative;
     overflow: hidden;
   }

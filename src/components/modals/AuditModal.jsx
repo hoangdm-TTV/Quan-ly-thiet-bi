@@ -166,7 +166,7 @@ export const AuditModal = ({ isOpen, onClose, onSave, auditToEdit, audits = [] }
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
+              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
               <span>{auditToEdit ? "Lưu thay đổi" : "Bắt đầu kiểm kê"}</span>

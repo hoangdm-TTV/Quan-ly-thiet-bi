@@ -98,7 +98,7 @@ export const UserDepartmentManagement = ({
           {activeSubTab === 'departments' && (
             <button
               onClick={onOpenNewDepartment}
-              className="flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-800"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700"
             >
               <Plus className="h-4 w-4" />
               <span>Thêm phòng ban</span>
@@ -267,19 +267,19 @@ export const UserDepartmentManagement = ({
                     <p className="text-xs text-slate-500 mt-0.5">Vị trí: {dept.room || 'Tòa nhà văn phòng'}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-brand-700">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
                       <Building className="h-5 w-5" />
                     </div>
                     <button
                       onClick={() => onEditDepartment(dept)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-brand-700"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-indigo-50 hover:text-indigo-700"
                       title="Sửa phòng ban"
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => onDeleteDepartment(dept)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-amber-50 hover:text-amber-700"
                       title="Xóa phòng ban"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
