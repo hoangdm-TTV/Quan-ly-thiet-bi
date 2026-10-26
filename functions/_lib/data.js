@@ -145,6 +145,26 @@ export const createAudit = async (db, input) => {
   return loadAudit(db, input.id);
 };
 
+export const updateAudit = async (db, auditId, input) => {
+  if (!String(input?.code || "").trim() || !String(input?.title || "").trim()) throw fail(422, "Đợt kiểm kê cần có mã và tên.");
+  const result = await db.prepare("UPDATE audits SET code=?,title=?,audit_date=?,auditor=?,notes=? WHERE id=? AND status!='completed'")
+    .bind(String(input.code).trim(), String(input.title).trim(), input.auditDate ?? null, input.auditor ?? null, input.notes ?? null, auditId).run();
+  if (!result.meta?.changes) {
+    const existing = await db.prepare("SELECT status FROM audits WHERE id=?").bind(auditId).first();
+    if (!existing) throw fail(404, "Không tìm thấy đợt kiểm kê.");
+    throw fail(409, "Đợt kiểm kê đã chốt, không thể sửa.");
+  }
+  return loadAudit(db, auditId);
+};
+
+export const deleteAudit = async (db, auditId) => {
+  const audit = await db.prepare("SELECT status, code FROM audits WHERE id=?").bind(auditId).first();
+  if (!audit) throw fail(404, "Không tìm thấy đợt kiểm kê.");
+  if (audit.status === "completed") throw fail(409, "Đợt kiểm kê đã chốt, không thể xóa.");
+  await db.prepare("DELETE FROM audits WHERE id=?").bind(auditId).run();
+  return { success: true, message: `Đã xóa đợt kiểm kê ${audit.code}.` };
+};
+
 export const saveAuditRecord = async (db, auditId, deviceId, input) => {
   if (!["found", "confirmed", "discrepancy"].includes(input?.status)) throw fail(422, "Trạng thái dòng kiểm kê không hợp lệ.");
   const audit = await db.prepare("SELECT status FROM audits WHERE id=?").bind(auditId).first();

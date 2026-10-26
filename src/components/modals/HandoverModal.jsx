@@ -22,7 +22,7 @@ export const HandoverModal = ({
     departmentId: "",
     handoverDate: getLocalDateInputValue(),
     expectedReturnDate: "",
-    giverName: "Nguyễn Văn Hùng (Bộ phận IT)",
+    giverName: "Đỗ Minh Hoàng (Bộ phận IT)",
     condition: "Thiết bị hoạt động tốt 100%, đầy đủ phụ kiện sạc zin đi kèm.",
     notes: "",
   });

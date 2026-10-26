@@ -16,6 +16,7 @@ import { HandoverModal } from "./components/modals/HandoverModal";
 import { ReturnModal } from "./components/modals/ReturnModal";
 import { MaintenanceModal } from "./components/modals/MaintenanceModal";
 import { AuditModal } from "./components/modals/AuditModal";
+import { DepartmentModal } from "./components/modals/DepartmentModal";
 import { UserModal } from "./components/modals/UserModal";
 import { PrintVoucherModal } from "./components/modals/PrintVoucherModal";
 import { LoginPage } from "./components/LoginPage";
@@ -25,6 +26,7 @@ import { getLocalDateInputValue } from "./utils/formatters";
 import {
   changePassword,
   createAudit,
+  deleteAudit,
   fetchInitialData,
   finishAuditRequest,
   getAuthStatus,
@@ -33,6 +35,7 @@ import {
   logout,
   saveAuditRecord,
   saveStoredData,
+  updateAudit,
 } from "./services/storage";
 
 export default function App() {
@@ -163,7 +166,8 @@ export default function App() {
     open: false,
     preselectedDevice: null,
   });
-  const [auditModal, setAuditModal] = useState({ open: false });
+  const [auditModal, setAuditModal] = useState({ open: false, editItem: null });
+  const [departmentModal, setDepartmentModal] = useState({ open: false, editItem: null });
   const [userModal, setUserModal] = useState({ open: false, editItem: null });
   const [printModal, setPrintModal] = useState({ open: false, handover: null });
 
@@ -617,13 +621,34 @@ export default function App() {
 
   const handleSaveAudit = async (auditData) => {
     try {
-      applyAudit(
-        await createAudit({ ...auditData, id: `audit-${Date.now()}` }),
-      );
+      if (auditModal.editItem) {
+        applyAudit(await updateAudit(auditModal.editItem.id, auditData));
+      } else {
+        applyAudit(await createAudit({ ...auditData, id: `audit-${Date.now()}` }));
+      }
+      setAuditModal({ open: false, editItem: null });
       return true;
     } catch (error) {
-      window.alert(`Không thể tạo đợt kiểm kê: ${error.message}`);
+      window.alert(`Không thể ${auditModal.editItem ? "sửa" : "tạo"} đợt kiểm kê: ${error.message}`);
       return false;
+    }
+  };
+
+  const handleDeleteAudit = async (audit) => {
+    if (!audit || audit.status === "completed") {
+      window.alert("Đợt kiểm kê đã chốt nên không thể xóa.");
+      return;
+    }
+    const recordCount = (audit.records || []).length;
+    const warning = recordCount
+      ? `Đợt ${audit.code} đã có ${recordCount} kết quả. Xóa sẽ xóa cả kết quả kiểm kê, bạn có chắc không?`
+      : `Bạn có chắc muốn xóa đợt kiểm kê ${audit.code}?`;
+    if (!window.confirm(warning)) return;
+    try {
+      await deleteAudit(audit.id);
+      setData((current) => ({ ...current, audits: current.audits.filter((item) => item.id !== audit.id) }));
+    } catch (error) {
+      window.alert(`Không thể xóa đợt kiểm kê: ${error.message}`);
     }
   };
 
@@ -688,6 +713,33 @@ export default function App() {
       const updatedUsers = data.users.filter((u) => u.id !== user.id);
       updateData({ ...data, users: updatedUsers });
     }
+  };
+
+  // --- Handlers for Departments ---
+  const handleSaveDepartment = (departmentData) => {
+    const updatedDepartments = departmentModal.editItem
+      ? data.departments.map((department) =>
+          department.id === departmentModal.editItem.id
+            ? { ...department, ...departmentData }
+            : department,
+        )
+      : [{ ...departmentData, id: `dept-${Date.now()}` }, ...data.departments];
+    updateData({ ...data, departments: updatedDepartments });
+  };
+
+  const handleDeleteDepartment = (department) => {
+    const linkedUsers = data.users.filter((user) => user.departmentId === department.id).length;
+    const linkedDevices = data.devices.filter((device) => device.departmentId === department.id).length;
+    const linkedHandovers = data.handovers.filter((handover) => handover.departmentId === department.id).length;
+    if (linkedUsers || linkedDevices || linkedHandovers) {
+      window.alert(`Không thể xóa ${department.name} vì đang liên kết với ${linkedUsers} nhân sự, ${linkedDevices} thiết bị và ${linkedHandovers} phiếu bàn giao. Hãy chuyển các dữ liệu liên quan sang phòng ban khác trước.`);
+      return;
+    }
+    if (!window.confirm(`Bạn có chắc muốn xóa phòng ban "${department.name}"?`)) return;
+    updateData({
+      ...data,
+      departments: data.departments.filter((item) => item.id !== department.id),
+    });
   };
 
   if (isAuthLoading) {
@@ -835,6 +887,9 @@ export default function App() {
               onOpenNewUser={() => setUserModal({ open: true, editItem: null })}
               onEditUser={(u) => setUserModal({ open: true, editItem: u })}
               onDeleteUser={handleDeleteUser}
+              onOpenNewDepartment={() => setDepartmentModal({ open: true, editItem: null })}
+              onEditDepartment={(department) => setDepartmentModal({ open: true, editItem: department })}
+              onDeleteDepartment={handleDeleteDepartment}
               onOpenDeviceDetail={(dev) =>
                 setDetailModal({ open: true, device: dev })
               }
@@ -877,7 +932,9 @@ export default function App() {
               users={data.users}
               departments={data.departments}
               currentUser={authUser}
-              onOpenNewAudit={() => setAuditModal({ open: true })}
+              onOpenNewAudit={() => setAuditModal({ open: true, editItem: null })}
+              onEditAudit={(audit) => setAuditModal({ open: true, editItem: audit })}
+              onDeleteAudit={handleDeleteAudit}
               onUpdateAuditItem={handleUpdateAuditItem}
               onFinishAudit={handleFinishAudit}
             />
@@ -962,9 +1019,18 @@ export default function App() {
 
       <AuditModal
         isOpen={auditModal.open}
-        onClose={() => setAuditModal({ open: false })}
+        onClose={() => setAuditModal({ open: false, editItem: null })}
         onSave={handleSaveAudit}
+        auditToEdit={auditModal.editItem}
         audits={data.audits}
+      />
+
+      <DepartmentModal
+        isOpen={departmentModal.open}
+        onClose={() => setDepartmentModal({ open: false, editItem: null })}
+        onSave={handleSaveDepartment}
+        departmentToEdit={departmentModal.editItem}
+        departments={data.departments}
       />
 
       <UserModal

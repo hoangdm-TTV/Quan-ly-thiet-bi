@@ -322,6 +322,22 @@ export const createAudit = async (audit) => {
   return saved;
 };
 
+export const updateAudit = async (auditId, audit) => {
+  const { audit: saved } = await request(`/audits/${encodeURIComponent(auditId)}`, {
+    method: "PUT",
+    body: JSON.stringify(audit),
+  });
+  cacheAudit(saved);
+  return saved;
+};
+
+export const deleteAudit = async (auditId) => {
+  const result = await request(`/audits/${encodeURIComponent(auditId)}`, {
+    method: "DELETE",
+  });
+  return result;
+};
+
 export const saveAuditRecord = async (auditId, deviceId, record) => {
   const { audit } = await request(
     `/audits/${encodeURIComponent(auditId)}/records/${encodeURIComponent(deviceId)}`,

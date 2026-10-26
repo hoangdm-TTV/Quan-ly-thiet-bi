@@ -8,7 +8,7 @@ import {
   readCookie,
   verifyCredentials,
 } from "../_lib/auth.js";
-import { createAudit, finishAudit, getSnapshot, saveAuditRecord, saveSnapshot } from "../_lib/data.js";
+import { createAudit, deleteAudit, finishAudit, getSnapshot, saveAuditRecord, saveSnapshot, updateAudit } from "../_lib/data.js";
 
 const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { "Cache-Control": "no-store", ...headers } });
 const errorResponse = (status, message) => json({ error: message }, status);
@@ -112,6 +112,15 @@ export async function onRequest({ request, env }) {
     if (path === "audits" && request.method === "POST") {
       const body = await parseBody(request);
       return json({ audit: await createAudit(db, body) }, 201);
+    }
+
+    const auditMatch = path.match(/^audits\/([^/]+)$/);
+    if (auditMatch && request.method === "PUT") {
+      const body = await parseBody(request);
+      return json({ audit: await updateAudit(db, decodeURIComponent(auditMatch[1]), body) });
+    }
+    if (auditMatch && request.method === "DELETE") {
+      return json(await deleteAudit(db, decodeURIComponent(auditMatch[1])));
     }
 
     const recordMatch = path.match(/^audits\/([^/]+)\/records\/([^/]+)$/);

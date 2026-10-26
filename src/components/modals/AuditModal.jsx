@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Save, ClipboardCheck } from "lucide-react";
 import { getLocalDateInputValue, getUniqueCode } from "../../utils/formatters";
 
-export const AuditModal = ({ isOpen, onClose, onSave, audits = [] }) => {
+export const AuditModal = ({ isOpen, onClose, onSave, auditToEdit, audits = [] }) => {
   const [formData, setFormData] = useState({
     code: `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`,
     title: `Kiểm kê tài sản thiết bị IT Quý ${Math.floor(new Date().getMonth() / 3) + 1}/${new Date().getFullYear()}`,
@@ -14,16 +14,23 @@ export const AuditModal = ({ isOpen, onClose, onSave, audits = [] }) => {
 
   useEffect(() => {
     if (!isOpen) return;
+    if (auditToEdit) {
+      setFormData({
+        code: auditToEdit.code || "",
+        title: auditToEdit.title || "",
+        auditDate: auditToEdit.auditDate || getLocalDateInputValue(),
+        auditor: auditToEdit.auditor || "",
+        notes: auditToEdit.notes || "",
+      });
+      return;
+    }
     const baseCode = `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`;
     setFormData((prev) => ({
       ...prev,
-      code: getUniqueCode(
-        baseCode,
-        audits.map((a) => a.code),
-      ),
+      code: getUniqueCode(baseCode, audits.map((a) => a.code)),
       auditDate: getLocalDateInputValue(),
     }));
-  }, [isOpen, audits]);
+  }, [auditToEdit, isOpen, audits]);
 
   if (!isOpen) return null;
 
@@ -53,7 +60,7 @@ export const AuditModal = ({ isOpen, onClose, onSave, audits = [] }) => {
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">
-                Khởi Tạo Đợt Kiểm Kê Mới
+                {auditToEdit ? "Chỉnh Sửa Đợt Kiểm Kê" : "Khởi Tạo Đợt Kiểm Kê Mới"}
               </h3>
               <p className="text-xs text-slate-500">
                 Đối chiếu danh sách tài sản với thực tế
@@ -159,10 +166,10 @@ export const AuditModal = ({ isOpen, onClose, onSave, audits = [] }) => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
+              className="px-5 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm flex items-center gap-1.5 transition"
             >
               <Save className="w-4 h-4" />
-              <span>Bắt đầu kiểm kê</span>
+              <span>{auditToEdit ? "Lưu thay đổi" : "Bắt đầu kiểm kê"}</span>
             </button>
           </div>
         </form>
