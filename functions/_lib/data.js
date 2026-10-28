@@ -12,16 +12,17 @@ const dateOnly = (value) => typeof value === "string" ? value.slice(0, 10) : nul
 const runRows = async (db, sql) => (await db.prepare(sql).all()).results || [];
 
 export const getSnapshot = async (db) => {
-  const [departments, users, devices, handovers, maintenance, audits, records, metadata] = await Promise.all([
-    runRows(db, "SELECT id, name, code, manager, room FROM departments ORDER BY id"),
-    runRows(db, 'SELECT id, code, name, email, phone, department_id AS "departmentId", position, avatar FROM users ORDER BY id'),
-    runRows(db, 'SELECT id, code, name, category, brand, model, serial, specs, status, user_id AS "userId", department_id AS "departmentId", purchase_date AS "purchaseDate", purchase_cost AS "purchaseCost", warranty_until AS "warrantyUntil", location, notes FROM devices ORDER BY id'),
-    runRows(db, 'SELECT id, code, type, device_id AS "deviceId", user_id AS "userId", department_id AS "departmentId", handover_date AS "handoverDate", expected_return_date AS "expectedReturnDate", actual_return_date AS "actualReturnDate", status, giver_id AS "giverId", giver_name AS "giverName", device_condition AS condition, notes FROM handovers ORDER BY handover_date DESC, id'),
-    runRows(db, 'SELECT id, code, device_id AS "deviceId", issue, solution, cost, vendor, status, start_date AS "startDate", completed_date AS "completedDate", technician, notes FROM maintenance ORDER BY start_date DESC, id'),
-    runRows(db, 'SELECT id, code, title, audit_date AS "auditDate", auditor, status, notes, total_checked AS "totalChecked", matched_count AS "matchedCount", discrepancy_count AS "discrepancyCount" FROM audits ORDER BY audit_date DESC, id'),
-    runRows(db, 'SELECT audit_id AS "auditId", device_id AS "deviceId", status, note, found_at AS "foundAt", found_by AS "foundBy", checked_at AS "checkedAt", checked_by AS "checkedBy", discrepancies, system_snapshot AS "systemSnapshot" FROM audit_records ORDER BY audit_id, device_id'),
-    runRows(db, "SELECT key, value FROM app_metadata WHERE key IN ('updatedAt','dataVersion')"),
+  const results = await db.batch([
+    db.prepare("SELECT id, name, code, manager, room FROM departments ORDER BY id"),
+    db.prepare('SELECT id, code, name, email, phone, department_id AS "departmentId", position, avatar FROM users ORDER BY id'),
+    db.prepare('SELECT id, code, name, category, brand, model, serial, specs, status, user_id AS "userId", department_id AS "departmentId", purchase_date AS "purchaseDate", purchase_cost AS "purchaseCost", warranty_until AS "warrantyUntil", location, notes FROM devices ORDER BY id'),
+    db.prepare('SELECT id, code, type, device_id AS "deviceId", user_id AS "userId", department_id AS "departmentId", handover_date AS "handoverDate", expected_return_date AS "expectedReturnDate", actual_return_date AS "actualReturnDate", status, giver_id AS "giverId", giver_name AS "giverName", device_condition AS condition, notes FROM handovers ORDER BY handover_date DESC, id'),
+    db.prepare('SELECT id, code, device_id AS "deviceId", issue, solution, cost, vendor, status, start_date AS "startDate", completed_date AS "completedDate", technician, notes FROM maintenance ORDER BY start_date DESC, id'),
+    db.prepare('SELECT id, code, title, audit_date AS "auditDate", auditor, status, notes, total_checked AS "totalChecked", matched_count AS "matchedCount", discrepancy_count AS "discrepancyCount" FROM audits ORDER BY audit_date DESC, id'),
+    db.prepare('SELECT audit_id AS "auditId", device_id AS "deviceId", status, note, found_at AS "foundAt", found_by AS "foundBy", checked_at AS "checkedAt", checked_by AS "checkedBy", discrepancies, system_snapshot AS "systemSnapshot" FROM audit_records ORDER BY audit_id, device_id'),
+    db.prepare("SELECT key, value FROM app_metadata WHERE key IN ('updatedAt','dataVersion')"),
   ]);
+  const [departments, users, devices, handovers, maintenance, audits, records, metadata] = results.map((result) => result.results || []);
   const byAudit = new Map();
   for (const row of records) {
     const group = byAudit.get(row.auditId) || [];
@@ -131,9 +132,12 @@ export const saveSnapshot = async (db, input, expectedVersion) => {
 
 const AUDIT_SELECT = 'id, code, title, audit_date AS "auditDate", auditor, status, notes, total_checked AS "totalChecked", matched_count AS "matchedCount", discrepancy_count AS "discrepancyCount"';
 const loadAudit = async (db, auditId) => {
-  const audit = await db.prepare(`SELECT ${AUDIT_SELECT} FROM audits WHERE id=?`).bind(auditId).first();
+  const [auditResult, recordResult] = await db.batch([
+    db.prepare(`SELECT ${AUDIT_SELECT} FROM audits WHERE id=?`).bind(auditId),
+    db.prepare('SELECT device_id AS "deviceId", status, note, found_at AS "foundAt", found_by AS "foundBy", checked_at AS "checkedAt", checked_by AS "checkedBy", discrepancies, system_snapshot AS "systemSnapshot" FROM audit_records WHERE audit_id=? ORDER BY device_id').bind(auditId),
+  ]);
+  const audit = auditResult.results?.[0] || null;
   if (!audit) return null;
-  const recordResult = await db.prepare('SELECT device_id AS "deviceId", status, note, found_at AS "foundAt", found_by AS "foundBy", checked_at AS "checkedAt", checked_by AS "checkedBy", discrepancies, system_snapshot AS "systemSnapshot" FROM audit_records WHERE audit_id=? ORDER BY device_id').bind(auditId).all();
   const safeRecords = recordResult.results || [];
   return { ...audit, records: safeRecords.map((row) => ({ ...row, discrepancies: JSON.parse(row.discrepancies || "[]"), systemSnapshot: JSON.parse(row.systemSnapshot || "{}") })) };
 };
@@ -167,10 +171,13 @@ export const deleteAudit = async (db, auditId) => {
 
 export const saveAuditRecord = async (db, auditId, deviceId, input) => {
   if (!["found", "confirmed", "discrepancy"].includes(input?.status)) throw fail(422, "Trạng thái dòng kiểm kê không hợp lệ.");
-  const audit = await db.prepare("SELECT status FROM audits WHERE id=?").bind(auditId).first();
+  const [audit, device] = await Promise.all([
+    db.prepare("SELECT status FROM audits WHERE id=?").bind(auditId).first(),
+    db.prepare("SELECT 1 AS found FROM devices WHERE id=?").bind(deviceId).first(),
+  ]);
   if (!audit) throw fail(404, "Không tìm thấy đợt kiểm kê.");
   if (audit.status === "completed") throw fail(409, "Đợt kiểm kê đã chốt, không thể ghi nhận thêm.");
-  if (!await db.prepare("SELECT 1 AS found FROM devices WHERE id=?").bind(deviceId).first()) throw fail(404, "Không tìm thấy thiết bị trong hệ thống.");
+  if (!device) throw fail(404, "Không tìm thấy thiết bị trong hệ thống.");
   await db.batch([
     db.prepare(`INSERT INTO audit_records(audit_id,device_id,status,note,found_at,found_by,checked_at,checked_by,discrepancies,system_snapshot)
       VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(audit_id,device_id) DO UPDATE SET status=excluded.status,note=excluded.note,found_at=excluded.found_at,found_by=excluded.found_by,checked_at=excluded.checked_at,checked_by=excluded.checked_by,discrepancies=excluded.discrepancies,system_snapshot=excluded.system_snapshot`)

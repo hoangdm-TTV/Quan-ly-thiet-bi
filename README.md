@@ -62,6 +62,7 @@ Xem hướng dẫn đầy đủ tại [CLOUDFLARE-D1.md](./CLOUDFLARE-D1.md).
 - Phiếu bảo trì/sửa chữa theo trạng thái.
 - Kiểm kê tài sản bằng camera, ảnh QR, nhập mã hoặc đầu đọc mã vạch.
 - Quét QR độc lập từ nút **Quét QR** trên đầu trang để mở ngay toàn bộ hồ sơ thiết bị, người sử dụng, phòng ban, lịch sử bàn giao và bảo trì.
+- Truy vấn D1 được tối ưu bằng batch đọc và index cho danh sách thiết bị, lịch sử, bảo trì và kiểm kê.
 - Báo cáo dashboard, xuất Excel và sao lưu/khôi phục JSON.
 - Đăng nhập admin, giới hạn đăng nhập sai, phiên cookie và đổi mật khẩu.
 
