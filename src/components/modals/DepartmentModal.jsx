@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Building2, Save, X } from "lucide-react";
 import { getNextCode } from "../../utils/formatters";
+import { useFeedback } from "../../context/FeedbackContext";
 
 export const DepartmentModal = ({
   isOpen,
@@ -9,6 +10,7 @@ export const DepartmentModal = ({
   departmentToEdit,
   departments = [],
 }) => {
+  const { toast } = useFeedback();
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -42,7 +44,7 @@ export const DepartmentModal = ({
     const name = formData.name.trim();
     const code = formData.code.trim().toUpperCase();
     if (!name || !code) {
-      window.alert("Vui lòng nhập mã và tên phòng ban.");
+      toast.warning("Vui lòng nhập mã và tên phòng ban.");
       return;
     }
     onSave({

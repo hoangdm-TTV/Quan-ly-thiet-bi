@@ -19,6 +19,7 @@ import {
 import { CATEGORIES } from "../../data/assetMetadata";
 import { getLocalDateInputValue } from "../../utils/formatters";
 import { getNextCode } from "../../utils/formatters";
+import { useFeedback } from "../../context/FeedbackContext";
 
 // Các mẫu cấu hình thông dụng
 const SPECS_TEMPLATES = {
@@ -68,6 +69,7 @@ export const DeviceModal = ({
   users,
   devices = [],
 }) => {
+  const { toast, confirm } = useFeedback();
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -113,20 +115,26 @@ export const DeviceModal = ({
   };
 
   // Chèn mẫu cấu hình
-  const handleInsertTemplate = (type, isInsideModal = false) => {
+  const handleInsertTemplate = async (type, isInsideModal = false) => {
     const template = SPECS_TEMPLATES[type] || "";
-    if (isInsideModal) {
-      if (tempSpecs.trim() && !window.confirm("Bạn có muốn ghi đè cấu hình hiện tại bằng mẫu này không?")) {
-        setTempSpecs((prev) => (prev ? prev + "\n" + template : template));
-      } else {
-        setTempSpecs(template);
-      }
+    const currentText = isInsideModal ? tempSpecs : formData.specs;
+    let shouldOverwrite = false;
+    if (currentText.trim()) {
+      shouldOverwrite = await confirm({
+        title: "Ghi đè cấu hình",
+        message: "Bạn có muốn ghi đè cấu hình hiện tại bằng mẫu này không? (Chọn Hủy để nối tiếp vào cuối)",
+        confirmText: "Ghi đè",
+        cancelText: "Nối tiếp",
+        variant: "primary",
+      });
     } else {
-      if (formData.specs.trim() && !window.confirm("Bạn có muốn ghi đè cấu hình hiện tại bằng mẫu này không?")) {
-        setFormData((prev) => ({ ...prev, specs: prev.specs ? prev.specs + "\n" + template : template }));
-      } else {
-        setFormData((prev) => ({ ...prev, specs: template }));
-      }
+      shouldOverwrite = true;
+    }
+
+    if (isInsideModal) {
+      setTempSpecs((prev) => (shouldOverwrite || !prev.trim() ? template : prev + "\n" + template));
+    } else {
+      setFormData((prev) => ({ ...prev, specs: shouldOverwrite || !prev.specs.trim() ? template : prev.specs + "\n" + template }));
     }
   };
 
@@ -177,7 +185,7 @@ export const DeviceModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.code.trim() || !formData.name.trim()) {
-      alert("Vui lòng nhập Mã tài sản và Tên thiết bị!");
+      toast.warning("Vui lòng nhập Mã tài sản và Tên thiết bị!");
       return;
     }
     const duplicated = devices.some(
@@ -186,7 +194,7 @@ export const DeviceModal = ({
         d.code.trim().toLowerCase() === formData.code.trim().toLowerCase(),
     );
     if (duplicated) {
-      alert(
+      toast.warning(
         `Mã tài sản "${formData.code.trim()}" đã tồn tại. Hãy nhập mã khác.`,
       );
       return;
@@ -605,8 +613,14 @@ export const DeviceModal = ({
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ nội dung cấu hình này?")) {
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: "Xóa cấu hình",
+                      message: "Bạn có chắc chắn muốn xóa toàn bộ nội dung cấu hình này?",
+                      confirmText: "Xóa cấu hình",
+                      variant: "danger",
+                    });
+                    if (ok) {
                       setTempSpecs("");
                     }
                   }}

@@ -29,6 +29,7 @@ import {
 import { CATEGORIES, STATUS_MAP } from '../data/assetMetadata';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportDevicesToExcel } from '../services/storage';
+import { Pagination } from './common/Pagination';
 
 export const DeviceManagement = ({
   devices,
@@ -48,6 +49,13 @@ export const DeviceManagement = ({
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDept, setSelectedDept] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedStatus, selectedDept, searchQuery]);
+
   const deviceTableScrollRef = useRef(null);
   const dragStartRef = useRef(null);
   const didDragRef = useRef(false);
@@ -179,6 +187,12 @@ export const DeviceManagement = ({
   const totalPurchaseCost = useMemo(() => {
     return filteredDevices.reduce((sum, dev) => sum + (Number(dev.purchaseCost) || 0), 0);
   }, [filteredDevices]);
+
+  // Danh sách thiết bị đã phân trang
+  const paginatedDevices = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredDevices.slice(start, start + pageSize);
+  }, [filteredDevices, currentPage, pageSize]);
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
@@ -417,7 +431,7 @@ export const DeviceManagement = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredDevices.map((dev) => {
+                    {paginatedDevices.map((dev) => {
                       const Icon = getCategoryIconComponent(dev.category);
                       const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
                       const userName = getUserName(dev.userId);
@@ -602,7 +616,7 @@ export const DeviceManagement = ({
           )}
           {/* Cards are the mobile layout; desktop can switch between cards and table. */}
           <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 sm:gap-4 ${viewMode === 'table' ? 'lg:hidden' : ''}`}>
-          {filteredDevices.map((dev) => {
+          {paginatedDevices.map((dev) => {
             const Icon = getCategoryIconComponent(dev.category);
             const statusMeta = STATUS_MAP[dev.status] || STATUS_MAP.available;
             const userName = getUserName(dev.userId);
@@ -729,6 +743,18 @@ export const DeviceManagement = ({
             );
           })}
         </div>
+
+        {/* Phân trang */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredDevices.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
         </>
       )}
     </div>

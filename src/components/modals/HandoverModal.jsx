@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFeedback } from "../../context/FeedbackContext";
 import { X, Save, Send, Calendar, User, Laptop } from "lucide-react";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
 import { STATUS_MAP } from "../../data/assetMetadata";
@@ -27,6 +28,7 @@ export const HandoverModal = ({
     notes: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useFeedback();
 
   useEffect(() => {
     if (isOpen) {
@@ -96,7 +98,7 @@ export const HandoverModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.userId) {
-      alert("Vui lòng chọn thiết bị và nhân viên tiếp nhận!");
+      toast.warning("Vui lòng chọn thiết bị và nhân viên tiếp nhận!");
       return;
     }
 
@@ -112,7 +114,7 @@ export const HandoverModal = ({
       selectedDevice.status !== "available" ||
       hasInProgressMaintenance
     ) {
-      alert(
+      toast.warning(
         "Thiết bị này không còn sẵn sàng cấp phát hoặc đang được sửa chữa. Hãy chọn thiết bị khác.",
       );
       return;

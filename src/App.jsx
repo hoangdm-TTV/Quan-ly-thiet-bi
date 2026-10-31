@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
-import { Dashboard } from "./components/Dashboard";
 import { DeviceManagement } from "./components/DeviceManagement";
 import { UserDepartmentManagement } from "./components/UserDepartmentManagement";
 import { HandoverManagement } from "./components/HandoverManagement";
 import { MaintenanceManagement } from "./components/MaintenanceManagement";
 import { AuditManagement } from "./components/AuditManagement";
 import { ReportManagement } from "./components/ReportManagement";
+
+// Lazy-loaded heavy components & modals
+const Dashboard = lazy(() => import("./components/Dashboard").then((m) => ({ default: m.Dashboard })));
+const QRScannerModal = lazy(() => import("./components/modals/QRScannerModal").then((m) => ({ default: m.QRScannerModal })));
+const PrintVoucherModal = lazy(() => import("./components/modals/PrintVoucherModal").then((m) => ({ default: m.PrintVoucherModal })));
 
 // Modals
 import { DeviceModal } from "./components/modals/DeviceModal";
@@ -17,12 +21,20 @@ import { ReturnModal } from "./components/modals/ReturnModal";
 import { MaintenanceModal } from "./components/modals/MaintenanceModal";
 import { AuditModal } from "./components/modals/AuditModal";
 import { DepartmentModal } from "./components/modals/DepartmentModal";
-import { QRScannerModal } from "./components/modals/QRScannerModal";
 import { UserModal } from "./components/modals/UserModal";
-import { PrintVoucherModal } from "./components/modals/PrintVoucherModal";
 import { LoginPage } from "./components/LoginPage";
 import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { getLocalDateInputValue } from "./utils/formatters";
+import { useFeedback } from "./context/FeedbackContext";
+
+const LazyFallback = () => (
+  <div className="flex h-64 items-center justify-center p-8 text-slate-500">
+    <div className="flex items-center gap-2">
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+      <span className="text-sm font-medium">Đang tải thành phần…</span>
+    </div>
+  </div>
+);
 
 import {
   changePassword,
@@ -40,6 +52,7 @@ import {
 } from "./services/storage";
 
 export default function App() {
+  const { toast, confirm, prompt } = useFeedback();
   // Main data state
   const [data, setData] = useState({
     devices: [],
@@ -184,7 +197,7 @@ export default function App() {
     } catch (error) {
       setIsBackendConnected(false);
       setDatabaseError(error.message);
-      window.alert(`Không thể lưu vào database: ${error.message}`);
+      toast.error(`Không thể lưu vào database: ${error.message}`);
       return false;
     }
   };
@@ -195,9 +208,10 @@ export default function App() {
       setData(latestData);
       setIsBackendConnected(true);
       setDatabaseError("");
+      toast.success("Đã làm mới dữ liệu từ database.");
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(`Không thể tải dữ liệu từ database: ${error.message}`);
+      toast.error(`Không thể tải dữ liệu từ database: ${error.message}`);
     }
   };
 
@@ -221,14 +235,14 @@ export default function App() {
     );
     setIsGlobalQRScannerOpen(false);
     if (!device) {
-      window.alert(`Không tìm thấy thiết bị theo mã QR: ${lookupValue}`);
+      toast.error(`Không tìm thấy thiết bị theo mã QR: ${lookupValue}`);
       return;
     }
     setDetailModal({ open: true, device });
   };
 
   // --- Handlers for Devices ---
-  const handleSaveDevice = (deviceData) => {
+  const handleSaveDevice = async (deviceData) => {
     let updatedDevices;
     if (deviceModal.editItem) {
       updatedDevices = data.devices.map((d) =>
@@ -252,10 +266,13 @@ export default function App() {
       };
       updatedDevices = [newDevice, ...data.devices];
     }
-    updateData({ ...data, devices: updatedDevices });
+    const ok = await updateData({ ...data, devices: updatedDevices });
+    if (ok) {
+      toast.success(`${deviceModal.editItem ? "Đã cập nhật" : "Đã thêm"} thiết bị ${deviceData.code}`);
+    }
   };
 
-  const handleDeleteDevice = (device) => {
+  const handleDeleteDevice = async (device) => {
     const hasHandoverHistory = data.handovers.some(
       (handover) => handover.deviceId === device.id,
     );
@@ -263,36 +280,38 @@ export default function App() {
       (item) => item.deviceId === device.id,
     );
     if (hasHandoverHistory || hasMaintenanceHistory) {
-      window.alert(
+      toast.warning(
         "Thiết bị đã có lịch sử bàn giao hoặc bảo trì nên không thể xóa. Hãy giữ hồ sơ để bảo toàn vòng đời tài sản.",
       );
       return;
     }
-    if (
-      window.confirm(
-        `Bạn có chắc muốn xóa thiết bị "${device.name}" (${device.code})?`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: "Xóa thiết bị",
+      message: `Bạn có chắc muốn xóa thiết bị "${device.name}" (${device.code})? Hành động này không thể hoàn tác.`,
+      confirmText: "Xóa thiết bị",
+      variant: "danger",
+    });
+    if (confirmed) {
       const updatedDevices = data.devices.filter((d) => d.id !== device.id);
-      updateData({ ...data, devices: updatedDevices });
+      const ok = await updateData({ ...data, devices: updatedDevices });
+      if (ok) toast.success(`Đã xóa thiết bị ${device.code}`);
     }
   };
 
   const handleLiquidateDevice = async (device) => {
-    const reason = window.prompt(
-      `Nhập lý do thanh lý thiết bị ${device.code}:`,
-    );
+    const reason = await prompt({
+      title: "Thanh lý thiết bị",
+      message: `Nhập lý do thanh lý cho thiết bị ${device.code} (${device.name}):`,
+      placeholder: "Ví dụ: Hỏng nặng không thể sửa, hết hạn khấu hao...",
+      inputType: "textarea",
+      required: true,
+      confirmText: "Thanh lý",
+    });
     if (reason === null) return;
     if (!reason.trim()) {
-      window.alert("Cần ghi lý do thanh lý để lưu dấu vết tài sản.");
+      toast.warning("Cần ghi lý do thanh lý để lưu dấu vết tài sản.");
       return;
     }
-    if (
-      !window.confirm(
-        `Xác nhận chuyển ${device.code} sang trạng thái Đã thanh lý?`,
-      )
-    )
-      return;
 
     let latestData;
     try {
@@ -300,7 +319,7 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(
+      toast.error(
         `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
       );
       return;
@@ -323,7 +342,7 @@ export default function App() {
       hasActiveHandover ||
       hasOpenMaintenance
     ) {
-      window.alert(
+      toast.warning(
         "Chỉ có thể thanh lý thiết bị đang ở kho hoặc đang hỏng và không còn phiếu bàn giao/bảo trì mở.",
       );
       return;
@@ -343,7 +362,10 @@ export default function App() {
         : item,
     );
     const saved = await updateData({ ...latestData, devices: updatedDevices });
-    if (saved) setDetailModal({ open: false, device: null });
+    if (saved) {
+      setDetailModal({ open: false, device: null });
+      toast.success(`Đã chuyển thiết bị ${device.code} sang trạng thái đã thanh lý.`);
+    }
   };
 
   // --- Handlers for Handover & Borrow ---
@@ -354,7 +376,7 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(
+      toast.error(
         `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
       );
       return false;
@@ -377,7 +399,7 @@ export default function App() {
       hasActiveHandover ||
       hasInProgressMaintenance
     ) {
-      window.alert(
+      toast.warning(
         "Không thể bàn giao: thiết bị chưa sẵn sàng, đang có phiếu chưa trả hoặc đang được sửa chữa. Hãy tải lại dữ liệu và chọn thiết bị khác.",
       );
       return false;
@@ -401,11 +423,15 @@ export default function App() {
       return d;
     });
 
-    return updateData({
+    const ok = await updateData({
       ...latestData,
       devices: updatedDevices,
       handovers: [newHandover, ...latestData.handovers],
     });
+    if (ok) {
+      toast.success(`Đã tạo phiếu ${newHandover.type === "borrow" ? "mượn" : "bàn giao"} ${newHandover.code}`);
+    }
+    return ok;
   };
 
   const handleConfirmReturn = async ({
@@ -422,7 +448,7 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(
+      toast.error(
         `Không thể kiểm tra trạng thái mới nhất của phiếu trả: ${error.message}`,
       );
       return false;
@@ -441,7 +467,7 @@ export default function App() {
       !device ||
       anotherActiveHandover
     ) {
-      window.alert(
+      toast.warning(
         "Không thể xác nhận trả: phiếu hoặc thiết bị đã thay đổi, hoặc đang có phiếu sử dụng khác. Hãy tải lại dữ liệu rồi thử lại.",
       );
       return false;
@@ -489,7 +515,7 @@ export default function App() {
   // --- Handlers for Maintenance ---
   const handleSaveMaintenance = async (maintenanceData) => {
     if (maintenanceData.status !== "scheduled") {
-      window.alert(
+      toast.warning(
         "Phiếu mới chỉ được tạo ở trạng thái đã lên lịch. Hãy dùng nút Bắt đầu xử lý khi thiết bị thực sự được tiếp nhận.",
       );
       return false;
@@ -500,7 +526,7 @@ export default function App() {
       setData(latestData);
     } catch (error) {
       setDatabaseError(error.message);
-      window.alert(
+      toast.error(
         `Không thể kiểm tra trạng thái mới nhất của thiết bị: ${error.message}`,
       );
       return false;
@@ -518,7 +544,7 @@ export default function App() {
       device &&
       ["available", "in_use", "borrowed", "broken"].includes(device.status);
     if (!canSchedule || hasOpenMaintenance) {
-      window.alert(
+      toast.warning(
         "Không thể tạo lịch: thiết bị không còn phù hợp hoặc đã có phiếu bảo trì đang mở. Hãy tải lại danh sách và kiểm tra phiếu hiện có.",
       );
       return false;
@@ -529,13 +555,17 @@ export default function App() {
       id: `maint-${Date.now()}`,
     };
 
-    return updateData({
+    const ok = await updateData({
       ...latestData,
       maintenance: [newRecord, ...latestData.maintenance],
     });
+    if (ok) {
+      toast.success(`Đã lên lịch bảo trì ${newRecord.code}`);
+    }
+    return ok;
   };
 
-  const handleStartMaintenance = (maintenanceItem) => {
+  const handleStartMaintenance = async (maintenanceItem) => {
     const currentItem = data.maintenance.find(
       (item) => item.id === maintenanceItem.id,
     );
@@ -553,13 +583,13 @@ export default function App() {
       !["available", "broken"].includes(device.status) ||
       hasActiveHandover
     ) {
-      window.alert(
+      toast.warning(
         "Chưa thể bắt đầu: hãy thu hồi thiết bị đang được giữ trước. Chỉ thiết bị đã ở kho hoặc ghi nhận hỏng mới vào bảo trì được.",
       );
       return;
     }
 
-    updateData({
+    const ok = await updateData({
       ...data,
       maintenance: data.maintenance.map((item) =>
         item.id === currentItem.id ? { ...item, status: "in_progress" } : item,
@@ -576,9 +606,12 @@ export default function App() {
           : item,
       ),
     });
+    if (ok) {
+      toast.success(`Đã chuyển phiếu ${currentItem.code} sang trạng thái đang sửa chữa.`);
+    }
   };
 
-  const handleCompleteMaintenance = (maintenanceItem) => {
+  const handleCompleteMaintenance = async (maintenanceItem) => {
     const currentItem = data.maintenance.find(
       (item) => item.id === maintenanceItem.id,
     );
@@ -591,19 +624,23 @@ export default function App() {
       !targetDev ||
       targetDev.status !== "maintenance"
     ) {
-      window.alert(
+      toast.warning(
         "Chỉ có thể nghiệm thu phiếu đang xử lý và thiết bị đang ở khu vực bảo trì.",
       );
       return;
     }
-    const completeDate = getLocalDateInputValue();
-    const costInput = window.prompt(
-      "Xác nhận nghiệm thu bảo trì xong. Nhập chi phí thực tế (VNĐ):",
-      String(maintenanceItem.cost || 0),
-    );
+    const costInput = await prompt({
+      title: "Nghiệm thu bảo trì",
+      message: `Xác nhận nghiệm thu bảo trì xong cho phiếu ${currentItem.code}. Nhập chi phí thực tế (VNĐ):`,
+      defaultValue: String(maintenanceItem.cost || 0),
+      inputType: "number",
+      required: false,
+      confirmText: "Nghiệm thu",
+    });
     if (costInput === null) return;
 
     const actualCost = Number(costInput) || 0;
+    const completeDate = getLocalDateInputValue();
 
     const updatedMaintenance = data.maintenance.map((m) => {
       if (m.id === currentItem.id) {
@@ -631,11 +668,14 @@ export default function App() {
       return d;
     });
 
-    updateData({
+    const ok = await updateData({
       ...data,
       devices: updatedDevices,
       maintenance: updatedMaintenance,
     });
+    if (ok) {
+      toast.success(`Đã hoàn tất nghiệm thu phiếu ${currentItem.code}, thiết bị đã sẵn sàng tại Kho IT.`);
+    }
   };
 
   // --- Handlers for Audits ---
@@ -657,26 +697,33 @@ export default function App() {
       setAuditModal({ open: false, editItem: null });
       return true;
     } catch (error) {
-      window.alert(`Không thể ${auditModal.editItem ? "sửa" : "tạo"} đợt kiểm kê: ${error.message}`);
+      toast.error(`Không thể ${auditModal.editItem ? "sửa" : "tạo"} đợt kiểm kê: ${error.message}`);
       return false;
     }
   };
 
   const handleDeleteAudit = async (audit) => {
     if (!audit || audit.status === "completed") {
-      window.alert("Đợt kiểm kê đã chốt nên không thể xóa.");
+      toast.warning("Đợt kiểm kê đã chốt nên không thể xóa.");
       return;
     }
     const recordCount = (audit.records || []).length;
     const warning = recordCount
       ? `Đợt ${audit.code} đã có ${recordCount} kết quả. Xóa sẽ xóa cả kết quả kiểm kê, bạn có chắc không?`
       : `Bạn có chắc muốn xóa đợt kiểm kê ${audit.code}?`;
-    if (!window.confirm(warning)) return;
+    const confirmed = await confirm({
+      title: "Xóa đợt kiểm kê",
+      message: warning,
+      confirmText: "Xóa",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     try {
       await deleteAudit(audit.id);
       setData((current) => ({ ...current, audits: current.audits.filter((item) => item.id !== audit.id) }));
+      toast.success(`Đã xóa đợt kiểm kê ${audit.code}`);
     } catch (error) {
-      window.alert(`Không thể xóa đợt kiểm kê: ${error.message}`);
+      toast.error(`Không thể xóa đợt kiểm kê: ${error.message}`);
     }
   };
 
@@ -694,7 +741,7 @@ export default function App() {
       );
       return true;
     } catch (error) {
-      window.alert(`Không thể lưu kết quả kiểm kê: ${error.message}`);
+      toast.error(`Không thể lưu kết quả kiểm kê: ${error.message}`);
       return false;
     }
   };
@@ -711,16 +758,23 @@ export default function App() {
     const message = unverifiedCount
       ? `Chốt đợt kiểm kê? ${unverifiedCount} tài sản chưa được quét sẽ chuyển thành “Chưa xác minh” để rà soát sau.`
       : "Bạn có chắc muốn chốt đợt kiểm kê này thành trạng thái Đã Hoàn Thành?";
-    if (!window.confirm(message)) return;
+    const confirmed = await confirm({
+      title: "Chốt đợt kiểm kê",
+      message,
+      confirmText: "Chốt kiểm kê",
+      variant: "warning",
+    });
+    if (!confirmed) return;
     try {
       applyAudit(await finishAuditRequest(auditId));
+      toast.success(`Đã hoàn thành và chốt đợt kiểm kê ${audit.code}.`);
     } catch (error) {
-      window.alert(`Không thể chốt đợt kiểm kê: ${error.message}`);
+      toast.error(`Không thể chốt đợt kiểm kê: ${error.message}`);
     }
   };
 
   // --- Handlers for Users ---
-  const handleSaveUser = (userData) => {
+  const handleSaveUser = async (userData) => {
     let updatedUsers;
     if (userModal.editItem) {
       updatedUsers = data.users.map((u) =>
@@ -733,18 +787,28 @@ export default function App() {
       };
       updatedUsers = [newUser, ...data.users];
     }
-    updateData({ ...data, users: updatedUsers });
+    const ok = await updateData({ ...data, users: updatedUsers });
+    if (ok) {
+      toast.success(`${userModal.editItem ? "Đã cập nhật" : "Đã thêm"} nhân sự ${userData.name}`);
+    }
   };
 
-  const handleDeleteUser = (user) => {
-    if (window.confirm(`Bạn có chắc muốn xóa nhân sự "${user.name}"?`)) {
+  const handleDeleteUser = async (user) => {
+    const confirmed = await confirm({
+      title: "Xóa nhân sự",
+      message: `Bạn có chắc muốn xóa nhân sự "${user.name}"?`,
+      confirmText: "Xóa",
+      variant: "danger",
+    });
+    if (confirmed) {
       const updatedUsers = data.users.filter((u) => u.id !== user.id);
-      updateData({ ...data, users: updatedUsers });
+      const ok = await updateData({ ...data, users: updatedUsers });
+      if (ok) toast.success(`Đã xóa nhân sự ${user.name}`);
     }
   };
 
   // --- Handlers for Departments ---
-  const handleSaveDepartment = (departmentData) => {
+  const handleSaveDepartment = async (departmentData) => {
     const updatedDepartments = departmentModal.editItem
       ? data.departments.map((department) =>
           department.id === departmentModal.editItem.id
@@ -752,22 +816,34 @@ export default function App() {
             : department,
         )
       : [{ ...departmentData, id: `dept-${Date.now()}` }, ...data.departments];
-    updateData({ ...data, departments: updatedDepartments });
+    const ok = await updateData({ ...data, departments: updatedDepartments });
+    if (ok) {
+      toast.success(`${departmentModal.editItem ? "Đã cập nhật" : "Đã thêm"} phòng ban ${departmentData.name}`);
+    }
   };
 
-  const handleDeleteDepartment = (department) => {
+  const handleDeleteDepartment = async (department) => {
     const linkedUsers = data.users.filter((user) => user.departmentId === department.id).length;
     const linkedDevices = data.devices.filter((device) => device.departmentId === department.id).length;
     const linkedHandovers = data.handovers.filter((handover) => handover.departmentId === department.id).length;
     if (linkedUsers || linkedDevices || linkedHandovers) {
-      window.alert(`Không thể xóa ${department.name} vì đang liên kết với ${linkedUsers} nhân sự, ${linkedDevices} thiết bị và ${linkedHandovers} phiếu bàn giao. Hãy chuyển các dữ liệu liên quan sang phòng ban khác trước.`);
+      toast.warning(
+        `Không thể xóa ${department.name} vì đang liên kết với ${linkedUsers} nhân sự, ${linkedDevices} thiết bị và ${linkedHandovers} phiếu bàn giao. Hãy chuyển các dữ liệu liên quan sang phòng ban khác trước.`,
+      );
       return;
     }
-    if (!window.confirm(`Bạn có chắc muốn xóa phòng ban "${department.name}"?`)) return;
-    updateData({
+    const confirmed = await confirm({
+      title: "Xóa phòng ban",
+      message: `Bạn có chắc muốn xóa phòng ban "${department.name}"?`,
+      confirmText: "Xóa",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    const ok = await updateData({
       ...data,
       departments: data.departments.filter((item) => item.id !== department.id),
     });
+    if (ok) toast.success(`Đã xóa phòng ban ${department.name}`);
   };
 
   if (isAuthLoading) {
@@ -867,17 +943,19 @@ export default function App() {
         {/* Center Content Area */}
         <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
           {activeTab === "dashboard" && (
-            <Dashboard
-              devices={data.devices}
-              users={data.users}
-              departments={data.departments}
-              handovers={data.handovers}
-              maintenance={data.maintenance}
-              setActiveTab={setActiveTab}
-              onOpenDeviceDetail={(dev) =>
-                setDetailModal({ open: true, device: dev })
-              }
-            />
+            <Suspense fallback={<LazyFallback />}>
+              <Dashboard
+                devices={data.devices}
+                users={data.users}
+                departments={data.departments}
+                handovers={data.handovers}
+                maintenance={data.maintenance}
+                setActiveTab={setActiveTab}
+                onOpenDeviceDetail={(dev) =>
+                  setDetailModal({ open: true, device: dev })
+                }
+              />
+            </Suspense>
           )}
 
           {activeTab === "devices" && (
@@ -1011,10 +1089,12 @@ export default function App() {
       />
 
       {isGlobalQRScannerOpen && (
-        <QRScannerModal
-          onDetected={handleGlobalQRDetected}
-          onClose={() => setIsGlobalQRScannerOpen(false)}
-        />
+        <Suspense fallback={null}>
+          <QRScannerModal
+            onDetected={handleGlobalQRDetected}
+            onClose={() => setIsGlobalQRScannerOpen(false)}
+          />
+        </Suspense>
       )}
 
       <HandoverModal
@@ -1078,18 +1158,22 @@ export default function App() {
         users={data.users}
       />
 
-      <PrintVoucherModal
-        isOpen={printModal.open}
-        onClose={() => setPrintModal({ open: false, handover: null })}
-        handover={printModal.handover}
-        device={data.devices.find(
-          (d) => d.id === printModal.handover?.deviceId,
-        )}
-        user={data.users.find((u) => u.id === printModal.handover?.userId)}
-        department={data.departments.find(
-          (dep) => dep.id === printModal.handover?.departmentId,
-        )}
-      />
+      {printModal.open && (
+        <Suspense fallback={null}>
+          <PrintVoucherModal
+            isOpen={printModal.open}
+            onClose={() => setPrintModal({ open: false, handover: null })}
+            handover={printModal.handover}
+            device={data.devices.find(
+              (d) => d.id === printModal.handover?.deviceId,
+            )}
+            user={data.users.find((u) => u.id === printModal.handover?.userId)}
+            department={data.departments.find(
+              (dep) => dep.id === printModal.handover?.departmentId,
+            )}
+          />
+        </Suspense>
+      )}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}

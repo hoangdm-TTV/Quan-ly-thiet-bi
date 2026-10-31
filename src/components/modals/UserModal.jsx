@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, User, Upload, Image as ImageIcon } from "lucide-react";
+import { useFeedback } from "../../context/FeedbackContext";
 
 export const UserModal = ({
   isOpen,
@@ -9,6 +10,7 @@ export const UserModal = ({
   departments,
   users,
 }) => {
+  const { toast } = useFeedback();
   const [imageError, setImageError] = useState("");
   const [formData, setFormData] = useState({
     code: "",
@@ -92,7 +94,7 @@ export const UserModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.code.trim()) {
-      alert("Vui lòng nhập Tên nhân viên và Mã nhân viên!");
+      toast.warning("Vui lòng nhập Tên nhân viên và Mã nhân viên!");
       return;
     }
 

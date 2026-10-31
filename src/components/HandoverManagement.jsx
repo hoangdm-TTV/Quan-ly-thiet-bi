@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Repeat,
   Plus,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { formatDate, getLocalDateInputValue } from "../utils/formatters";
 import { exportHandoversToExcel } from "../services/storage";
+import { Pagination } from "./common/Pagination";
 
 export const HandoverManagement = ({
   handovers,
@@ -30,32 +31,45 @@ export const HandoverManagement = ({
   const [filterType, setFilterType] = useState("all"); // 'all' | 'handover' | 'borrow'
   const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'active' | 'returned'
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const today = getLocalDateInputValue();
 
-  const filteredHandovers = handovers.filter((h) => {
-    if (filterType !== "all" && h.type !== filterType) return false;
-    if (filterStatus !== "all" && h.status !== filterStatus) return false;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterStatus, searchQuery]);
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const codeMatch = (h.code || "").toLowerCase().includes(q);
-      const notesMatch = (h.notes || "").toLowerCase().includes(q);
+  const filteredHandovers = useMemo(() => {
+    return handovers.filter((h) => {
+      if (filterType !== "all" && h.type !== filterType) return false;
+      if (filterStatus !== "all" && h.status !== filterStatus) return false;
 
-      const dev = devices.find((d) => d.id === h.deviceId);
-      const devMatch =
-        dev &&
-        (dev.name.toLowerCase().includes(q) ||
-          dev.code.toLowerCase().includes(q));
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const codeMatch = (h.code || "").toLowerCase().includes(q);
+        const notesMatch = (h.notes || "").toLowerCase().includes(q);
 
-      const user = users.find((u) => u.id === h.userId);
-      const userMatch = user && user.name.toLowerCase().includes(q);
+        const dev = devices.find((d) => d.id === h.deviceId);
+        const devMatch =
+          dev &&
+          (dev.name.toLowerCase().includes(q) ||
+            dev.code.toLowerCase().includes(q));
 
-      if (!codeMatch && !notesMatch && !devMatch && !userMatch) return false;
-    }
+        const user = users.find((u) => u.id === h.userId);
+        const userMatch = user && user.name.toLowerCase().includes(q);
 
-    return true;
-  });
+        if (!codeMatch && !notesMatch && !devMatch && !userMatch) return false;
+      }
+
+      return true;
+    });
+  }, [handovers, filterType, filterStatus, searchQuery, devices, users]);
+
+  const paginatedHandovers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredHandovers.slice(start, start + pageSize);
+  }, [filteredHandovers, currentPage, pageSize]);
 
   return (
     <div className="space-y-5">
@@ -162,7 +176,7 @@ export const HandoverManagement = ({
                   </td>
                 </tr>
               ) : (
-                filteredHandovers.map((h) => {
+                paginatedHandovers.map((h) => {
                   const dev = devices.find((d) => d.id === h.deviceId);
                   const user = users.find((u) => u.id === h.userId);
                   const dept = departments.find((d) => d.id === h.departmentId);
@@ -314,6 +328,18 @@ export const HandoverManagement = ({
           </table>
         </div>
       </div>
+
+      {/* Phân trang */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredHandovers.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 };

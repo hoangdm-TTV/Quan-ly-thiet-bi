@@ -1,6 +1,10 @@
-import * as XLSX from "xlsx";
 import { getLocalDateInputValue } from "../utils/formatters";
 import { CATEGORIES, STATUS_MAP } from "../data/assetMetadata";
+
+const getXlsx = async () => {
+  const module = await import("xlsx");
+  return module.default || module;
+};
 
 const STORAGE_KEY = "IT_ASSET_MASTER_V1";
 const API_URL = "/api";
@@ -162,7 +166,8 @@ export const restoreFromJsonFile = async (file) => {
   });
 };
 
-export const exportDevicesToExcel = (devices, users, departments) => {
+export const exportDevicesToExcel = async (devices, users, departments) => {
+  const XLSX = await getXlsx();
   const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
 
@@ -199,12 +204,13 @@ export const exportDevicesToExcel = (devices, users, departments) => {
   XLSX.writeFile(workbook, `Danh_Sach_Thiet_Bi_${dateStr}.xlsx`);
 };
 
-export const exportHandoversToExcel = (
+export const exportHandoversToExcel = async (
   handovers,
   devices,
   users,
   departments,
 ) => {
+  const XLSX = await getXlsx();
   const devMap = Object.fromEntries(devices.map((d) => [d.id, d]));
   const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
@@ -239,12 +245,13 @@ export const exportHandoversToExcel = (
   XLSX.writeFile(workbook, `Lich_Su_Ban_Giao_Muon_Tra_${dateStr}.xlsx`);
 };
 
-export const exportAuditsToExcel = (
+export const exportAuditsToExcel = async (
   audit,
   devices,
   users = [],
   departments = [],
 ) => {
+  const XLSX = await getXlsx();
   const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
   const recordMap = new Map(

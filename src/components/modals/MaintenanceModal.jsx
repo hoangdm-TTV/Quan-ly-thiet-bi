@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Save, Wrench, X } from "lucide-react";
+import { useFeedback } from "../../context/FeedbackContext";
 import { getLocalDateInputValue, getNextCode } from "../../utils/formatters";
 import { STATUS_MAP } from "../../data/assetMetadata";
 
@@ -11,6 +12,7 @@ export const MaintenanceModal = ({
   devices,
   maintenance = [],
 }) => {
+  const { toast } = useFeedback();
   const [formData, setFormData] = useState({
     code: "",
     deviceId: "",
@@ -76,7 +78,7 @@ export const MaintenanceModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.deviceId || !formData.issue.trim()) {
-      alert("Vui lòng chọn thiết bị và mô tả hiện trạng sự cố!");
+      toast.warning("Vui lòng chọn thiết bị và mô tả hiện trạng sự cố!");
       return;
     }
     const saved = await onSave({

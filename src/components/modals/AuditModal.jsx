@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, ClipboardCheck } from "lucide-react";
 import { getLocalDateInputValue, getUniqueCode } from "../../utils/formatters";
+import { useFeedback } from "../../context/FeedbackContext";
 
 export const AuditModal = ({ isOpen, onClose, onSave, auditToEdit, audits = [] }) => {
+  const { toast } = useFeedback();
   const [formData, setFormData] = useState({
     code: `KK-${new Date().getFullYear()}-Q${Math.floor(new Date().getMonth() / 3) + 1}`,
     title: `Kiểm kê tài sản thiết bị IT Quý ${Math.floor(new Date().getMonth() / 3) + 1}/${new Date().getFullYear()}`,
@@ -37,7 +39,7 @@ export const AuditModal = ({ isOpen, onClose, onSave, auditToEdit, audits = [] }
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert("Vui lòng nhập tên đợt kiểm kê!");
+      toast.warning("Vui lòng nhập tên đợt kiểm kê!");
       return;
     }
 

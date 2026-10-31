@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useFeedback } from '../../context/FeedbackContext';
 import { formatDate, getLocalDateInputValue } from '../../utils/formatters';
 
 export const ReturnModal = ({
@@ -10,6 +11,7 @@ export const ReturnModal = ({
   user,
   onConfirmReturn,
 }) => {
+  const { toast } = useFeedback();
   const [returnDate, setReturnDate] = useState(getLocalDateInputValue());
   const [condition, setCondition] = useState('Máy nguyên vẹn, hoạt động bình thường, đầy đủ phụ kiện sạc.');
   const [nextDeviceStatus, setNextDeviceStatus] = useState('available'); // 'available' | 'maintenance' | 'broken' (legacy API value)
@@ -30,7 +32,7 @@ export const ReturnModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (handover.status !== 'active' || !device) {
-      alert('Phiếu này không còn hiệu lực hoặc không tìm thấy thiết bị. Hãy tải lại dữ liệu.');
+      toast.error('Phiếu này không còn hiệu lực hoặc không tìm thấy thiết bị. Hãy tải lại dữ liệu.');
       return;
     }
 
