@@ -77,11 +77,23 @@ Trong DBeaver chọn **New Database Connection → SQLite**, sau đó chọn fil
 
 ## 4. Cấu hình Cloudflare Pages
 
-Trong Pages project, đặt:
+### Pages kết nối trực tiếp với Git
 
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Repository phải có thư mục `functions/`, `migrations/` và `wrangler.jsonc` ở root.
+Đặt build command là `npm run build`, output directory là `dist`, root directory là thư mục gốc repo. Để Pages tự xử lý deployment; không cần thêm lệnh `wrangler deploy`. Repository phải giữ `functions/`, `migrations/` và `wrangler.jsonc` ở root để API và cấu hình D1 được đưa lên cùng ứng dụng.
+
+### Nếu dùng màn hình Workers Builds có Deploy command
+
+Log có dòng `Executing user deploy command` là Workers Builds, không phải Pages Git integration. Đặt:
+
+```text
+Build command:  npm run build
+Deploy command: npx wrangler pages deploy dist --project-name=TEN_PAGES_PROJECT
+Root directory: thư mục gốc repo
+```
+
+Thay `TEN_PAGES_PROJECT` bằng tên Pages project thật. Lệnh phải chạy ở root repo để Wrangler nhận thư mục `functions/`. Không dùng `npx wrangler deploy`: đó là lệnh deploy Worker và gây lỗi `Missing entry-point` trong dự án Pages này. Nếu xác thực bị từ chối, kiểm tra token của build có quyền Cloudflare Pages Edit.
+
+Không dùng Dashboard drag-and-drop chỉ với `dist/` để deploy ứng dụng có Pages Functions; phương thức đó không biên dịch thư mục `functions/`. Có thể xem tài liệu [Pages Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/), [Pages Functions](https://developers.cloudflare.com/pages/functions/get-started/) và [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
 
 Trong **Settings → Bindings**, kiểm tra binding:
 
@@ -109,7 +121,7 @@ npm run d1:migrate:remote
 
 Lệnh này thay đổi schema của D1 Production. Không dùng `--remote` cho các thao tác thử nghiệm hoặc dữ liệu mẫu.
 
-Sau đó push code lên branch mà Cloudflare Pages đang theo dõi. Kiểm tra sau deploy:
+Sau migration, deploy theo phương thức đã cấu hình ở mục 4: với Pages Git integration thì push lên branch đang theo dõi; với Workers Builds thì chạy lại deployment. Kiểm tra:
 
 ```text
 https://<domain-pages-cua-ban>/api/health

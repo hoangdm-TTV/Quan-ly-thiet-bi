@@ -1,31 +1,43 @@
 # IT AssetMaster — Quản lý thiết bị và tài sản IT
 
-Ứng dụng quản lý thiết bị, bàn giao/mượn trả, bảo trì, kiểm kê bằng QR và báo cáo. Dự án chạy theo một kiến trúc thống nhất:
+Ứng dụng nội bộ quản lý thiết bị, nhân viên/phòng ban, bàn giao và mượn trả, bảo trì, kiểm kê, báo cáo và sao lưu dữ liệu.
 
-- React 18 + Vite + Tailwind CSS ở frontend.
-- Cloudflare Pages Functions ở API.
-- Cloudflare D1 ở database.
-- Wrangler/Miniflare tạo D1 SQLite riêng cho local.
+## Kiến trúc hiện tại
 
-Phần Express/PostgreSQL cũ đã được loại khỏi đường chạy của ứng dụng để tránh ghi dữ liệu vào hai database khác nhau.
+```text
+React 18 + Vite
+       │ same-origin /api
+       ▼
+Cloudflare Pages Functions (functions/api/[[path]].js)
+       │ binding: DB
+       ▼
+Cloudflare D1
+```
 
-## Chạy nhanh
+Local cũng chạy Pages Functions, nhưng dùng D1 SQLite local do Wrangler quản lý. Production dùng D1 trên Cloudflare. Hai môi trường là hai database tách biệt; dữ liệu local không tự đồng bộ lên production khi deploy code.
+
+Ứng dụng hiện không chạy Express/PostgreSQL. `package.json` không còn lệnh hoặc dependency để chạy backend PostgreSQL. Frontend gọi API cùng origin; `localStorage` chỉ giữ cache phục vụ xuất/sao lưu, không thay thế D1. Mọi thay đổi được gửi đến API/database trước, rồi mới cập nhật cache.
+
+## Chạy local
+
+Cần Node.js và npm. Tại thư mục gốc repo, chạy:
 
 ```powershell
 npm install
 Copy-Item .dev.vars.example .dev.vars
 notepad .dev.vars
+```
+
+Thay email và mật khẩu mẫu trong `.dev.vars` bằng thông tin chỉ dùng local. Mật khẩu phải dài ít nhất 12 ký tự. Không commit `.dev.vars`; file này đã được `.gitignore` bỏ qua. Production phải dùng secrets riêng trong Cloudflare, không dùng thông tin local.
+
+Tạo bảng cho D1 local và chạy app:
+
+```powershell
 npm run d1:migrate:local
 npm run dev
 ```
 
-Mở địa chỉ Wrangler in ra, thường là:
-
-```text
-http://localhost:8788
-```
-
-`npm run dev` chính là `npm run pages:dev`, vì vậy local luôn chạy qua Pages Functions và D1 local.
+`npm run dev` gọi `npm run pages:dev`. Script này build Vite rồi chạy `wrangler pages dev dist`, để giao diện và Pages Functions cùng hoạt động. Mở URL Wrangler in ra, thường là `http://localhost:8788`.
 
 Kiểm tra API:
 
@@ -34,129 +46,102 @@ http://localhost:8788/api/health
 http://localhost:8788/api/auth/status
 ```
 
-## Database
+`/api/health` cần trả JSON tương tự `{"status":"ok","database":"cloudflare-d1"}`. Tài khoản admin được tạo lần đầu khi đăng nhập hoặc gọi trạng thái xác thực, nếu D1 chưa có tài khoản và các biến `AUTH_ADMIN_EMAIL`, `AUTH_ADMIN_PASSWORD` hợp lệ.
 
-Local sử dụng SQLite D1 trong:
+> `npm run preview` chỉ chạy Vite preview tĩnh; để thử API/Functions local, dùng `npm run dev`.
 
-```text
-.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite
-```
+## Lệnh npm
 
-Production sử dụng Cloudflare D1:
+| Lệnh | Công dụng |
+|---|---|
+| `npm run dev` | Build và chạy Pages Functions + D1 local bằng Wrangler |
+| `npm run pages:dev` | Tương tự `npm run dev` |
+| `npm run build` | Build frontend Vite vào `dist/` |
+| `npm run preview` | Xem bản frontend tĩnh; không thay thế Pages Functions |
+| `npm run d1:migrate:local` | Áp dụng migration vào D1 local |
+| `npm run d1:migrate:remote` | Áp dụng migration vào D1 production — chỉ chạy khi đã xác nhận database đích |
 
-```text
-Database: it-assetmaster
-Binding: DB
-```
+## Database và migration
 
-Local và Production là hai database tách biệt. Dữ liệu nhập trên local không tự đẩy lên Production. Deploy code cũng không tự sao chép dữ liệu.
+Cấu hình D1 nằm trong `wrangler.jsonc`: binding phải tên `DB`, `database_name` phải khớp tên D1 trên Cloudflare, và `database_id` phải là ID thật của database đó. Migration tạo schema nằm trong `migrations/`.
 
-Xem hướng dẫn đầy đủ tại [CLOUDFLARE-D1.md](./CLOUDFLARE-D1.md).
-
-## Tính năng
-
-- Quản lý laptop, PC, màn hình, máy chủ, thiết bị mạng, máy in và phụ kiện.
-- Hồ sơ thiết bị gồm mã tài sản, serial, hãng, model, cấu hình, giá mua, ngày mua, bảo hành và vị trí.
-- Bàn giao chính thức, cho mượn, thu hồi và theo dõi quá hạn.
-- Quản lý nhân viên và phòng ban.
-- Phiếu bảo trì/sửa chữa theo trạng thái.
-- Kiểm kê tài sản bằng camera, ảnh QR, nhập mã hoặc đầu đọc mã vạch.
-- Quét QR độc lập từ nút **Quét QR** trên đầu trang để mở ngay toàn bộ hồ sơ thiết bị, người sử dụng, phòng ban, lịch sử bàn giao và bảo trì.
-- Truy vấn D1 được tối ưu bằng batch đọc và index cho danh sách thiết bị, lịch sử, bảo trì và kiểm kê.
-- Báo cáo dashboard, xuất Excel và sao lưu/khôi phục JSON.
-- Đăng nhập admin, giới hạn đăng nhập sai, phiên cookie và đổi mật khẩu.
-
-## Các lệnh chính
-
-```powershell
-# Cài dependency
-npm install
-
-# Chạy local qua Cloudflare Pages Functions + D1 local
-npm run dev
-
-# Build frontend production
-npm run build
-
-# Migration D1 local
-npm run d1:migrate:local
-
-# Migration D1 Production — chỉ chạy sau khi đã kiểm tra local
-npm run d1:migrate:remote
-```
-
-## DBeaver và D1 local
-
-Sau khi chạy migration local, tìm file SQLite:
+D1 local được lưu dưới `.wrangler/state/v3/d1/miniflare-D1DatabaseObject/`. Có thể tìm file SQLite bằng PowerShell:
 
 ```powershell
 Get-ChildItem -Recurse .wrangler\state\v3\d1 -Filter *.sqlite
 ```
 
-Trong DBeaver chọn **New Database Connection → SQLite**, sau đó mở file `.sqlite` trong thư mục D1. Không mở các file `metadata.sqlite`; đó là file metadata nội bộ của Wrangler.
+Trong DBeaver, tạo kết nối SQLite và mở file database có tên hash; bỏ qua `metadata.sqlite`, vì đó là metadata Wrangler. D1 production không cung cấp kết nối TCP SQLite trực tiếp cho DBeaver. Dùng Cloudflare Dashboard hoặc Wrangler để truy vấn.
 
-Cloudflare D1 Production không cung cấp kết nối TCP trực tiếp cho DBeaver. Có thể xem bằng Cloudflare Dashboard hoặc Wrangler:
+Ví dụ đọc dữ liệu production — lệnh này cần Wrangler đã đăng nhập đúng tài khoản và database ID đúng:
 
 ```powershell
 npx wrangler d1 execute it-assetmaster --remote --command "SELECT * FROM devices LIMIT 50"
 ```
 
-## Cloudflare Pages
+Không chạy lệnh `--remote` để thử nghiệm dữ liệu. Trước thay đổi schema hoặc thao tác lớn, hãy xác nhận đang trỏ đúng database và có bản sao lưu phù hợp.
 
-Cấu hình Pages:
+## Tính năng
+
+- Quản lý thiết bị/tài sản, thông tin cấu hình, serial, tình trạng, vị trí và giá trị.
+- Quản lý nhân viên và phòng ban.
+- Lập phiếu bàn giao hoặc cho mượn, theo dõi hạn trả và ghi nhận hoàn trả.
+- Theo dõi lịch bảo trì/sửa chữa.
+- Kiểm kê theo đợt, lưu trạng thái/ghi chú và chênh lệch từng thiết bị.
+- Quét QR từ nút trên thanh điều hướng để tìm thiết bị và mở hồ sơ.
+- Dashboard, báo cáo, xuất danh sách thiết bị Excel, sao lưu và khôi phục JSON.
+- Đăng nhập admin, giới hạn lần đăng nhập sai, phiên cookie và đổi mật khẩu.
+
+Dữ liệu nghiệp vụ gồm phòng ban, nhân viên, thiết bị, phiếu bàn giao, bảo trì và hồ sơ kiểm kê. D1 schema cùng index được định nghĩa trong `migrations/0001_initial.sql`.
+
+## Deploy Cloudflare Pages
+
+### Nếu Pages kết nối trực tiếp với Git
+
+Trong Pages project, build command là `npm run build`, output directory là `dist`, root directory là thư mục gốc repo. Giữ nguyên thư mục `functions/` ở root cùng với `migrations/` và `wrangler.jsonc`; không chỉ deploy mỗi `dist/`. Pages Git integration sẽ build và deploy project theo cấu hình Pages.
+
+### Nếu đang dùng màn hình Workers Builds có ô Deploy command
+
+Đây là quy trình khác với Pages Git integration. Log có dòng `Executing user deploy command` là Workers Builds đang chạy lệnh deploy tùy chỉnh. Đặt:
 
 ```text
-Build command: npm run build
-Build output directory: dist
+Build command:  npm run build
+Deploy command: npx wrangler pages deploy dist --project-name=TEN_PAGES_PROJECT
+Root directory: thư mục gốc repo
 ```
 
-Repository phải deploy cùng các thư mục:
+Thay `TEN_PAGES_PROJECT` bằng tên **Pages project** thật. Lệnh deploy cần chạy ở root repo để Wrangler nhận cả `functions/`. Không dùng `npx wrangler deploy`: đó là lệnh deploy Worker và sẽ lỗi `Missing entry-point` với app Pages này. Nếu Pages project chưa tồn tại, tạo Pages project trước.
 
-```text
-functions/
-migrations/
-wrangler.jsonc
-```
+Không dùng thao tác Dashboard kéo-thả riêng `dist/` để deploy bản có API: upload kéo-thả Pages không biên dịch thư mục `functions/`. Xem [Pages Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/) và [Pages Functions](https://developers.cloudflare.com/pages/functions/get-started/).
 
-Trong Pages Settings → Bindings, kiểm tra:
+### Binding và secrets production
 
-```text
-DB → it-assetmaster
-```
-
-Trong Pages Settings → Variables and Secrets → Production, thêm:
+Trong Pages project, cấu hình D1 binding có tên chính xác `DB` và trỏ đến database `it-assetmaster` tương ứng với `wrangler.jsonc`. Trong **Settings → Variables and Secrets → Production**, tạo:
 
 ```text
 AUTH_ADMIN_EMAIL
 AUTH_ADMIN_PASSWORD
 ```
 
-Không đặt secret dưới tiền tố `VITE_` và không commit `.dev.vars`.
+Đặt mật khẩu riêng dài tối thiểu 12 ký tự. Không dùng tiền tố `VITE_`, không ghi secrets vào Git. Secrets chỉ khởi tạo admin khi bảng tài khoản còn trống; sửa secrets sau khi đã có tài khoản không tự đổi mật khẩu đã lưu.
 
-## Luồng lưu dữ liệu
+Sau khi tạo D1 và cập nhật `database_id`, áp dụng schema production khi đã kiểm tra database đích:
 
-Khi chạy local:
-
-```text
-Frontend → Pages Functions local → D1 local SQLite
+```powershell
+npm run d1:migrate:remote
 ```
 
-Khi chạy Production:
+Sau deploy, mở `/api/health` trên domain Pages; endpoint phải trả JSON và `database` phải là `cloudflare-d1`.
 
-```text
-Frontend → Cloudflare Pages Functions → D1 it-assetmaster
-```
-
-Frontend có lưu một bản cache trong `localStorage` để hỗ trợ backup và hiển thị, nhưng database thật vẫn là D1. App luôn ghi API/database trước rồi mới cập nhật cache.
+Hướng dẫn chi tiết: [CLOUDFLARE-D1.md](./CLOUDFLARE-D1.md). Tài liệu Cloudflare: [Build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/), [Pages Git integration](https://developers.cloudflare.com/pages/configuration/git-integration/), [Pages Functions](https://developers.cloudflare.com/pages/functions/get-started/), [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
 
 ## Xử lý sự cố
 
-- `500 Thiếu D1 binding tên DB`: Pages binding phải có tên chính xác là `DB`.
-- `no such table`: chạy `npm run d1:migrate:local` hoặc `npm run d1:migrate:remote` đúng môi trường.
-- `503` khi đăng nhập: kiểm tra `AUTH_ADMIN_EMAIL` và `AUTH_ADMIN_PASSWORD`.
-- `401`: phiên đã hết hạn hoặc thông tin đăng nhập không đúng.
-- API trả HTML thay vì JSON: kiểm tra thư mục `functions/` đã được deploy cùng frontend chưa.
-
-## Lưu ý dữ liệu
-
-Không dùng lệnh `--remote` để thử nghiệm dữ liệu. Trước thao tác lớn, hãy dùng chức năng sao lưu JSON hoặc xuất dữ liệu cần thiết. Không sao chép dữ liệu Production sang local nếu chưa kiểm tra thông tin nhạy cảm.
+- **`Missing entry-point`**: thường do dùng `npx wrangler deploy`. Với Pages, dùng `npx wrangler pages deploy dist --project-name=TEN_PAGES_PROJECT` hoặc dùng Pages Git integration.
+- **`database ... could not be found` / mã 7404**: kiểm tra `database_id`, account Cloudflare đã đăng nhập và tên database trong `wrangler.jsonc`.
+- **`500 Thiếu D1 binding tên DB`**: kiểm tra binding Pages tên chính xác `DB` và trỏ đúng D1, rồi deploy lại.
+- **`no such table`**: áp dụng migration vào đúng môi trường: `npm run d1:migrate:local` hoặc `npm run d1:migrate:remote`.
+- **`503` khi xác thực**: nếu chưa có admin, kiểm tra `AUTH_ADMIN_EMAIL` và `AUTH_ADMIN_PASSWORD` trong `.dev.vars` (local) hoặc Pages secrets (production).
+- **`401`**: thông tin đăng nhập không đúng hoặc phiên đăng nhập đã hết hạn.
+- **API trả HTML thay vì JSON / 404 / 405**: kiểm tra Pages Function tại `functions/api/[[path]].js` đã được deploy cùng Pages project chưa; không deploy riêng `dist/`.
+- **Cảnh báo bundle lớn hơn 500 kB**: là cảnh báo của Vite về kích thước bundle, không phải lỗi nếu build kết thúc thành công.
